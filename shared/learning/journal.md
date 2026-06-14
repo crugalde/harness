@@ -4,11 +4,11 @@
 **Evidencia**: El usuario corrigió explícitamente el formato visual de la presentación generada automáticamente, dictando reglas estrictas.
 **Patrón a Fijar**:
 - Diapositiva 1 (Portada): Debe contener siempre el título de la presentación y el autor ("Dr. Cristian Ugalde").
-- Tipografía: Uso universal de `Arial`.
+- Tipografía: Uso universal de `Calibri`.
 - Jerarquía de Tamaños:
-  - Títulos: `40 pt`
-  - Subtítulos: `32 pt`
-  - Contenido (texto o viñetas): `24 pt`
+  - Títulos: `30 pt`
+  - Subtítulos: `26 pt`
+  - Contenido (texto o viñetas): `20 pt`
   - Pie de página (Referencias + Autor): `10 pt`
 - Distribución de Diapositiva (Contenido):
   - 50% reservado para texto o viñetas.

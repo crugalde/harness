@@ -1,9 +1,9 @@
 {
-  "font": "Arial",
+  "font": "Calibri",
   "sizes": {
-    "title": 40,
-    "subtitle": 32,
-    "content": 24,
+    "title": 30,
+    "subtitle": 26,
+    "content": 20,
     "footer": 10
   },
   "layout": {
