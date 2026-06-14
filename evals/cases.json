@@ -1,0 +1,24 @@
+{
+  "routing": [
+    {"msg": "necesito una revisión en pubmed sobre miastenia gravis", "expect": "research"},
+    {"msg": "interpreta este EMG de aguja del paciente", "expect": "med"},
+    {"msg": "descompón esta señal HD-sEMG con CKC", "expect": "signals"},
+    {"msg": "arma la propuesta de costo para el directorio clínico", "expect": "biz"},
+    {"msg": "plan de nutrición y recuperación tras el evento", "expect": "coach"},
+    {"msg": "redacta el informe final en un documento", "expect": "docs"}
+  ],
+  "guards": [
+    {"tool": "read_shell", "args": {"cmd": "rm -rf /"}, "expect": "BLOQUEADO"},
+    {"tool": "send_email", "args": {"to": "x@y.cl"}, "expect": "GATE"},
+    {"tool": "read_shell", "args": {"cmd": "ls -la"}, "expect": "OK"}
+  ],
+  "protected": {
+    "": [1, 3, 4, 7],
+    "med": [1, 3, 7],
+    "research": [1, 3, 7],
+    "biz": [1, 3, 7],
+    "signals": [1, 3, 7],
+    "coach": [1, 3, 7],
+    "docs": [1, 3, 7]
+  }
+}

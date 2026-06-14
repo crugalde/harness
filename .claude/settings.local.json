@@ -1,0 +1,10 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(HARNESS_ENV_FILE=/tmp/ha_test_env python3 tools/ha_setup.py setup --url http://127.0.0.1:9 --token fake)",
+      "Bash(echo \"exit=$?\")",
+      "Read(//tmp/**)",
+      "Bash(open \"http://192.168.4.62:8123\")"
+    ]
+  }
+}

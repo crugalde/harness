@@ -1,0 +1,15 @@
+# Núcleo del harness (loop + autoaprendizaje)
+anthropic>=0.40
+
+# Opcionales por skill/subagente (descomenta lo que uses)
+# biopython>=1.83        # skill pubmed_search (Entrez)
+# python-docx>=1.1        # skill build_docx (subagente docs)
+# python-pptx>=0.6        # skill build_pptx (subagente docs)
+# numpy>=1.26            # subagente signals
+# scipy>=1.12            # subagente signals
+# matplotlib>=3.8        # figuras de signals
+
+# Desarrollo
+# ruff>=0.4
+# black>=24.0
+# pytest>=8.0

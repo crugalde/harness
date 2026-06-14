@@ -1,0 +1,15 @@
+# Secrets / local env (kept outside the repo, e.g. ~/.config/harness/.env)
+.env
+.env.*
+!.env.example
+
+# Python
+.venv/
+__pycache__/
+*.pyc
+
+# macOS
+.DS_Store
+
+# Office temp/lock files
+~$*

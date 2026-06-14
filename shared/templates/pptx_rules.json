@@ -1,0 +1,21 @@
+{
+  "font": "Arial",
+  "sizes": {
+    "title": 40,
+    "subtitle": 32,
+    "content": 24,
+    "footer": 10
+  },
+  "layout": {
+    "left_margin_inches": 0.5,
+    "top_margin_inches": 2.0,
+    "content_width_inches": 4.5,
+    "image_left_inches": 5.5,
+    "image_width_inches": 4.0,
+    "footer_top_inches": 5.8,
+    "footer_left_inches": 0.5
+  },
+  "author": "Dr. Cristian Ugalde",
+  "footer_align": "left",
+  "content_split": "50_50"
+}
