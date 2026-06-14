@@ -1,0 +1,58 @@
+# ---------------------------------------------------------------------------
+# Automatización HA: "Nadie en casa: avisar y apagar"
+#
+# Cuándo: cuando NO queda nadie en casa durante 5 min. Se cuenta el número de
+#         personas en la zona Home (zone.home < 1), no una persona concreta, así
+#         funciona con cualquier residente. El 'for' evita disparos al salir un rato.
+#
+# Qué hace:
+#   1. Avisa al iPhone que la casa quedó vacía.
+#   2. Apaga TODAS las luces salvo "luces exterior" (que la maneja el sol).
+#
+# Los ENCHUFES NO se apagan: quedan siempre fuera del apagado automático.
+#
+# Instalar: Ajustes -> Automatizaciones -> Crear -> ⋮ -> Editar en YAML -> pegar.
+# ---------------------------------------------------------------------------
+alias: "Nadie en casa: avisar y apagar luces"
+description: >-
+  Al quedar la casa vacía 5 min: avisa y apaga las luces (salvo exterior).
+  Los enchufes no se tocan.
+mode: single
+
+triggers:
+  - trigger: numeric_state
+    entity_id: zone.home
+    below: 1
+    for: "00:05:00"
+
+conditions: []
+
+actions:
+  - alias: "Aviso de casa vacía"
+    action: notify.iphone_de_cristian
+    data:
+      title: "🏠 Casa vacía"
+      message: "Nadie en casa: apago las luces (dejo exterior). Los enchufes no se tocan."
+
+  - alias: "Apagar todas las luces salvo exterior (los enchufes NO se incluyen)"
+    action: switch.turn_off
+    target:
+      entity_id:
+        - switch.interruptor_sala_de_estar
+        - switch.luces_living
+        - switch.luz_hall_de_entrada
+        - switch.0xa4c138e5bc2074f7        # luces gimnasio
+        - switch.0xa4c138158bb87add        # luz comedor
+        - switch.0xa4c13810778e158f        # luz mueble comedor
+        - switch.0xa4c13822d90872da        # Luz oficina 2do piso
+        - switch.0xa4c138ae8d13652e        # Luz dormitorio principal
+        - switch.0xa4c1388728915c91        # closet 2do piso
+        - switch.0xa4c138035f03ebaf        # luz baño segundo piso
+        - switch.0xa4c138be96035920_left   # Interruptor Miguel izq techo
+        - switch.0xa4c138be96035920_right  # Interruptor Miguel der muralla
+        - switch.0xa4c1389b22617402_left   # interruptor rafael der techo
+        - switch.0xa4c1389b22617402_right  # interruptor rafael izq led
+        - switch.0xa4c138530a5fe5b9_left   # cocina izquierda adelante
+        - switch.0xa4c138530a5fe5b9_right  # cocina derecha atrás
+        - switch.0xa4c13849ad80c6d7_left   # pasillo primer piso izq
+        - switch.0xa4c13849ad80c6d7_right  # pasillo primer piso der

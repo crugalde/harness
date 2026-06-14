@@ -41,6 +41,7 @@ los anclas a criterios formales. Trato peer-to-peer con Cristian.
 
 ## 4. Gates y handoffs
 
+- **Pipeline de Presentaciones**: Recibe el `raw_studies.json` desde `research`. Aplica el filtro clínico (revisión de NNT/NNH, validación contra guías locales/AHA, eliminación de sesgos) y define el hilo conductor clínico. Exporta estructuradamente el archivo `content.json` como handoff directo hacia el subagente `docs`.
 - Revisión bibliográfica profunda → invoca `research`.
 - Análisis de señal cruda / descomposición → invoca `signals`.
 - Cualquier conclusión que vaya a un destino persistente pasa por Gate 2 del orquestador.

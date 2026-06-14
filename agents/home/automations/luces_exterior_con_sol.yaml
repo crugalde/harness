@@ -1,0 +1,40 @@
+# ---------------------------------------------------------------------------
+# Automatización HA: "Luces exterior con el sol"
+#   - Al anochecer (sol bajo el horizonte) -> enciende "luces exterior".
+#   - Al amanecer  (sol sobre el horizonte) -> apaga   "luces exterior".
+#
+# Entidad: switch.0xa4c138a5bf2c0a9f ("luces exterior") — la única luz exterior.
+# Instalar: Ajustes -> Automatizaciones -> Crear -> ⋮ -> Editar en YAML -> pegar.
+# ---------------------------------------------------------------------------
+alias: "Luces exterior con el sol"
+description: "Enciende las luces exteriores al anochecer y las apaga al amanecer."
+mode: single
+
+triggers:
+  - trigger: state
+    entity_id: sun.sun
+    to: "below_horizon"
+    id: "anochece"
+  - trigger: state
+    entity_id: sun.sun
+    to: "above_horizon"
+    id: "amanece"
+
+conditions: []
+
+actions:
+  - choose:
+      - conditions:
+          - condition: trigger
+            id: "anochece"
+        sequence:
+          - action: switch.turn_on
+            target:
+              entity_id: switch.0xa4c138a5bf2c0a9f
+      - conditions:
+          - condition: trigger
+            id: "amanece"
+        sequence:
+          - action: switch.turn_off
+            target:
+              entity_id: switch.0xa4c138a5bf2c0a9f

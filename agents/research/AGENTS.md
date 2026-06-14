@@ -39,6 +39,7 @@ preciso y crítico, sin grandilocuencia. No afirmas lo que no puedes respaldar.
 
 ## 4. Gates y handoffs
 
+- **Pipeline de Presentaciones**: Extrae la metodología, resultados y texto crudo de los papers (desde PDFs en carpetas locales o consultas a NotebookLM) y genera estructuradamente el archivo `raw_studies.json`. Este archivo es el handoff estricto hacia el subagente `med`.
 - Produce insumos estructurados para `med` (clínica) y `biz` (decisiones de negocio).
 - Mantiene un `_estado.md` por investigación para continuidad entre sesiones (R5).
 

@@ -138,11 +138,17 @@ def ha_services(args: dict) -> str:
 
 
 def ha_call_service(args: dict) -> str:
-    """Ejecuta un servicio (encender, apagar, etc.). EFECTO EXTERNO (gated)."""
+    """Ejecuta un servicio (encender, apagar, etc.). EFECTO EXTERNO (gated).
+
+    Nota de campo (instalación de Cristian, 2026-06-14): las luces son entidades
+    'switch' (interruptores Zigbee vía Zigbee2MQTT), NO hay dominio 'light'. Y el
+    REST de HA suele responder [] ("sin cambios") aunque la acción sí se aplique;
+    por eso, si hay entity_id, releemos el estado real y lo reportamos (D4).
+    """
     domain = (args.get("domain") or "").strip()
     service = (args.get("service") or "").strip()
     if not domain or not service:
-        return "ERROR: faltan 'domain' y 'service' (p.ej. domain='light', service='turn_on')."
+        return "ERROR: faltan 'domain' y 'service' (p.ej. domain='switch', service='turn_off')."
     data = args.get("data") or {}
     entity_id = args.get("entity_id")
     if entity_id and "entity_id" not in data:
@@ -151,10 +157,104 @@ def ha_call_service(args: dict) -> str:
         result = call_service(domain, service, data)
     except RuntimeError as e:
         return f"ERROR: {e}"
+    # Verificación por re-lectura: el endpoint REST puede no listar cambios aunque
+    # el estado físico sí cambie. Releemos la entidad objetivo para reportar la verdad.
+    verify = ""
+    eid = data.get("entity_id")
+    if isinstance(eid, str):
+        try:
+            verify = f" Estado verificado: {eid} = {states(eid).get('state', '?')}."
+        except RuntimeError:
+            pass
     changed = [s.get("entity_id") for s in result] if isinstance(result, list) else []
-    return (f"OK: {domain}.{service} ejecutado. "
-            + (f"Entidades afectadas: {', '.join(filter(None, changed))}"
-               if changed else "Sin cambios de estado reportados."))
+    extra = (f" Afectadas: {', '.join(filter(None, changed))}" if changed else "")
+    return f"OK: {domain}.{service} ejecutado.{verify}{extra}"
+
+
+# --------------------------------------------------------------------------- #
+# Luces: en esta instalación son entidades 'switch' (Zigbee2MQTT), no 'light'.
+# Distinguimos luces de enchufes/entidades de bridge por entity_id + friendly_name.
+# --------------------------------------------------------------------------- #
+# Estrategia de EXCLUSIÓN: en esta instalación todo 'switch' controlable es una luz,
+# salvo enchufes, el bridge de Zigbee2MQTT y sub-entidades de diagnóstico. Es más
+# fiable que buscar "luz" en el nombre, porque varios interruptores Zigbee tienen
+# nombres sin esa palabra (p.ej. "cocina...", "pasillo..."). Si algún día agregas un
+# switch que NO sea luz (bomba, ventilador), añádelo a _NOT_LIGHT o usa 'keep'.
+_NOT_LIGHT = ("enchufe", "network_indicator", "outlet_control", "permit_join",
+              "zigbee2mqtt_bridge", "power_on_behavior", "backlight")
+
+
+def _is_light(entity_id: str, friendly_name: str) -> bool:
+    if not entity_id.startswith("switch."):
+        return False
+    blob = f"{entity_id} {friendly_name}".lower()
+    return not any(n in blob for n in _NOT_LIGHT)
+
+
+def lights() -> list[dict]:
+    """Estados de las entidades clasificadas como luz (heurística por nombre)."""
+    return [s for s in states()
+            if _is_light(s.get("entity_id", ""),
+                         (s.get("attributes") or {}).get("friendly_name", ""))]
+
+
+def ha_lights(args: dict) -> str:
+    """Lista las luces detectadas y su estado (solo lectura)."""
+    try:
+        ls = lights()
+    except RuntimeError as e:
+        return f"ERROR: {e}"
+    if not ls:
+        return "No se detectaron luces (switch)."
+    rows = []
+    for s in sorted(ls, key=lambda x: x.get("entity_id", "")):
+        fn = (s.get("attributes") or {}).get("friendly_name", "")
+        rows.append(f"  {s.get('entity_id', ''):<44} {s.get('state', '?'):<8} {fn}")
+    on = sum(1 for s in ls if s.get("state") == "on")
+    return f"{len(ls)} luces ({on} encendidas):\n" + "\n".join(rows)
+
+
+def ha_lights_off(args: dict) -> str:
+    """Apaga TODAS las luces encendidas salvo las de 'keep'. EFECTO EXTERNO (gated).
+
+    keep: lista (o csv) de entity_id a mantener encendidos, p.ej.
+          ['switch.0xa4c138a5bf2c0a9f']  (luces exterior).
+    """
+    keep = args.get("keep") or []
+    if isinstance(keep, str):
+        keep = [k.strip() for k in keep.split(",") if k.strip()]
+    keep = set(keep)
+    try:
+        targets = [s for s in lights()
+                   if s.get("entity_id") not in keep and s.get("state") == "on"]
+    except RuntimeError as e:
+        return f"ERROR: {e}"
+    if not targets:
+        return "No hay luces encendidas para apagar (o todas están en 'keep')."
+    done, errors = [], []
+    for s in targets:
+        eid = s["entity_id"]
+        try:
+            call_service("switch", "turn_off", {"entity_id": eid})
+            done.append(eid)
+        except RuntimeError as e:
+            errors.append(f"{eid} ({e})")
+    # Verificación tras la ronda de apagado.
+    import time
+    time.sleep(1.0)
+    still_on = []
+    try:
+        still_on = [s["entity_id"] for s in lights()
+                    if s.get("entity_id") not in keep and s.get("state") == "on"]
+    except RuntimeError:
+        pass
+    msg = (f"Apagadas {len(done)} luces. "
+           f"Mantenidas (keep): {', '.join(sorted(keep)) or '(ninguna)'}.")
+    if errors:
+        msg += f" ERRORES: {'; '.join(errors)}."
+    if still_on:
+        msg += f" ⚠️ Siguen encendidas: {', '.join(still_on)}."
+    return msg
 
 
 def _fmt_state(s: dict) -> str:
@@ -183,6 +283,20 @@ def register_skill(reg) -> None:
         "Lista servicios disponibles en Home Assistant. Filtra por domain.",
         {"type": "object", "properties": {"domain": {"type": "string"}}},
         ha_services,
+    )
+    reg.register(
+        "ha_lights",
+        "Lista las luces (entidades switch en esta instalación) y su estado. Solo lectura.",
+        {"type": "object", "properties": {}},
+        ha_lights,
+    )
+    reg.register(
+        "ha_lights_off",
+        "Apaga TODAS las luces encendidas salvo las de 'keep'. EFECTO EXTERNO: gated.",
+        {"type": "object",
+         "properties": {"keep": {"type": "array", "items": {"type": "string"},
+                                 "description": "entity_id a mantener encendidos"}}},
+        ha_lights_off,
     )
     reg.register(
         "ha_call_service",

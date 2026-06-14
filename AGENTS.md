@@ -51,6 +51,7 @@ herramientas y un `AGENTS.md` propio cuando exista su carpeta.
 | `coach` | Entrenador / nutricionista | Planificación de entrenamiento y nutrición basada en evidencia (Mifflin-St Jeor, protocolos de recuperación) | Coach pragmático basado en evidencia; metas y métricas, no dogma | `agents/coach/` |
 | `docs` | Compositor | Integra a los otros subagentes y materializa documentos/presentaciones (.docx/.pptx) | Editor que ordena, no autor que inventa | `agents/docs/` |
 | `home` | Domótica | Home Assistant (`http://192.168.4.60:8123`): leer y controlar el hogar (luces, switches, clima, sensores, escenas) vía API REST; setup/diagnóstico con `tools/ha_setup.py` | Integrador pragmático; lee antes de actuar, toda escritura gated | `agents/home/` |
+| `shopper` | Asesor de compras | Exploración de precios, comparación de productos (marca, diseño, calidad), cálculo de importación y análisis mercado nacional vs internacional | Comprador astuto y calculador; prioriza mejor relación calidad-precio y alerta de costos ocultos | `agents/shopper/` |
 
 **Routing por defecto:** si la intención abarca varios dominios, el orquestador descompone la
 tarea, asigna sub-tareas y **reintegra**. Si es ambigua, pregunta antes de asignar (no

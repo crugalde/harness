@@ -1,0 +1,104 @@
+# ---------------------------------------------------------------------------
+# Automatización HA: "Apagar luces a medianoche con aviso (confirmar o se apaga)"
+#
+# Qué hace:
+#   1. A las 00:00 manda una notificación ACCIONABLE a tu iPhone (HA Companion app)
+#      con dos botones: "Mantener encendidas" y "Apagar ahora".
+#   2. Espera tu respuesta hasta 5 minutos.
+#        - Si tocas "Mantener"  -> aborta, no apaga nada.
+#        - Si tocas "Apagar"    -> apaga de inmediato.
+#        - Si NO respondes (5 min)-> apaga igual (continue_on_timeout).
+#   3. Apaga TODAS las luces salvo "luces exterior" (switch.0xa4c138a5bf2c0a9f),
+#      que se mantiene encendida.
+#   4. Te confirma por iPhone el resultado.
+#
+# Cómo instalarla (elige UNA):
+#   A) UI: Ajustes -> Automatizaciones y escenas -> Crear automatización ->
+#      (menú ⋮ arriba a la derecha) -> "Editar en YAML" -> pega TODO esto -> Guardar.
+#   B) Archivo: pega el bloque (sin requerir la primera línea 'alias' como clave de
+#      lista) en config/automations.yaml y recarga automatizaciones.
+#
+# Requisito: la app "Home Assistant" instalada en tu iPhone (ya tienes
+# notify.iphone_de_cristian), con notificaciones permitidas. Las notificaciones
+# accionables de iOS funcionan sin configurar categorías por adelantado.
+# ---------------------------------------------------------------------------
+alias: "Apagar luces a medianoche (con aviso)"
+description: >-
+  A las 00:00 avisa al iPhone; si confirmas o no respondes en 5 min, apaga todas
+  las luces salvo las exteriores. Si eliges "Mantener", no apaga nada.
+mode: single
+
+triggers:
+  - trigger: time
+    at: "00:00:00"
+
+conditions: []
+
+actions:
+  - alias: "Aviso accionable al iPhone"
+    action: notify.iphone_de_cristian
+    data:
+      title: "🌙 Apagado de luces"
+      message: "Voy a apagar todas las luces (menos exterior) en 5 min. ¿Confirmas?"
+      data:
+        # Notificación accionable iOS (HA Companion)
+        actions:
+          - action: "LUCES_MANTENER"
+            title: "Mantener encendidas"
+          - action: "LUCES_APAGAR"
+            title: "Apagar ahora"
+            destructive: true
+        push:
+          interruption-level: time-sensitive
+
+  - alias: "Esperar respuesta (máx 5 min)"
+    wait_for_trigger:
+      - trigger: event
+        event_type: mobile_app_notification_action
+        event_data:
+          action: "LUCES_MANTENER"
+      - trigger: event
+        event_type: mobile_app_notification_action
+        event_data:
+          action: "LUCES_APAGAR"
+    timeout: "00:05:00"
+    continue_on_timeout: true
+
+  - alias: "Si elegiste Mantener -> abortar"
+    if:
+      - condition: template
+        value_template: >-
+          {{ wait.trigger is not none
+             and wait.trigger.event.data.action == 'LUCES_MANTENER' }}
+    then:
+      - stop: "Cristian eligió mantener las luces encendidas."
+
+  - alias: "Apagar todas las luces salvo exterior (los enchufes NO se incluyen)"
+    action: switch.turn_off
+    target:
+      entity_id:
+        - switch.interruptor_sala_de_estar
+        - switch.luces_living
+        - switch.luz_hall_de_entrada
+        - switch.0xa4c138e5bc2074f7        # luces gimnasio
+        - switch.0xa4c138158bb87add        # luz comedor
+        - switch.0xa4c13810778e158f        # luz mueble comedor
+        - switch.0xa4c13822d90872da        # Luz oficina 2do piso
+        - switch.0xa4c138ae8d13652e        # Luz dormitorio principal
+        - switch.0xa4c1388728915c91        # closet 2do piso
+        - switch.0xa4c138035f03ebaf        # luz baño segundo piso
+        - switch.0xa4c138be96035920_left   # Interruptor Miguel izq techo
+        - switch.0xa4c138be96035920_right  # Interruptor Miguel der muralla
+        - switch.0xa4c1389b22617402_left   # interruptor rafael der techo
+        - switch.0xa4c1389b22617402_right  # interruptor rafael izq led
+        - switch.0xa4c138530a5fe5b9_left   # cocina izquierda adelante
+        - switch.0xa4c138530a5fe5b9_right  # cocina derecha atrás
+        - switch.0xa4c13849ad80c6d7_left   # pasillo primer piso izq
+        - switch.0xa4c13849ad80c6d7_right  # pasillo primer piso der
+        # NO se incluye switch.0xa4c138a5bf2c0a9f (luces exterior): se mantiene.
+
+  - alias: "Confirmar apagado"
+    action: notify.iphone_de_cristian
+    data:
+      title: "✅ Luces apagadas"
+      message: "Listo. Mantengo encendidas las luces exteriores."

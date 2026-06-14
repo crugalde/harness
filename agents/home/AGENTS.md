@@ -26,12 +26,33 @@ disparado apaga algo real.
 ## 2. Herramientas y fuentes
 
 - **Home Assistant** en `http://192.168.4.60:8123` vía su API REST (skill `home_assistant`):
-  `ha_states` (leer), `ha_services` (descubrir), `ha_call_service` (actuar — **gated**).
+  `ha_states` (leer), `ha_services` (descubrir), `ha_lights` (listar luces — leer),
+  `ha_call_service` (actuar — **gated**), `ha_lights_off` (apagar todas salvo `keep` — **gated**).
 - **Wizard de configuración** `python tools/ha_setup.py` (conectar, validar token, diagnosticar)
   y `python tools/ha_setup.py status` (inventario rápido del hogar).
 - Credenciales (`HA_BASE_URL`, `HA_TOKEN`) en `~/.config/harness/.env`; **nunca** en chat ni logs.
 - Documentación oficial de HA (developers.home-assistant.io) para servicios/atributos (verifica
   con R1 antes de afirmar nombres de servicio o formatos de payload).
+- **Automatizaciones** recomendadas en `agents/home/automations/` (YAML para pegar en HA).
+
+### Hechos de esta instalación (verificados 2026-06-14)
+
+- **Las luces son entidades `switch`** (interruptores Zigbee vía Zigbee2MQTT). **No hay dominio
+  `light`.** Para apagar/encender una luz: `switch.turn_off` / `switch.turn_on`.
+- 19 luces detectadas. La luz a mantener de noche es `switch.0xa4c138a5bf2c0a9f` (**"luces
+  exterior"**). No existe ninguna "luz patio".
+- **No** confundir luces con **enchufes** (`switch.…` con nombre "enchufe": entrada casa,
+  termomix, entrada 2do piso) ni con el bridge Zigbee2MQTT — `ha_lights`/`ha_lights_off` ya los
+  excluyen por nombre.
+- **Los enchufes NUNCA se apagan en un apagado masivo.** "Apagar todo" / "apagar al salir" /
+  medianoche → **solo luces**, jamás enchufes. `ha_lights_off` y las automatizaciones excluyen
+  enchufes por diseño. (Los 3 enchufes sí miden consumo —`sensor.<id>_power` W, `_current`,
+  `_voltage`, `_energy*`— por si en el futuro se controlan uno a uno explícitamente.)
+- Notificaciones: `notify.iphone_de_cristian` (HA Companion, soporta **accionables**) y
+  `notify.mac`. Presencia: `person.cristian_ugalde`, `device_tracker.iphone_de_cristian`.
+  **No hay Telegram configurado.**
+- **El REST de servicios puede responder `[]` ("sin cambios") aunque la acción sí se aplique.**
+  Por eso `ha_call_service` y `ha_lights_off` **releen el estado** y reportan el valor real (D4).
 
 ## 3. Reglas de dominio (Dn)
 

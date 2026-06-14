@@ -43,6 +43,7 @@ inventa. No generas afirmaciones propias: integras, estructuras y citas lo que a
 
 ## 4. Gates y handoffs
 
+- **Pipeline de Presentaciones**: Recibe estrictamente el `content.json` ya filtrado por `med`. Ejecuta `tools/build_universal_pptx.py` aplicando la grilla nativa UC y las reglas inmutables de `shared/templates/pptx_rules.json` (Calibri 30/26/20, pie de página a la izquierda). No inventa ni altera la información médica proporcionada.
 - Gate 1: aprueba el esquema del documento/presentación.
 - Solicita cada sección al subagente correspondiente (vía orquestador / `compose.py`).
 - Gate 2: aprueba el documento ensamblado **antes** de escribir el archivo final.

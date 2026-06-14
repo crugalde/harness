@@ -17,3 +17,18 @@
 - Estructura Obligatoria: Toda presentación final debe incluir diapositiva de Conclusión y diapositiva de Bibliografía en formato Vancouver.
 
 **Acción**: Se ha generado el archivo `shared/templates/pptx_rules.json` para que los scripts consuman estas reglas dinámicamente y permitan auto-aprendizaje.
+
+## [2026-06-14] Domótica — hechos de la instalación Home Assistant (subagente `home`)
+**Evidencia**: Primera conexión real al HA del usuario (`192.168.4.60:8123`, no `.62` como decía la doc inicial). Prueba exitosa de apagado de "Luz oficina 2do piso".
+**Patrón a Fijar**:
+- IP correcta de HA: `192.168.4.60` (la `.62` era errónea; corregida en todo el harness).
+- **Las luces son entidades `switch`** (Zigbee2MQTT); **no existe dominio `light`**. Usar
+  `switch.turn_on`/`switch.turn_off`. 19 luces; mantener de noche `switch.0xa4c138a5bf2c0a9f`
+  ("luces exterior"). No hay "luz patio".
+- Distinguir luces de **enchufes** (nombre "enchufe") y del bridge Zigbee2MQTT.
+- Canal de aviso: `notify.iphone_de_cristian` (accionable). **No hay Telegram.**
+- **El REST de `call_service` puede devolver `[]`** ("sin cambios") aunque la acción se aplique
+  → siempre verificar releyendo el estado.
+**Acción**: La skill `home_assistant` ahora verifica por re-lectura y expone `ha_lights`/
+`ha_lights_off` (exclusión de enchufes). Automatización de medianoche en
+`agents/home/automations/apagar_luces_medianoche.yaml`.
