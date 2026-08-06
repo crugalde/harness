@@ -1,0 +1,672 @@
+{
+  "tema": "Tolosa-Hunt syndrome",
+  "enfoque": "diagnosis OR differential diagnosis OR magnetic resonance imaging OR diagnostic criteria OR painful ophthalmoplegia",
+  "generado": "2026-08-06 14:59",
+  "n_fuentes": 23,
+  "fuentes": [
+    {
+      "pmid": "41432513",
+      "doi": "10.17116/oftalma2025141061114",
+      "pmcid": "",
+      "titulo": "[Tolosa-Hunt syndrome].",
+      "revista": "Vestn Oftalmol",
+      "anio": "2025",
+      "autores": [
+        "Reznikova LV",
+        "Kuchminskaya MB",
+        "Sherstneva LV",
+        "Aslamazova AE"
+      ],
+      "tipos": [
+        "Journal Article",
+        "Review",
+        "English Abstract"
+      ],
+      "mesh": [
+        "Humans",
+        "Tolosa-Hunt Syndrome",
+        "Diagnosis, Differential",
+        "Cavernous Sinus"
+      ],
+      "abstract": "Tolosa-Hunt syndrome (THS) is a rare neuro-ophthalmological pathology caused by nonspecific granulomatous inflammation in the area of the cavernous sinus, which leads to painful ocular motility restrictions and ophthalmoplegia. The disease is characterized by lesions of the III, IV, and VI cranial nerves, with possible extension to branches of the V nerve and oculosympathetic fibers. This review analyses current data on this disease, with emphasis on its clinical presentation, diagnostic criteria and treatment methods. Taking into account the complexity of identifying THS, emphasis is made on the need for careful differential diagnosis with other clinically similar conditions, such as brain tumors, vascular aneurysms, inflammatory processes, etc. Timely detection of the syndrome and initiation of appropriate treatment, including the use of glucocorticoid hormones, can help prevent serious complications in the form of vision loss or permanent impairment of ocular motor function.",
+      "url_pubmed": "https://pubmed.ncbi.nlm.nih.gov/41432513/",
+      "estrato": "enfoque_dirigido",
+      "acceso": "paywall",
+      "url_pdf": "",
+      "url_texto": "https://doi.org/10.17116/oftalma2025141061114"
+    },
+    {
+      "pmid": "39553346",
+      "doi": "10.26574/maedica.2024.19.3.634",
+      "pmcid": "PMC11565145",
+      "titulo": "Intracavernous Aneurysm Mimicking Tolosa-Hunt Syndrome.",
+      "revista": "Maedica (Bucur)",
+      "anio": "2024",
+      "autores": [
+        "Dinaki K",
+        "Sarafidou A",
+        "Papadopoulos C",
+        "Triaridis S",
+        "Karkos P"
+      ],
+      "tipos": [
+        "Editorial"
+      ],
+      "mesh": [],
+      "abstract": "INTRODUCTION: Tolosa-Hunt syndrome (THS) is a disorder related to inflammation of cavernous sinus and superior orbital fissure that usually presents with ophthalmoplegia and oculomotor nerve palsies. The etiology of the syndrome is unknown and the diagnosis is set by exclusion of other clinical conditions that manifest in a similar way. Intracranial aneurysms, such as intracavernous ones, should be included in the differential diagnosis as they can compress cranial nerves leading to similar clinical presentation. CASE REPORT: We present a case of a 51-year-old woman who was referred to our clinic after 24-hour hospitalization in an ophthalmology clinic due to periorbital cellulitis in her right eye. A nose and paranasal sinuses computed tomography (CT) scan with contrast revealed sinusitis affecting the maxillary sinus, the ethmoidal cells and the sphenoid sinus on the right side. The patient underwent endoscopic sinus surgery on the right side, where middle meatal antrostomy, anterior and posterior ethmoidectomy and Draf I frontal sinus drainage were performed. There was an immediate improvement of the orbital edema and the neuro-opthalmologic examination of the right eye was normal. However, on the ninth postoperative day she presented headache, retro-orbital pain and diplopia of her left eye. In 24 hours, the symptoms progressed to ophthalmoplegia and ipsilateral palpebral ptosis. Intravenous treatment with corticosteroids was initiated under the suspicion of Tolosa-Hunt syndrome, without resolution of her symptoms. Emergency CT and CT-angiography scans revealed a possible intracavernous carotid artery aneurysm on the left side. The diagnosis was confirmed by a magnetic resonance imaging (MRI) scan and the patient was referred to neurosurgery department, where a cerebral angiography was performed and the giant intracavernous aneurysm was treated with guglielmi detachable coils. CONCLUSION: Our case indicates that an intracavernous aneurysm can present with painful ophthalmoplegia in all directions, mimicking the Tolosa-Hunt syndrome. One must underline the importance of radiological examination focusing on the vascular structures, as it is essential for the differential diagnosis, defining the course of treatment applied in such cases.",
+      "url_pubmed": "https://pubmed.ncbi.nlm.nih.gov/39553346/",
+      "estrato": "enfoque_dirigido",
+      "acceso": "pmc",
+      "url_pdf": "https://www.ncbi.nlm.nih.gov/pmc/articles/PMC11565145/pdf/",
+      "url_texto": "https://www.ncbi.nlm.nih.gov/pmc/articles/PMC11565145/"
+    },
+    {
+      "pmid": "38032539",
+      "doi": "10.1007/s11916-023-01193-4",
+      "pmcid": "",
+      "titulo": "Review of Tolosa-Hunt Syndrome, Recent Updates.",
+      "revista": "Curr Pain Headache Rep",
+      "anio": "2023",
+      "autores": [
+        "Kmeid M",
+        "Medrea I"
+      ],
+      "tipos": [
+        "Journal Article",
+        "Review"
+      ],
+      "mesh": [
+        "Humans",
+        "Tolosa-Hunt Syndrome",
+        "Diagnosis, Differential",
+        "Cavernous Sinus",
+        "Magnetic Resonance Imaging",
+        "Steroids"
+      ],
+      "abstract": "PURPOSE OF REVIEW: We aim to present diagnostic considerations and management insights on Tolosa-Hunt syndrome. We highlight recent controversies in this field and emerging literature. RECENT FINDINGS: The diagnostic categorization of Tolosa-Hunt syndrome remains controversial, with imaging negative cases described in the literature and an increasing literature of secondary causes falsely diagnosed as Tolosa-Hunt syndrome. Response to steroids can fulfill diagnostic criteria, but newer management strategies are available in treatment-resistant patients, such as steroid-sparing agents or radiotherapy. Tolosa-Hunt syndrome has become controversial; the entity of granulomatous inflammation of the cavernous sinus and possible extension into orbital fissure and posterior orbit of late has been re-evaluated. Recent case series and reviews have outlined multiple false positive (neoplasm or infection) and negative (no imaging findings) diagnoses. In the future, when assessing whether a patient has this entity, we caution readers to closely follow patients for secondary causes and consider this entity in differential even if MRI is non-revealing. Additionally, biopsy should be regarded as a gold standard for diagnosis and utilized, especially in uncertain cases. The diagnostic categorization of Tolosa-Hunt syndrome may need reconsideration in future versions of the ICHD.",
+      "url_pubmed": "https://pubmed.ncbi.nlm.nih.gov/38032539/",
+      "estrato": "enfoque_dirigido",
+      "acceso": "paywall",
+      "url_pdf": "",
+      "url_texto": "https://doi.org/10.1007/s11916-023-01193-4"
+    },
+    {
+      "pmid": "38117733",
+      "doi": "",
+      "pmcid": "",
+      "titulo": "[Tolosa-Hunt syndrome].",
+      "revista": "Medicina (B Aires)",
+      "anio": "2023",
+      "autores": [
+        "Napoli S",
+        "Aguilera C",
+        "Villa RA"
+      ],
+      "tipos": [
+        "Journal Article"
+      ],
+      "mesh": [
+        "Humans",
+        "Tolosa-Hunt Syndrome",
+        "Diagnosis, Differential",
+        "Magnetic Resonance Imaging"
+      ],
+      "abstract": "",
+      "url_pubmed": "https://pubmed.ncbi.nlm.nih.gov/38117733/",
+      "estrato": "enfoque_dirigido",
+      "acceso": "paywall",
+      "url_pdf": "",
+      "url_texto": ""
+    },
+    {
+      "pmid": "34386372",
+      "doi": "10.4103/tcmj.tcmj_137_20",
+      "pmcid": "PMC8323652",
+      "titulo": "Recurrent Tolosa-Hunt syndrome.",
+      "revista": "Tzu Chi Med J",
+      "anio": "2021",
+      "autores": [
+        "Thu PW",
+        "Chen YM",
+        "Liu WM"
+      ],
+      "tipos": [
+        "Case Reports",
+        "Journal Article"
+      ],
+      "mesh": [],
+      "abstract": "The Tolosa-Hunt syndrome (THS) is caused by granulomatous inflammation in the cavernous sinus, superior orbital fissure, or orbit characterized by painful ophthalmoplegia. Here, we report a case of recurrent THS in a 48-year-old female, who initially showed a poor response to low-dose steroids. Each episode involved different cranial nerves and painful ophthalmoplegia. Neuroimaging showed enhancement in the right cavernous sinus. The patient was treated with glucocorticoid pulse therapy and azathioprine. THS was previously considered to be responsive to glucocorticoids. This report demonstrates a case of THS with poor response to steroids and unique presentation of frequent recurrence with different cranial nerve involvement.",
+      "url_pubmed": "https://pubmed.ncbi.nlm.nih.gov/34386372/",
+      "estrato": "enfoque_dirigido",
+      "acceso": "pmc",
+      "url_pdf": "https://www.ncbi.nlm.nih.gov/pmc/articles/PMC8323652/pdf/",
+      "url_texto": "https://www.ncbi.nlm.nih.gov/pmc/articles/PMC8323652/"
+    },
+    {
+      "pmid": "32574933",
+      "doi": "10.1016/j.clinimag.2020.06.029",
+      "pmcid": "",
+      "titulo": "Cavernous sinus lesions.",
+      "revista": "Clin Imaging",
+      "anio": "2020",
+      "autores": [
+        "Munawar K",
+        "Nayak G",
+        "Fatterpekar GM",
+        "Sen C",
+        "Zagzag D",
+        "Zan E",
+        "Hagiwara M"
+      ],
+      "tipos": [
+        "Journal Article",
+        "Review"
+      ],
+      "mesh": [
+        "Cavernous Sinus",
+        "Humans",
+        "Magnetic Resonance Imaging",
+        "Meningeal Neoplasms",
+        "Meningioma",
+        "Tolosa-Hunt Syndrome"
+      ],
+      "abstract": "The cavernous sinus is a complex structure susceptible to a wide variety of vascular, neoplastic and inflammatory pathologies. Vascular pathologies include ICA aneurysms, carotid-cavernous fistulas, cavernous sinus thrombosis, and cavernous hemangioma. Neoplasms that involve the cavernous sinus include pituitary adenoma, meningioma, schwannoma, lymphoma, perineural tumor spread, metastases, and direct tumor invasion. Infectious and inflammatory diseases include Tolosa-Hunt syndrome, sarcoidosis, granulomatosis with polyangiitis, IgG-4 related disease and invasive fungal infections. In this article, we review the clinical and imaging findings of a number of pathologies involving the cavernous sinus, focusing on key features that can narrow the differential diagnosis and, in some cases, support a particular diagnosis.",
+      "url_pubmed": "https://pubmed.ncbi.nlm.nih.gov/32574933/",
+      "estrato": "enfoque_dirigido",
+      "acceso": "paywall",
+      "url_pdf": "",
+      "url_texto": "https://doi.org/10.1016/j.clinimag.2020.06.029"
+    },
+    {
+      "pmid": "31849556",
+      "doi": "10.2147/EB.S180190",
+      "pmcid": "PMC6913296",
+      "titulo": "Orbital Apex Syndrome: A Review.",
+      "revista": "Eye Brain",
+      "anio": "2019",
+      "autores": [
+        "Badakere A",
+        "Patil-Chhablani P"
+      ],
+      "tipos": [
+        "Journal Article",
+        "Review"
+      ],
+      "mesh": [],
+      "abstract": "Orbital apex syndrome is characterized by vision loss from optic neuropathy and ophthalmoplegia due to the involvement of ocular motor nerves in the anatomical region of the orbital apex. Patients could present with signs and symptoms deriving from the involvement of structures within the orbital apex, the superior orbital fissure or the cavernous sinus. The primary focus of the ophthalmologist should be to locate the lesion and then identify its etiology. Clinical evaluation holds key to diagnosis which is aided then by certain serological and lab investigations and neuro-imaging modalities including brain and orbital MRI (Magnetic Resonance Imaging) with contrast, CT (Computed Tomography) scans. In rare instances, a biopsy may be needed to aid in diagnosis. Treatment depends on what the nature of the lesion is with inflammatory conditions usually responding to steroids and infections to anti-microbial agents. Through this review, the authors attempt to decode the approach to localizing the lesion, the etiopathology and the management of cases of orbital apex syndrome.",
+      "url_pubmed": "https://pubmed.ncbi.nlm.nih.gov/31849556/",
+      "estrato": "enfoque_dirigido",
+      "acceso": "pmc",
+      "url_pdf": "https://www.ncbi.nlm.nih.gov/pmc/articles/PMC6913296/pdf/",
+      "url_texto": "https://www.ncbi.nlm.nih.gov/pmc/articles/PMC6913296/"
+    },
+    {
+      "pmid": "29623162",
+      "doi": "10.1177/1941874417714147",
+      "pmcid": "PMC5882006",
+      "titulo": "Tolosa-Hunt Syndrome.",
+      "revista": "Neurohospitalist",
+      "anio": "2018",
+      "autores": [
+        "Yuliati A",
+        "Rajamani K"
+      ],
+      "tipos": [
+        "Journal Article"
+      ],
+      "mesh": [],
+      "abstract": "",
+      "url_pubmed": "https://pubmed.ncbi.nlm.nih.gov/29623162/",
+      "estrato": "enfoque_dirigido",
+      "acceso": "pmc",
+      "url_pdf": "https://www.ncbi.nlm.nih.gov/pmc/articles/PMC5882006/pdf/",
+      "url_texto": "https://www.ncbi.nlm.nih.gov/pmc/articles/PMC5882006/"
+    },
+    {
+      "pmid": "41886124",
+      "doi": "10.1007/s10072-026-08985-7",
+      "pmcid": "PMC13021801",
+      "titulo": "Relapse in Tolosa-Hunt syndrome: pooled recurrence rates and associated factors from a meta-analysis of 456 cases.",
+      "revista": "Neurol Sci",
+      "anio": "2026",
+      "autores": [
+        "da Luz BLP",
+        "Silva GD"
+      ],
+      "tipos": [
+        "Journal Article",
+        "Meta-Analysis",
+        "Systematic Review"
+      ],
+      "mesh": [
+        "Humans",
+        "Tolosa-Hunt Syndrome",
+        "Recurrence"
+      ],
+      "abstract": "OBJECTIVE: Tolosa-Hunt Syndrome (THS) is a rare, painful ophthalmoplegia caused by granulomatous inflammation within the cavernous sinus. Despite the effective response to corticosteroid therapy, recurrence rates reported in the literature vary significantly, and clear associated factors of recurrence remain elusive. This systematic review and meta-analysis aim to establish the frequency of relapse and identify f actors associated with recurrence. EVIDENCE ACQUISITION: Following PRISMA guidelines, we performed a comprehensive database search of MEDLINE/PubMed, EMBASE, and Scopus from inception to June 2024, focusing on observational studies or case series reporting THS recurrence. Meta-analysis employed a random-effects model to estimate pooled recurrence rates. Meta-regression analyses evaluated clinical and demographic associated factors of recurrence, with publication bias assessed via funnel plots and Egger’s test. RESULTS: Seventeen studies encompassing 456 patients met the inclusion criteria. The pooled recurrence rate was 23% (95% CI, 17–32%), with substantial heterogeneity (I2 = 59.9%). The frequency of cranial nerve involvement specifically nerves II, IV, and VI, correlated with higher recurrence risk (P < 0.05). Age, sex, duration of follow-up, and MRI abnormalities did not show significant associations. Limited data were available concerning the use of steroid-sparing immunosuppressants, inflammatory biomarkers, and characteristics of MRI. CONCLUSION: Approximately one-quarter of patients with THS experience recurrence. Involvement of cranial nerves II, IV, and VI was associated with relapses. Further prospective investigations with standardized recurrence definitions and structured therapeutic comparisons are needed to clarify prognostic factors and optimize long-term management.",
+      "url_pubmed": "https://pubmed.ncbi.nlm.nih.gov/41886124/",
+      "estrato": "revisiones_sistematicas",
+      "acceso": "pmc",
+      "url_pdf": "https://www.ncbi.nlm.nih.gov/pmc/articles/PMC13021801/pdf/",
+      "url_texto": "https://www.ncbi.nlm.nih.gov/pmc/articles/PMC13021801/"
+    },
+    {
+      "pmid": "39749480",
+      "doi": "10.1111/head.14890",
+      "pmcid": "",
+      "titulo": "Tolosa-Hunt syndrome in children and adolescents: A systematic review.",
+      "revista": "Headache",
+      "anio": "2025",
+      "autores": [
+        "Ahmed HS",
+        "Jayaram PR",
+        "Khar S"
+      ],
+      "tipos": [
+        "Journal Article",
+        "Systematic Review"
+      ],
+      "mesh": [
+        "Adolescent",
+        "Child",
+        "Humans",
+        "Tolosa-Hunt Syndrome"
+      ],
+      "abstract": "OBJECTIVE: This systematic review aims to consolidate and analyze the existing evidence on Tolosa-Hunt syndrome (THS) in the pediatric population, focusing on clinical features, diagnostic challenges, treatment outcomes, and prognosis. BACKGROUND: Tolosa-Hunt syndrome is a rare headache disorder caused by idiopathic inflammation of the cavernous sinus, orbital apex, or orbit, resulting in neuro-ophthalmological manifestations. It is uniquely characterized by cranial nerve palsies and often responds well to steroids. METHODS: A comprehensive literature search was conducted using three databases along with the gray literature. We followed the Preferred Reporting Items for Systematic Reviews and Meta-Analyses guidelines, and the review protocol was registered on International Prospective Register of Systematic Reviews (PROSPERO identifier: CRD42024576802). The review included case reports and case series published in multiple languages that documented pediatric or adolescent cases of THS. We excluded any cases that were irrelevant, had insufficient details, were unsure of the diagnosis, or were later re-diagnosed with another condition. Data on clinical presentations, imaging findings, treatment modalities, and outcomes were extracted and analyzed using Microsoft Excel 2021. RESULTS: The initial literature search provided 325 articles of which 55 articles discussing 61 unique pediatric patients were included. The median (interquartile range [IQR]) age was 11 (8-15) years, with a female predominance (70% [43/61]). Common symptoms included unilateral headache (48% [29/61]), retro-orbital pain (56% [34/61]), and cranial nerve palsies, predominantly involving the oculomotor nerve (66% [40/61]). The median (IQR) duration of symptoms was 14.5 (5-35) days. Imaging often revealed contrast enhancement on magnetic resonance imaging with cavernous sinus/orbital apex lesions. Steroid therapy was the mainstay of treatment, with 91% (52/57) of patients receiving corticosteroids. High-dose steroids ranged from 500-1000 mg/day, with some cases requiring combined therapy (typically intravenous methylprednisolone followed by oral prednisolone) and subsequent tapering. A few patients (5% [3/61]) experienced spontaneous improvement without steroids. Recurrence was noted in 33% (20/61) of patients, often necessitating prolonged or repeated corticosteroid therapy, and some cases required additional immunosuppressive therapies (infliximab/adalimumab) for management. The median (IQR) time to symptom resolution was 14 (4.5-38.5) days, while the median (IQR) duration of follow-up was 730 (195-1095) days. CONCLUSION: Tolosa-Hunt syndrome in children presents significant diagnostic and management challenges due to the complexity of symptoms and the rarity of the condition. Accurate diagnosis and prompt steroid therapy are crucial after ruling out other causes, although recurrence remains a considerable risk. The present systematic review relies heavily on case reports and case series and is therefore at high risk of publication bias. Further research is needed to establish standardized treatment protocols and improve long-term outcomes in this population.",
+      "url_pubmed": "https://pubmed.ncbi.nlm.nih.gov/39749480/",
+      "estrato": "revisiones_sistematicas",
+      "acceso": "paywall",
+      "url_pdf": "",
+      "url_texto": "https://doi.org/10.1111/head.14890"
+    },
+    {
+      "pmid": "39366127",
+      "doi": "10.1016/j.jocn.2024.110858",
+      "pmcid": "",
+      "titulo": "Clinical profile and outcomes in Tolosa-Hunt Syndrome; a systematic review.",
+      "revista": "J Clin Neurosci",
+      "anio": "2024",
+      "autores": [
+        "Ahmed HS",
+        "Shivananda DB",
+        "Pulkurthi SR",
+        "Dias AF",
+        "Sahoo PP"
+      ],
+      "tipos": [
+        "Journal Article",
+        "Systematic Review"
+      ],
+      "mesh": [
+        "Humans",
+        "Tolosa-Hunt Syndrome"
+      ],
+      "abstract": "INTRODUCTION: Tolosa-Hunt Syndrome (THS) stands as a rare headache disorder distinguished by painful ophthalmoplegia, accompanied by headaches and cranial nerve palsies. The syndrome was initially identified by Eduardo Tolosa in Spain in 1954. He observed granulomatous inflammation surrounding a carotid siphon in a patient with an intracavernous carotid aneurysm. The objective of this systematic review is to consolidate and summarize existing studies on THS, providing a comprehensive evaluation of its clinical findings and outcomes. METHODS: This review adhered to the Preferred Reporting Items for Systematic Reviews and Meta-analysis (PRISMA) checklist. Systematic searches were conducted on PubMed and Scopus databases to identify literature examining the sociodemographics, clinical findings, cranial nerve palsies, laboratory and radiological data, treatment, and outcomes of THS. The study followed a pre-established protocol registered on the PROSPERO database (ID: CRD42023494249). RESULTS: Out of 1115 studies screened, 11 met the predefined inclusion and exclusion criteria. The studies predominantly focused on Asian populations, emphasizing unilateral orbital headaches as a common clinical feature. Ophthalmological findings, including restriction of eye movements, diplopia, ptosis, and vision loss, were prevalent. Studies also highlighted some cases presenting atypically without ophthalmoplegia but with acute vision changes. Oculomotor nerve palsy, followed by abducens and trochlear nerve palsies, were the most frequently reported. Laboratory investigations across the studies often showed normal cerebrospinal fluid findings and varying levels of inflammatory markers like ESR and CRP. Inflammation of the cavernous sinus and orbital apex was noted most frequently. Treatment strategies were consistent across the studies, with steroids (both IV and oral) being the mainstay treatment for managing THS. Despite the use of steroids, the studies reported varied outcomes in terms of pain relief and recovery from cranial nerve deficits, with some cases showing rapid improvement while others had prolonged or incomplete recovery. Other immunosuppressants and steroid sparing agents are used with varying levels of success. Recurrence rates ranged from 9% to 71% across studies. CONCLUSION: This review discusses the varied constellation of symptoms associated with THS, with headaches and cranial nerve findings being consistently observed. High and low doses, as well as both intravenous and oral steroids, have proven to be effective in managing THS. Overall, the prognosis appears favorable, with a limited number of cases showing recurrence.",
+      "url_pubmed": "https://pubmed.ncbi.nlm.nih.gov/39366127/",
+      "estrato": "revisiones_sistematicas",
+      "acceso": "paywall",
+      "url_pdf": "",
+      "url_texto": "https://doi.org/10.1016/j.jocn.2024.110858"
+    },
+    {
+      "pmid": "38082244",
+      "doi": "10.1186/s12883-023-03486-y",
+      "pmcid": "PMC10712145",
+      "titulo": "Neuromuscular diseases associated with COVID-19 vaccines: a systematic review and pooled analysis of 258 patients.",
+      "revista": "BMC Neurol",
+      "anio": "2023",
+      "autores": [
+        "Tayebi A",
+        "Samimisedeh P",
+        "Jafari Afshar E",
+        "Mahmoudnia S",
+        "Milan N",
+        "Ayati A",
+        "Madady A",
+        "Rastad H"
+      ],
+      "tipos": [
+        "Systematic Review",
+        "Journal Article"
+      ],
+      "mesh": [
+        "Adult",
+        "Humans",
+        "Female",
+        "Male",
+        "COVID-19 Vaccines",
+        "COVID-19",
+        "Neuromuscular Diseases",
+        "Myasthenia Gravis",
+        "Guillain-Barre Syndrome",
+        "Bell Palsy",
+        "Facial Paralysis"
+      ],
+      "abstract": "BACKGROUND: Neuromuscular diseases (NMD) emerged as one of the main side effects of the COVID-19 vaccination. We pooled and summarized the evidence on the clinical features and outcomes of NMD associated with COVID-19 vaccination. METHODS: We comprehensively searched three databases, Medline, Embase, and Scopus, using the key terms covering \"Neuromuscular disease\" AND \"COVID-19 vaccine\", and pooled the individual patient data extracted from the included studies. RESULTS: A total of 258 NMD cases following COVID-19 have been reported globally, of which 171 cases were Guillain-Barré syndrome (GBS), 40 Parsonage-Turner syndrome (PTS), 22 Myasthenia Gravis (MG), 19 facial nerve palsy (FNP), 5 single fiber neuropathy, and 1 Tolosa-Hunt syndrome. All (100%) SFN patients and 58% of FNP patients were female; in the remaining NMDs, patients were predominantly male, including MG (82%), GBS (63%), and PTS (62.5%). The median time from vaccine to symptom was less than 2 weeks in all groups. Symptoms mainly appeared following the first dose of vector vaccine, but there was no specific pattern for mRNA-based. CONCLUSION: COVID-19 vaccines might induce some NMDs, mainly in adults. The age distribution and gender characteristics of affected patients may differ based on the NMD type. About two-thirds of the cases probably occur less than 2 weeks after vaccination.",
+      "url_pubmed": "https://pubmed.ncbi.nlm.nih.gov/38082244/",
+      "estrato": "revisiones_sistematicas",
+      "acceso": "pmc",
+      "url_pdf": "https://www.ncbi.nlm.nih.gov/pmc/articles/PMC10712145/pdf/",
+      "url_texto": "https://www.ncbi.nlm.nih.gov/pmc/articles/PMC10712145/"
+    },
+    {
+      "pmid": "35427282",
+      "doi": "10.1097/WNO.0000000000001537",
+      "pmcid": "",
+      "titulo": "Neuro-Ophthalmological Complications of the COVID-19 Vaccines: A Systematic Review.",
+      "revista": "J Neuroophthalmol",
+      "anio": "2022",
+      "autores": [
+        "Lotan I",
+        "Lydston M",
+        "Levy M"
+      ],
+      "tipos": [
+        "Journal Article",
+        "Systematic Review"
+      ],
+      "mesh": [
+        "COVID-19",
+        "COVID-19 Vaccines",
+        "Herpes Zoster Ophthalmicus",
+        "Humans",
+        "Pandemics"
+      ],
+      "abstract": "BACKGROUND: A worldwide mass vaccination campaign against the coronavirus disease 2019 (COVID-19) pandemic is currently underway. Although the safety data of the clinical trials did not report specific concerns regarding neuro-ophthalmological adverse events, they involved a limited number of individuals and were conducted over a relatively short time. The aim of the current review is to summarize the available postmarketing data regarding the occurrence of neuro-ophthalmological and other ocular complications of the COVID-19 vaccines. EVIDENCE ACQUISITION: Electronic searches for published literature were conducted using Ovid MEDLINE, Embase, Web of Science, Google Scholar, Cochrane Central Register of Controlled Trials, Cochrane Database of Systematic Reviews, and ClinicalTrials.gov. The search strategy incorporated controlled vocabulary and free-text synonyms for the concepts of COVID, vaccines, and visual and neuro-ophthalmologic diseases and symptoms. RESULTS: A total of 14 case reports and 2 case series have been selected for inclusion in the final report, reporting 76 cases of post-COVID-vaccination adverse events. The most common adverse event was optic neuritis (n = 61), followed by uveitis (n = 3), herpes zoster ophthalmicus (n = 2), acute macular neuroretinopathy (n = 2), optic disc edema as an atypical presentation of Guillain-Barré syndrome (n = 1), (arteritic anterior ischemic optic neuropathy; n = 1), abducens nerve palsy (n = 1), oculomotor nerve palsy (n = 1), Tolosa-Hunt syndrome (n = 1), central serous retinopathy (n = 1), acute zonal occult outer retinopathy (n = 1), and bilateral choroiditis (n = 1). Most cases were treated with high-dose steroids and had a favorable clinical outcome. CONCLUSION: Since the implementation of the COVID-19 vaccination campaign in the past year, several post-COVID-vaccination neuro-ophthalmological complications have been described. However, considering the number of individuals that have been exposed to the vaccines, the risk seems very low, and the clinical outcome in most cases is favorable. Therefore, on a population level, the benefits of the vaccines far outweigh the risk of neuro-ophthalmological complications.",
+      "url_pubmed": "https://pubmed.ncbi.nlm.nih.gov/35427282/",
+      "estrato": "revisiones_sistematicas",
+      "acceso": "paywall",
+      "url_pdf": "",
+      "url_texto": "https://doi.org/10.1097/WNO.0000000000001537"
+    },
+    {
+      "pmid": "32892335",
+      "doi": "10.1055/s-0040-1715632",
+      "pmcid": "",
+      "titulo": "Tolosa-Hunt Syndrome in Childhood and Adolescence: A Literature Review in the Last 10 Years.",
+      "revista": "Neuropediatrics",
+      "anio": "2021",
+      "autores": [
+        "Gama BP",
+        "Silva-Néto RP"
+      ],
+      "tipos": [
+        "Journal Article",
+        "Systematic Review"
+      ],
+      "mesh": [
+        "Adolescent",
+        "Child",
+        "Child, Preschool",
+        "Female",
+        "Humans",
+        "Male",
+        "Tolosa-Hunt Syndrome"
+      ],
+      "abstract": "OBJECTIVES: The aim of the study is to review the articles published in the last 10 years on Tolosa-Hunt syndrome (THS) in childhood and adolescence to learn about its clinical and epidemiological characteristics and its therapeutic management. METHODS: Based on the literature search in the major medical databases and using the descriptors \"Tolosa-Hunt syndrome and children\" and \"Tolosa-Hunt syndrome and adolescent\" we included articles published between 2009 and 2019. We found 51 articles, but only 11 met the inclusion criteria. RESULTS: There were eight women and four men with THS, whose average age was 12.0 ± 4.3 years, ranging from 4 to 17 years. Magnetic resonance imaging showed inflammation in the cavernous sinus (100%), orbit (25%), and superior orbital fissure (8.3%), unilateral in all patients. The internal carotid artery (58.3%), third (66.7%), sixth (33.3%), and fourth (25%) cranial nerves were injured. Headache was located in the orbital region, ipsilaterally to nerve involvement and had mild to severe intensity. Corticosteroid was the treatment used in 91.7% of the patients. They were followed for an average of 13.4 ± 12.4 months. Only two patients had recurrence of the disease. CONCLUSION: THS is infrequent in childhood and adolescence and knowledge of its clinical and epidemiological characteristics and its therapeutic management is necessary for pediatricians.",
+      "url_pubmed": "https://pubmed.ncbi.nlm.nih.gov/32892335/",
+      "estrato": "revisiones_sistematicas",
+      "acceso": "paywall",
+      "url_pdf": "",
+      "url_texto": "https://doi.org/10.1055/s-0040-1715632"
+    },
+    {
+      "pmid": "42156050",
+      "doi": "10.11477/mf.188160960780050580",
+      "pmcid": "",
+      "titulo": "[Cerebral Aspergillosis].",
+      "revista": "Brain Nerve",
+      "anio": "2026",
+      "autores": [
+        "Hara K",
+        "Fujita N"
+      ],
+      "tipos": [
+        "Journal Article",
+        "Review",
+        "English Abstract"
+      ],
+      "mesh": [
+        "Humans",
+        "Neuroaspergillosis",
+        "Aspergillosis"
+      ],
+      "abstract": "Cerebral aspergillosis is broadly classified into hematogenous dissemination and direct invasion from the paranasal sinuses or orbit. The hematogenous form is characterized by brain abscesses and subcortical infarctions, whereas the direct invasion form typically presents with orbital apex syndrome and cerebral infarctions affecting major vessels. Differentiation from Tolosa-Hunt syndrome, hypertrophic pachymeningitis, brain abscess, and cerebral infarction is essential. The sensitivity of serum β-D-glucan and Aspergillus antigen assays is limited, and inappropriate corticosteroid use may be fatal. When a definitive diagnosis is difficult, empirical antifungal therapy should be considered.",
+      "url_pubmed": "https://pubmed.ncbi.nlm.nih.gov/42156050/",
+      "estrato": "revisiones",
+      "acceso": "paywall",
+      "url_pdf": "",
+      "url_texto": "https://doi.org/10.11477/mf.188160960780050580"
+    },
+    {
+      "pmid": "28399651",
+      "doi": "10.1177/0333102417703761",
+      "pmcid": "",
+      "titulo": "Facial pain: Overlapping syndromes.",
+      "revista": "Cephalalgia",
+      "anio": "2017",
+      "autores": [
+        "Evers S"
+      ],
+      "tipos": [
+        "Journal Article",
+        "Review"
+      ],
+      "mesh": [
+        "Facial Neuralgia",
+        "Facial Pain",
+        "Headache",
+        "Humans"
+      ],
+      "abstract": "Premise This review summarises the pain syndromes that overlap between headache and facial pain and overlap between pain and cranial nerve lesion. Problem These syndromes share two features in common. First, they show both cranial nerve impairment (e.g. palsy, autonomic dysfunction) and pain; second, they have inflammatory (and/or small vessel) processes as the underlying mechanism. A typical representative of these syndromes is recurrent painful ophthalmoplegic neuropathy, which was previously called ophthalmoplegic migraine and was regarded as a migraine subtype. It is now supposed that this syndrome is caused by an inflammation of one of the ocular motor nerves. Other syndromes discussed in this review are optic neuritis, Tolosa-Hunt syndrome, ischaemic ocular motor nerve palsy, and the very rare Raeder's syndrome. Treatment of all these syndromes is mainly based on steroids. Potential solution Management of possibly underlying disorders such as multiple sclerosis or atherosclerosis should also be considered.",
+      "url_pubmed": "https://pubmed.ncbi.nlm.nih.gov/28399651/",
+      "estrato": "revisiones",
+      "acceso": "paywall",
+      "url_pdf": "",
+      "url_texto": "https://doi.org/10.1177/0333102417703761"
+    },
+    {
+      "pmid": "26252594",
+      "doi": "10.1212/CON.0000000000000204",
+      "pmcid": "",
+      "titulo": "The Eye and Headache.",
+      "revista": "Continuum (Minneap Minn)",
+      "anio": "2015",
+      "autores": [
+        "Friedman DI"
+      ],
+      "tipos": [
+        "Journal Article",
+        "Review"
+      ],
+      "mesh": [
+        "Diagnosis, Differential",
+        "Eye Pain",
+        "Giant Cell Arteritis",
+        "Headache",
+        "Humans",
+        "Neuralgia"
+      ],
+      "abstract": "PURPOSE OF REVIEW: This article highlights painful conditions involving the eyes that are encountered in practice, emphasizing those that do not have obvious findings on the neurologic examination. RECENT FINDINGS: Peripheral and central sensitization are associated with chronic neuropathic ocular pain, and hyperalgesia is associated with dry eyes. The aorta and its branches are involved in 25% of patients with giant cell arteritis. SUMMARY: Eye pain is a common concern and one of the most difficult symptoms for the clinician to evaluate. Eye pain may be a manifestation of a primary headache disorder, as is common in migraine, the trigeminal autonomic cephalalgias, and primary stabbing headache. Secondary headache disorders, such as posterior communicating artery aneurysm, Tolosa-Hunt syndrome, and microvascular ocular motor neuropathies, frequently produce eye pain. Ophthalmic conditions producing eye pain include orbital masses, angle-closure glaucoma, intraocular inflammation, and ocular surface (corneal) disease. Of these, corneal problems are the most commonly encountered.",
+      "url_pubmed": "https://pubmed.ncbi.nlm.nih.gov/26252594/",
+      "estrato": "revisiones",
+      "acceso": "paywall",
+      "url_pdf": "",
+      "url_texto": "https://doi.org/10.1212/CON.0000000000000204"
+    },
+    {
+      "pmid": "17765951",
+      "doi": "10.1016/j.semarthrit.2007.06.003",
+      "pmcid": "",
+      "titulo": "Orbital inflammatory disease.",
+      "revista": "Semin Arthritis Rheum",
+      "anio": "2008",
+      "autores": [
+        "Lutt JR",
+        "Lim LL",
+        "Phal PM",
+        "Rosenbaum JT"
+      ],
+      "tipos": [
+        "Journal Article",
+        "Research Support, Non-U.S. Gov't",
+        "Review"
+      ],
+      "mesh": [
+        "Exophthalmos",
+        "Humans",
+        "Orbital Diseases",
+        "Rheumatology"
+      ],
+      "abstract": "OBJECTIVES: To familiarize rheumatologists and internists with the signs, symptoms, and management of orbital inflammatory disease (OID). METHODS: A comprehensive literature review related to OID was performed and reported from the perspectives of rheumatology, ophthalmology, and radiology. RESULTS: OID is a general term encompassing inflammatory diseases that affect some or all of the structures contained within the orbit external to the globe. Orbital involvement as a part of the initial symptom complex is not uncommon for systemic diseases such as Graves' disease, Wegener's granulomatosis, and sarcoidosis. The management of these and other causes of OID, such as idiopathic orbital inflammation (formerly known as \"orbital pseudotumor\"), orbital myositis, and Tolosa-Hunt syndrome frequently involves systemic immunosuppression. Before immunosuppression is considered, however, infectious and malignant causes of inflammation must be ruled out. DISCUSSION: Rheumatologists should be familiar with the differential diagnosis of OID and often need to assist colleagues in ophthalmology and internal medicine with the management of this group of diseases.",
+      "url_pubmed": "https://pubmed.ncbi.nlm.nih.gov/17765951/",
+      "estrato": "revisiones",
+      "acceso": "paywall",
+      "url_pdf": "",
+      "url_texto": "https://doi.org/10.1016/j.semarthrit.2007.06.003"
+    },
+    {
+      "pmid": "12169223",
+      "doi": "10.1007/s11910-002-0069-3",
+      "pmcid": "",
+      "titulo": "Parasellar syndromes.",
+      "revista": "Curr Neurol Neurosci Rep",
+      "anio": "2002",
+      "autores": [
+        "Johnston JL"
+      ],
+      "tipos": [
+        "Case Reports",
+        "Journal Article",
+        "Review"
+      ],
+      "mesh": [
+        "Adult",
+        "Aged",
+        "Cavernous Sinus",
+        "Diplopia",
+        "Female",
+        "Humans",
+        "Male",
+        "Oculomotor Nerve",
+        "Ophthalmoplegia",
+        "Sella Turcica",
+        "Syndrome",
+        "Vision Disorders"
+      ],
+      "abstract": "The parasellar compartments are located lateral to and on either side of the sella turcica. The cavernous sinuses are the most prominent anatomic feature of the parasella. Each sinus consists of a plexus of veins through which runs the intracavernous portion of the internal carotid artery. Ocular motor nerves three and four travel within the dural covering of the cavernous sinus to the superior orbital fissure, and cranial nerve six travels through the carotid sinus itself, giving rise to parasellar syndromes, which have distinctive clinical features. Ophthalmoplegia occurs as a result of damage to these ocular motor nerves and variable involvement of oculosympathetic nerves. Facial pain, dysesthesia, and paraesthesia are caused by damage to one or more of the divisions of the fifth cranial nerve, travelling in the dural wall of the cavernous sinus. Tumors, such as meningiomas, frequently cause parasellar syndromes, as do aneurysms of the intracavernous portion of the internal carotid artery, carotid-cavernous fistulas, and cavernous sinus thrombosis. Inflammatory conditions such as Tolosa-Hunt syndrome, ischemia to small vessels supplying the cavernous portion of the cranial nerves, and infections can cause this syndrome. Magnetic resonance imaging is the investigation of choice and therapy is specific to the cause of the parasellar syndrome, but now includes more aggressive endoscopic and microsurgical intervention, and radiosurgery.",
+      "url_pubmed": "https://pubmed.ncbi.nlm.nih.gov/12169223/",
+      "estrato": "revisiones",
+      "acceso": "paywall",
+      "url_pdf": "",
+      "url_texto": "https://doi.org/10.1007/s11910-002-0069-3"
+    },
+    {
+      "pmid": "37853245",
+      "doi": "10.1007/s00415-023-12044-y",
+      "pmcid": "",
+      "titulo": "Recurrence and long-term outcomes of Tolosa-Hunt syndrome.",
+      "revista": "J Neurol",
+      "anio": "2024",
+      "autores": [
+        "Kim HJ",
+        "Lee SU",
+        "Lee ES",
+        "Choi JY",
+        "Kim JS"
+      ],
+      "tipos": [
+        "Journal Article"
+      ],
+      "mesh": [
+        "Humans",
+        "Tolosa-Hunt Syndrome",
+        "Retrospective Studies",
+        "Cavernous Sinus",
+        "Magnetic Resonance Imaging",
+        "Ophthalmoplegia",
+        "Adrenal Cortex Hormones",
+        "Paralysis",
+        "Recurrence"
+      ],
+      "abstract": "BACKGROUND AND PURPOSE: Tolosa-Hunt Syndrome (THS) is a rare disorder, and detailed clinical information and treatment outcomes have yet to be fully elucidated. This study aims to investigate the clinical features and factors associated with the treatment outcomes of THS, as defined by the established diagnostic criteria. METHODS: This study retrospectively recruited 91 patients with a diagnosis of THS from 2003 to 2020. We analyzed the clinical features and outcomes, the initial treatment response, recurrences, and the final treatment response. RESULTS: Isolated ocular motor nerve palsy was the most common (82.4%) finding of ophthalmoplegia, involving the oculomotor nerve in more than half of the cases (52.0%). The MRI lesions were mostly observed in the cavernous sinus (94.5%) with an extracavernous extension in about one-third of them. Five patients showed only extracavernous lesions. A total of 25 (27.5%) patients experienced recurrence. Recurrence occurred during steroid tapering as part of the initial treatment in seven, while in 18 patients, it happened after the successful termination of the initial treatment. However, all patients achieved complete remission at the final. Age was associated with a decrease in initial symptom duration (HR = 1.023, CI = 1.004-1.044) as well as an increase in recurrence-free duration (HR = 0.944, CI = 0.911-0.978). High-dose corticosteroid treatment was associated with a decrease in initial symptom duration (HR = 1.642, CI = 1.001-2.695) and total treatment duration (HR = 2.203 CI = 1.302-3.730). CONCLUSIONS: THS can recur frequently especially in younger but have a favorable prognosis. High-dose corticosteroids can be an effective initial treatment and reduce the total treatment duration.",
+      "url_pubmed": "https://pubmed.ncbi.nlm.nih.gov/37853245/",
+      "estrato": "originales",
+      "acceso": "paywall",
+      "url_pdf": "",
+      "url_texto": "https://doi.org/10.1007/s00415-023-12044-y"
+    },
+    {
+      "pmid": "37936989",
+      "doi": "10.7759/cureus.46635",
+      "pmcid": "PMC10626213",
+      "titulo": "Tolosa Hunt Syndrome: MRI Findings.",
+      "revista": "Cureus",
+      "anio": "2023",
+      "autores": [
+        "Ramirez JA",
+        "Ramirez Marquez E",
+        "Torres G",
+        "Muns Aponte C",
+        "Labat EJ"
+      ],
+      "tipos": [
+        "Case Reports",
+        "Journal Article"
+      ],
+      "mesh": [],
+      "abstract": "Tolosa-Hunt syndrome (THS) is an idiopathic inflammatory condition involving the cavernous sinus and orbital apex with an incidence of 1 case per million per year. We report on a case of a 70-year-old male with atypical MRI findings, vision loss, and painless ophthalmoplegia.  Ophthalmic evaluation revealed his best-corrected visual acuity was 20/40 in the right eye and counting fingers at a 0.5-foot distance in the left eye. External examination of the left eye revealed limited ocular movement, proptosis, and a positive relative afferent pupillary defect. Complete blood count, inflammatory markers, and full biochemistry tests, including thyroid and liver function tests, were within the normal range. A magnetic resonance imaging of the orbits with and without contrast demonstrated a homogenously enhancing lesion at the posterior intraconal compartment of the left orbit, extending to the orbital apex with the involvement of the adjacent extraocular muscles. The patient was started on intravenous methylprednisolone 60 mg daily and later discharged on prednisone 5 mg daily with partial symptom improvement on follow-up. Resection and biopsy revealed a soft tissue lesion with mixed inflammatory infiltrate. The clinical, pathological, and imaging findings favored the diagnosis of THS.",
+      "url_pubmed": "https://pubmed.ncbi.nlm.nih.gov/37936989/",
+      "estrato": "originales",
+      "acceso": "pmc",
+      "url_pdf": "https://www.ncbi.nlm.nih.gov/pmc/articles/PMC10626213/pdf/",
+      "url_texto": "https://www.ncbi.nlm.nih.gov/pmc/articles/PMC10626213/"
+    },
+    {
+      "pmid": "36589035",
+      "doi": "10.4103/aian.aian_457_22",
+      "pmcid": "PMC9795703",
+      "titulo": "Tolosa-Hunt Syndrome and IgG4 Diseases in Neuro-Ophthalmology.",
+      "revista": "Ann Indian Acad Neurol",
+      "anio": "2022",
+      "autores": [
+        "Kapila AT",
+        "Ray S",
+        "Lal V"
+      ],
+      "tipos": [
+        "Journal Article"
+      ],
+      "mesh": [],
+      "abstract": "Tolosa-Hunt syndrome (THS) remains a challenging diagnosis for many neurologists. Often believed to be a rare presentation, the classical presentation is known to involve cranial nerves and tissues surrounding the cavernous sinus. Traditionally, a diagnosis of THS is considered when all secondary conditions have been ruled out. Yet, newer findings have elaborated a complex pathogenetic process with some overlap from the IgG4 spectrum of disorders, with which it shares many phenotypic similarities. In this narrative review, we present an updated picture of the condition focusing on the latest developments in the pathogenesis, diagnosis, and clinical management of these two conditions and use illustrative examples to highlight the salient features of this rare presentation.",
+      "url_pubmed": "https://pubmed.ncbi.nlm.nih.gov/36589035/",
+      "estrato": "originales",
+      "acceso": "pmc",
+      "url_pdf": "https://www.ncbi.nlm.nih.gov/pmc/articles/PMC9795703/pdf/",
+      "url_texto": "https://www.ncbi.nlm.nih.gov/pmc/articles/PMC9795703/"
+    },
+    {
+      "pmid": "34409218",
+      "doi": "10.4103/joco.joco_134_20",
+      "pmcid": "PMC8365592",
+      "titulo": "Tolosa-Hunt Syndrome: A Review of Diagnostic Criteria and Unresolved Issues.",
+      "revista": "J Curr Ophthalmol",
+      "anio": "2021",
+      "autores": [
+        "Dutta P",
+        "Anand K"
+      ],
+      "tipos": [
+        "Journal Article",
+        "Review"
+      ],
+      "mesh": [],
+      "abstract": "PURPOSE: To review the diagnostic criteria for Tolosa-Hunt syndrome (THS) and utility of recent modifications. METHODS: We searched PubMed for keywords Tolosa Hunt and magnetic resonance imaging. We compared the three editions of International Classification of Headache Disorders and isolated case reports and case series with the assessment of cavernous internal carotid artery (ICA) caliber to find the prevalence of vascular anomalies. We also evaluated cases of THS with the involvement of extracavernous structures and the possible role of idiopathic hypertrophic pachymeningitis (HP). Cases diagnosed falsely as THS were also reviewed for the presence of atypical features and relevance of criterion D. We assessed nonconforming cases (those with normal neuroimaging benign THS) and idiopathic inflammatory orbital pseudotumor (IIPO). RESULTS: Vascular abnormalities were found in 36.36% of THS cases. Benign THS may also show changes in ICA caliber. Evidence suggestive of idiopathic HP could be found in 57% of cases with the involvement of extracavernous structures, such as facial nerve and pituitary gland. Both THS and IIPO are steroid-responsive pathologies with similar clinical and radiological features. False-positive diagnosis of THS results from early labeling, based solely on clinical features and symptom resolution after steroid therapy. CONCLUSIONS: Benign THS may be a result of limitation of resolution of available neuroimaging technique or early testing. Early and late vascular changes can be seen in both THS and its benign variant; some of them are not innocuous. THS may be considered a type of focal idiopathic HP. IIPO may represent an anterior variant of THS. In the absence of histopathological diagnosis, steroid-induced resolution of symptoms should be confirmed radiologically and followed-up.",
+      "url_pubmed": "https://pubmed.ncbi.nlm.nih.gov/34409218/",
+      "estrato": "originales",
+      "acceso": "pmc",
+      "url_pdf": "https://www.ncbi.nlm.nih.gov/pmc/articles/PMC8365592/pdf/",
+      "url_texto": "https://www.ncbi.nlm.nih.gov/pmc/articles/PMC8365592/"
+    }
+  ]
+}
