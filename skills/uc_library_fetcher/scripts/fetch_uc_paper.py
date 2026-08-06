@@ -1,8 +1,18 @@
 import sys
 import asyncio
 import os
+from pathlib import Path
 from urllib.parse import quote
 from playwright.async_api import async_playwright
+
+# El .env vive fuera del repo (~/.config/harness/.env) y hay que cargarlo
+# explícitamente: os.getenv solo ve lo que ya está exportado en el shell.
+sys.path.insert(0, str(Path(__file__).resolve().parents[3]))
+try:
+    from tools.env_loader import load_env
+except ImportError:  # ejecutado fuera del árbol del harness
+    load_env = None
+
 
 async def main():
     if len(sys.argv) < 3:
@@ -12,11 +22,21 @@ async def main():
     target = sys.argv[1]
     out_path = sys.argv[2]
 
+    if load_env is not None:
+        ruta = load_env()
+        if ruta:
+            print(f"[*] Credenciales cargadas desde {ruta}")
+
     uc_user = os.getenv("UC_USER")
     uc_pass = os.getenv("UC_PASSWORD")
 
     if not uc_user or not uc_pass:
-        print("Error: Variables de entorno UC_USER o UC_PASSWORD no encontradas en el archivo .env.", file=sys.stderr)
+        env_file = os.environ.get("HARNESS_ENV_FILE", "~/.config/harness/.env")
+        print(f"Error: UC_USER o UC_PASSWORD no encontradas.\n"
+              f"       Se buscaron en el entorno y en {env_file}.\n"
+              f"       Guárdalas con los comandos de skills/uc_library_fetcher/SKILL.md\n"
+              f"       (nunca las escribas en un chat ni las pases por argumento).",
+              file=sys.stderr)
         sys.exit(1)
 
     async with async_playwright() as p:

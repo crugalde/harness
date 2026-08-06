@@ -1,0 +1,53 @@
+{
+  "skill_name": "medicalinfosummary",
+  "notas": "Casos pensados para probar cosas distintas: enfoque explícito vs ausente, tema con evidencia abundante vs escasa, y petición parcial. Ejecutar con la skill cargada y revisar el .md resultante.",
+  "evals": [
+    {
+      "id": 0,
+      "nombre": "tema-comun-con-enfoque",
+      "prompt": "Hazme un resumen completo de miastenia gravis, con énfasis en las terapias nuevas anti-FcRn y anti-complemento. Lo quiero para pegarlo en Notion.",
+      "expected_output": "Informe .md con las 8 secciones. Sección 8 con peso claro en efgartigimod/rozanolixizumab y eculizumab/ravulizumab, con nivel de evidencia por cada uno. Sección 7 debe recoger la controversia sobre secuenciación terapéutica y costo. Mermaid de fisiopatología y de algoritmo diagnóstico. Bibliografía con PMIDs/DOIs reales verificables.",
+      "assertions": [
+        "El informe contiene las 8 secciones numeradas en el orden de la plantilla",
+        "Preguntó enfoque, ruta de salida y profundidad en un solo turno antes de buscar",
+        "Todos los PMIDs citados existen y corresponden al título indicado",
+        "Ninguna fuente citada es anterior al año 2000",
+        "Incluye al menos 2 bloques mermaid sintácticamente válidos",
+        "La sección 7 nombra controversias concretas, no frases genéricas tipo 'se necesitan más estudios'",
+        "Las recomendaciones de tratamiento declaran diseño de estudio y n, no solo 'se recomienda'",
+        "Incluye sección final 'Qué quedó fuera' con limitaciones explícitas",
+        "No usa encabezados de nivel 4 (####) ni LaTeX $$",
+        "Toda URL de imagen incluida responde HTTP 200"
+      ],
+      "files": []
+    },
+    {
+      "id": 1,
+      "nombre": "tema-raro-evidencia-escasa",
+      "prompt": "Necesito ponerme al día sobre síndrome de Isaacs (neuromiotonía adquirida). No tengo un enfoque particular.",
+      "expected_output": "Informe .md donde varias secciones declaran explícitamente el vacío de evidencia en vez de rellenar. Epidemiología debe decir que no hay datos poblacionales sólidos. La sección 7 debería ser proporcionalmente extensa. No debe inventar cifras de prevalencia.",
+      "assertions": [
+        "Las 8 secciones están presentes aunque algunas declaren ausencia de datos",
+        "No aparecen cifras epidemiológicas sin fuente que las respalde",
+        "Declara explícitamente qué secciones tienen evidencia insuficiente",
+        "Distingue entre 'no hay estudios' y 'los estudios existentes son de baja calidad'",
+        "El total de fuentes es menor que en un tema común, y lo dice"
+      ],
+      "files": []
+    },
+    {
+      "id": 2,
+      "nombre": "peticion-parcial",
+      "prompt": "Explícame bien la fisiopatología y el diagnóstico diferencial de CIDP, que tengo que hacer clase el viernes.",
+      "expected_output": "Debe activarse igual (petición parcial de una entidad clínica) y entregar el informe completo pero con las secciones 3 y 6 desarrolladas en profundidad. Mermaid de fisiopatología detallado. Tabla de diferencial con columna de qué sugiere/qué descarta.",
+      "assertions": [
+        "La skill se activa pese a que el usuario no pidió un 'informe' ni una 'revisión'",
+        "Las secciones 3 y 6 son claramente más extensas que el resto",
+        "La tabla de diagnóstico diferencial distingue qué sugiere y qué descarta cada entidad",
+        "Incluye los criterios EFNS/PNS vigentes con su año",
+        "Separa frecuencia de valor discriminante en la sección clínica"
+      ],
+      "files": []
+    }
+  ]
+}
