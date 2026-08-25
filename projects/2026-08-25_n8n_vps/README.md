@@ -68,6 +68,7 @@ bash scripts/preflight.sh n8n.tudominio.cl
 mkdir -p /opt/n8n && cd /opt/n8n
 # copia aquí projects/2026-08-25_n8n_vps/{deploy,scripts} desde tu máquina:
 #   rsync -av projects/2026-08-25_n8n_vps/ root@srv1314177:/opt/n8n/
+#   Windows:  scp -r projects\2026-08-25_n8n_vps\* root@srv1314177:/opt/n8n/
 
 cd /opt/n8n/deploy
 cp .env.example .env && chmod 600 .env
@@ -88,15 +89,46 @@ propagar o el puerto 80 cerrado.
 
 ---
 
+## 3.bis Si tu máquina es Windows
+
+Todo lo que corre **en el VPS** es igual (es Ubuntu). Solo cambian los pasos locales:
+
+| En el runbook | En Windows (PowerShell) |
+|---|---|
+| `python3 script.py` | `python script.py` (o `py -3 script.py`) |
+| `export N8N_API_KEY=...` | `$env:N8N_API_KEY = "n8n_api_..."` |
+| `rsync -av origen/ root@srv:/destino/` | `scp -r origen\* root@srv:/destino/` |
+| `~/.config/harness/.env` | `$HOME\.config\harness\.env` (misma ruta, la resuelve Python) |
+| `openssl rand -hex 32` | genérala **en el VPS**, ahí sí hay openssl |
+
+Requisitos: **Python 3** (`winget install Python.Python.3.12`) y el cliente **OpenSSH**, que
+Windows 10/11 ya trae (`ssh` y `scp` funcionan en PowerShell sin instalar nada).
+
+Tres trampas concretas:
+
+1. **Finales de línea.** El repo trae `.gitattributes` que fuerza LF en `*.sh`, `*.py`,
+   `*.yml` y el `Caddyfile`, así que un `git clone` en Windows ya viene sano. Si copias
+   archivos por otra vía y en el VPS ves `$'\r': command not found`:
+   `sed -i 's/\r$//' /opt/n8n/scripts/*.sh`
+2. **El `.env` créalo en el VPS** (`nano .env`), no en Windows. Un `.env` con CRLF le mete
+   un `\r` invisible al final de cada valor y Postgres rechaza la contraseña.
+3. **Nada de Notepad** para editar `.sh` o `.env`: usa `nano` por SSH, o VS Code con el
+   indicador de la esquina inferior derecha en **LF**.
+
+**Alternativa más cómoda:** `wsl --install` te deja Ubuntu dentro de Windows y el runbook
+corre tal cual, con `rsync`, `bash` y `openssl` incluidos.
+
+---
+
 ## 4. Paso 2 — Exportar los workflows desde n8n Cloud
 
 En Cloud: **Settings → n8n API → Create an API key**. (La API pública no existe en el trial;
 si ese es tu caso, salta a la alternativa manual más abajo.)
 
 ```bash
-# En tu Mac, desde la raíz del repo
+# En tu máquina, desde la raíz del repo (Windows: ver 3.bis)
 export N8N_API_KEY='n8n_api_...'
-python projects/2026-08-25_n8n_vps/scripts/export_cloud.py \
+python3 projects/2026-08-25_n8n_vps/scripts/export_cloud.py \
     --base-url https://cristianub.app.n8n.cloud \
     --out ~/n8n_export \
     --new-domain n8n.tudominio.cl
@@ -138,6 +170,7 @@ reescribe esos IDs emparejando por (tipo, nombre):
 ```bash
 # 1) Copia los JSON al VPS
 rsync -av ~/n8n_export/workflows/ root@srv1314177:/opt/n8n/export_workflows/
+#    Windows:  scp -r $HOME\n8n_export\workflows\* root@srv1314177:/opt/n8n/export_workflows/
 
 # 2) En el VPS: mapa de las credenciales que acabas de crear (solo metadatos, sin secretos)
 cd /opt/n8n
