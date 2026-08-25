@@ -89,7 +89,9 @@ subdominio libre —`n8n.neuromuscular.cloud`— y creas el registro:
 - hPanel → **Dominios → tu dominio → DNS / Nameservers → Zona DNS → Añadir registro**
 - Tipo `A` · Nombre `n8n` · Apunta a la IP del VPS · TTL `300`
 
-El nombre se pone **solo** (`n8n`), no el dominio completo: el panel le agrega el resto.
+El nombre se pone **solo** (`n8n`), no el dominio completo: el panel le agrega el resto. Y no lo
+confundas con `cristianub`: ese es el subdominio en n8n *Cloud*, el origen de la migración, y no
+tiene nada que hacer en esta zona DNS.
 
 Antes de buscar el panel, confirma **quién administra el DNS** de ese dominio — no siempre es
 donde lo compraste:
