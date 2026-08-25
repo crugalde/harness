@@ -1,0 +1,85 @@
+# Estado — Migración de n8n Cloud al VPS
+
+**Última actualización:** 2026-08-25
+**Objetivo:** correr n8n self-hosted en `srv1314177` (Hostinger, Ubuntu, Docker) y mover
+todos los workflows desde n8n Cloud, sin ejecuciones duplicadas ni credenciales rotas.
+
+## Decisiones tomadas
+
+- **Stack:** n8n **2.36.7** (versión a la que apuntan los tags `latest`/`stable` al
+  2026-08-25; la línea 2.37.x es pre-release) + **Postgres 16** + **Caddy 2**.
+  - Postgres y no el SQLite por defecto: con volumen de ejecuciones real, SQLite es el
+    cuello de botella y la causa nº 1 de bases corruptas tras un reinicio sucio.
+  - Caddy y no Traefik: TLS automático con 6 líneas de config; no hay más servicios que
+    enrutar en este VPS.
+  - Versión **pineada**: `latest` cambia de versión en un `docker compose pull`.
+- **Modo regular**, no queue mode (Redis + workers). Se justifica recién con ejecuciones
+  concurrentes pesadas; es un cambio de compose, no una migración.
+- **Solo Caddy publica puertos** (80/443). n8n y Postgres quedan en la red interna de Docker.
+- Retención de ejecuciones a 14 días (`EXECUTIONS_DATA_MAX_AGE=336`): es lo que más crece
+  en disco.
+
+## Hechos clave de la migración (verificados)
+
+- **Las credenciales NO se pueden exportar desde n8n Cloud**: se cifran con una clave que no
+  controlas. Se recrean a mano, sin excepción. Es el cuello de botella real del proyecto.
+- **`N8N_ENCRYPTION_KEY` es el punto de no retorno**: sin ella, un dump de Postgres no sirve
+  de nada (todas las credenciales quedan indescifrables). Va al gestor de contraseñas, no
+  junto al respaldo.
+- Al recrear una credencial, n8n le da **ID nuevo** → los workflows importados apuntan al ID
+  viejo y muestran "credential not found". Resuelto con `credenciales_map.sh` +
+  `remap_credentials.py` (emparejan por tipo + nombre).
+- **El historial de ejecuciones no migra** y **las URLs de webhook cambian de dominio**: hay
+  que reapuntar cada sistema emisor externo.
+- **El import por CLI no activa workflows** (upsert por ID, quedan inactivos): bueno, porque
+  evita que corran en Cloud y en el VPS al mismo tiempo.
+- La API pública de n8n **no existe en el trial**; sin ella, el export es a mano desde la UI.
+- En n8n 2.x los task runners ya vienen activos y `N8N_RUNNERS_ENABLED` está deprecado;
+  además `N8N_BLOCK_ENV_ACCESS_IN_NODE=true` por defecto (los nodos Code ya no leen
+  `process.env`).
+
+## Hecho hasta ahora
+
+- [x] `README.md` — runbook completo (decisión, preflight, levantar, exportar, credenciales,
+      importar, corte, respaldos, definición de "hecho", qué no se migra).
+- [x] `deploy/docker-compose.yml` + `Caddyfile` + `.env.example` — stack completo.
+- [x] `scripts/preflight.sh` — verifica DNS/puertos/RAM/disco/firewall en el VPS (solo lectura).
+- [x] `scripts/export_cloud.py` — exporta workflows vía API pública + genera
+      `inventario_credenciales.md` y `resumen.md` (tabla webhook viejo→nuevo, schedules).
+- [x] `scripts/credenciales_map.sh` + `scripts/remap_credentials.py` — reapuntan los IDs de
+      credenciales de Cloud a los del VPS.
+- [x] `scripts/import_vps.sh` — import por CLI dentro del contenedor.
+- [x] `scripts/backup.sh` + `scripts/restore.sh` — pg_dump + export de workflows, retención,
+      restauración con confirmación explícita.
+
+### Validado en esta sesión
+
+- `docker compose config` → OK (compose válido, variables resueltas).
+- Tag `2.36.7` existe en Docker Hub y es a donde apuntan `latest`/`stable` (mismo digest).
+- `export_cloud.py` contra una API n8n falsa: paginación por cursor, un JSON por workflow,
+  ambos informes, y los errores 401 / 404 / sin-API-key con mensaje accionable.
+- `remap_credentials.py` con fixture: reescribe los IDs que calzan, lista los que no y sale
+  con código 1 cuando queda trabajo manual.
+- `ruff check` limpio en ambos scripts; `bash -n` limpio en los cinco `.sh`.
+
+### NO validado (declarado)
+
+- **El stack no se levantó de verdad**: este contenedor de sesión tiene CLI de Docker pero no
+  daemon. La primera corrida real (certificado de Caddy, arranque de n8n contra Postgres,
+  `import:workflow` dentro del contenedor) queda para el VPS.
+
+## Pendiente (retomar aquí)
+
+1. **Datos que faltan** para ejecutar: subdominio elegido (`n8n.???`), subdominio de Cloud
+   (`https://???.app.n8n.cloud`) y si el plan tiene API pública habilitada.
+2. Correr `preflight.sh` en el VPS y arreglar lo que marque.
+3. Levantar el stack, crear la cuenta de owner, exportar de Cloud.
+4. Recrear credenciales (aprovechar de **rotar** los tokens viejos), importar, remapear.
+5. Corte: desactivar en Cloud → reapuntar webhooks → activar en el VPS uno a uno.
+6. Instalar el cron de `backup.sh` y probar `restore.sh` una vez en limpio antes de
+   cancelar el plan de Cloud.
+
+## Siguiente acción
+
+Confirmar dominio y subdominio de Cloud, y correr `bash scripts/preflight.sh <dominio>` en
+`srv1314177`.
