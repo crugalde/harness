@@ -413,6 +413,13 @@ siguen igual.
 
 ---
 
+## Delegar la ejecución a un agente de terminal
+
+`PROMPT_AGENTE_TERMINAL.md` es un brief autocontenido para pegarle a Warp AI (o a cualquier
+agente que viva en la terminal): contexto, reglas duras —nada destructivo, secretos fuera de
+pantalla, no activar workflows—, los nueve pasos con su criterio de éxito y qué reportar al
+final. Sirve para no repetir la instalación a mano ni ir explicando el contexto de a pedazos.
+
 ## Fuentes
 
 - [Migrating from cloud to self-hosted — n8n Help Center](https://support.n8n.io/article/migrating-from-cloud-to-self-hosted)
