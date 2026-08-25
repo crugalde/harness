@@ -18,8 +18,9 @@ tools/compose.py              # motor de `docs`: integra subagentes → .docx/.p
 tools/read_emg.py             # de-identificación de estudios EMG (med)
 tools/decompose.py            # pipeline HD-sEMG (signals)
 tools/ha_setup.py             # wizard de conexión/diagnóstico de Home Assistant (home)
+tools/n8n_setup.py            # wizard de conexión/diagnóstico del n8n del VPS
 tools/schedule_distill.py     # disparador periódico del autoaprendizaje (cron)
-skills/<nombre>/SKILL.md+tool.py   # pubmed_search · build_docx · build_pptx · home_assistant
+skills/<nombre>/SKILL.md+tool.py   # pubmed_search · build_docx · build_pptx · home_assistant · n8n
 evals/run_evals.py            # red de seguridad offline (routing, guardas, secciones protegidas)
 tests/test_harness.py         # pytest del núcleo
 shared/                       # rules/, notebooklm/, learning/, traces/, templates/
@@ -105,6 +106,26 @@ confirmar la conexión tras el setup.
 Verifica con `ha_states` que el estado cambió tras el toggle y volvió al original tras revertir.
 Nota: `ha_call_service` puede responder "sin cambios de estado reportados" aunque la acción sí
 se aplique; confírmalo releyendo el estado.
+
+## n8n self-hosted (skill `n8n`)
+
+Automatizaciones propias corriendo en el VPS, con el harness como copiloto de diseño.
+El stack y la migración desde n8n Cloud viven en `projects/2026-08-25_n8n_vps/`
+(runbook, docker-compose, scripts de export/import y respaldo).
+
+```bash
+# Conectar el harness a tu instancia (guarda credenciales en ~/.config/harness/.env)
+python tools/n8n_setup.py
+python tools/n8n_setup.py status        # workflows, activos y últimas ejecuciones fallidas
+
+# Diseñar/depurar con el harness
+python tools/loop.py "lista mis workflows activos de n8n"
+python tools/loop.py "por qué falló el workflow abc123"
+```
+
+Lectura libre; `n8n_workflow_create`, `n8n_workflow_update` y `n8n_workflow_activate` están
+en `GATED_TOOLS`: un workflow activo dispara acciones reales, así que cada escritura exige
+confirmación humana por turno.
 
 ## Flujo de seguridad
 

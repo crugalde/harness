@@ -63,6 +63,26 @@ bash scripts/preflight.sh n8n.tudominio.cl
 
 ## 3. Paso 1 — Levantar n8n en el VPS
 
+**Camino rápido (una sola pasada).** Copia el proyecto al VPS y corre el bootstrap: verifica
+docker y el preflight, genera los secretos, escribe el `.env`, levanta el stack y espera a que
+n8n esté sano. Es idempotente: si algo falla, lo arreglas y lo vuelves a correr.
+
+```bash
+# Desde tu máquina
+rsync -av projects/2026-08-25_n8n_vps/ root@srv1314177:/opt/n8n/
+#   Windows:  scp -r projects\2026-08-25_n8n_vps\* root@srv1314177:/opt/n8n/
+
+# En el VPS
+ssh root@srv1314177
+bash /opt/n8n/scripts/bootstrap_vps.sh --domain n8n.tudominio.cl --email tu@correo.cl
+```
+
+Al terminar te imprime la URL y **la clave de cifrado, una sola vez**: guárdala en tu gestor
+de contraseñas antes de cerrar la terminal.
+
+<details>
+<summary>Camino manual, si prefieres ver cada paso</summary>
+
 ```bash
 # En el VPS
 mkdir -p /opt/n8n && cd /opt/n8n
@@ -80,6 +100,8 @@ nano .env                 # completa N8N_DOMAIN, ACME_EMAIL y los dos secretos
 docker compose up -d
 docker compose logs -f n8n     # espera "Editor is now accessible via ..."
 ```
+
+</details>
 
 Abre `https://n8n.tudominio.cl` y **crea la cuenta de owner** (email + contraseña). Hazlo
 ahora: el import por CLI necesita que exista un usuario dueño al que asignar los workflows.
@@ -236,6 +258,33 @@ Reglas de operación:
 
 ---
 
+## 8.bis Conectar el harness: diseñar los próximos workflows con Claude Code
+
+Con n8n ya operativo, el harness se conecta a su API pública y pasa a ser copiloto de diseño:
+
+```bash
+# En tu máquina, una sola vez (crea la API key en Settings → n8n API del VPS)
+python tools/n8n_setup.py
+python tools/n8n_setup.py status     # workflows, activos y últimas ejecuciones con error
+
+# A partir de ahí
+python tools/loop.py "lista mis workflows activos de n8n"
+python tools/loop.py "por qué falló el workflow abc123"
+python tools/loop.py "diseña un workflow que me avise por Telegram de papers nuevos de NMUS"
+```
+
+La skill `skills/n8n/` expone seis herramientas: tres de **lectura** (`n8n_workflows`,
+`n8n_workflow_get`, `n8n_executions`) y tres de **escritura** —crear, modificar y activar—
+que están en `GATED_TOOLS`: cada una exige confirmación humana por turno, porque un workflow
+activo dispara acciones reales. Los workflows que crea el harness **nacen inactivos** a
+propósito: se revisan en el editor, se corren una vez a mano y recién ahí se activan.
+
+`skills/n8n/SKILL.md` lleva además las reglas de diseño que el agente sigue al proponer nodos
+(idempotencia, manejo de error, nombres útiles, nada de secretos en parámetros, y que en
+n8n 2.x el nodo Code ya no lee `process.env`).
+
+---
+
 ## 9. Definición de "hecho"
 
 - [ ] `https://n8n.tudominio.cl` carga con certificado válido y cuenta de owner creada.
@@ -247,6 +296,7 @@ Reglas de operación:
 - [ ] `bash scripts/backup.sh` corre y deja `backups/<fecha>/db.sql.gz`.
 - [ ] `N8N_ENCRYPTION_KEY` guardada en el gestor de contraseñas.
 - [ ] Cron de respaldo instalado.
+- [ ] `python tools/n8n_setup.py status` responde desde tu máquina (harness conectado).
 
 ---
 

@@ -32,7 +32,8 @@ MAX_ITERS = 8
 AGENTS = ["med", "research", "biz", "signals", "coach", "docs", "home"]
 DESTRUCTIVE = re.compile(r"(rm\s+-rf|mkfs|dd\s+if=|:\(\)\s*\{|shutdown|reboot|>\s*/dev/sd)")
 GATED_TOOLS = {"send_email", "post", "publish", "write_file", "delete", "vps_write",
-               "git_push", "ha_call_service", "ha_lights_off"}
+               "git_push", "ha_call_service", "ha_lights_off",
+               "n8n_workflow_create", "n8n_workflow_update", "n8n_workflow_activate"}
 
 
 class Backend(Protocol):

@@ -51,6 +51,18 @@ todos los workflows desde n8n Cloud, sin ejecuciones duplicadas ni credenciales 
 - [x] `scripts/import_vps.sh` — import por CLI dentro del contenedor.
 - [x] `scripts/backup.sh` + `scripts/restore.sh` — pg_dump + export de workflows, retención,
       restauración con confirmación explícita.
+- [x] `scripts/bootstrap_vps.sh` — despliegue de una pasada (preflight → secretos → `.env` →
+      `up -d` → espera healthy → imprime URL y clave). Idempotente: respeta un `.env` existente.
+- [x] `.gitattributes` en la raíz — fuerza LF en `*.sh`/`*.py`/`*.yml`/`Caddyfile`, porque el
+      escritorio del usuario es **Windows** y un checkout con CRLF rompe los scripts en el VPS.
+- [x] Sección 3.bis del runbook con la ruta Windows (PowerShell, `scp` en vez de `rsync`, las
+      tres trampas de CRLF, alternativa WSL).
+- [x] **Skill `skills/n8n/`** (el harness como copiloto de diseño): `n8n_workflows`,
+      `n8n_workflow_get`, `n8n_executions` (lectura) + `n8n_workflow_create`,
+      `n8n_workflow_update`, `n8n_workflow_activate` (escritura, en `GATED_TOOLS`).
+      `SKILL.md` lleva las reglas de diseño de workflows.
+- [x] `tools/n8n_setup.py` — wizard setup/status (valida la API key, la guarda en
+      `~/.config/harness/.env` chmod 600, y diagnostica: workflows, activos, últimos errores).
 
 ### Validado en esta sesión
 
@@ -60,7 +72,15 @@ todos los workflows desde n8n Cloud, sin ejecuciones duplicadas ni credenciales 
   ambos informes, y los errores 401 / 404 / sin-API-key con mensaje accionable.
 - `remap_credentials.py` con fixture: reescribe los IDs que calzan, lista los que no y sale
   con código 1 cuando queda trabajo manual.
-- `ruff check` limpio en ambos scripts; `bash -n` limpio en los cinco `.sh`.
+- `ruff check` limpio en todo lo nuevo; `bash -n` limpio en los seis `.sh`.
+- Skill `n8n` contra una API n8n falsa: listado con paginación, resumen de nodos, ejecuciones
+  con error, create/update/activate/deactivate — y el servidor de prueba **rechaza** la
+  petición si se envían campos de solo lectura (`id`, `active`, `versionId`), que es
+  justamente lo que `_clean()` evita.
+- `tools/registry.py` descubre la skill: las 6 herramientas quedan registradas.
+- `tools/n8n_setup.py setup/status` end-to-end contra la API falsa; `.env` queda en 0600 y un
+  401 devuelve mensaje accionable.
+- `evals`: 19 OK, 0 fallos (3 casos nuevos cubren el gate de escritura de n8n). `pytest`: 5 OK.
 
 ### NO validado (declarado)
 
@@ -70,10 +90,13 @@ todos los workflows desde n8n Cloud, sin ejecuciones duplicadas ni credenciales 
 
 ## Pendiente (retomar aquí)
 
-1. **Datos que faltan** para ejecutar: subdominio elegido para el VPS (`n8n.???`) y si el
-   plan de Cloud tiene API pública habilitada (se sabe corriendo `export_cloud.py`: un 403
-   significa trial/API apagada y el export pasa a ser manual desde la UI).
+1. **Único dato que bloquea el arranque:** el subdominio para el VPS (`n8n.???`) con su
+   registro A. Sin dominio propio se puede partir con `sslip.io` sobre la IP, pero entonces
+   no hay que reapuntar webhooks de producción hasta tener el definitivo.
    - Instancia de origen **confirmada**: `https://cristianub.app.n8n.cloud`.
+   - Si el plan de Cloud tiene API pública se sabe corriendo `export_cloud.py`: un 403
+     significa trial/API apagada y el export pasa a ser manual desde la UI.
+   - Escritorio del usuario: **Windows** (los pasos locales van en PowerShell; el VPS no cambia).
 2. Correr `preflight.sh` en el VPS y arreglar lo que marque.
 3. Levantar el stack, crear la cuenta de owner, exportar de Cloud.
 4. Recrear credenciales (aprovechar de **rotar** los tokens viejos), importar, remapear.
@@ -83,5 +106,5 @@ todos los workflows desde n8n Cloud, sin ejecuciones duplicadas ni credenciales 
 
 ## Siguiente acción
 
-Confirmar dominio y subdominio de Cloud, y correr `bash scripts/preflight.sh <dominio>` en
-`srv1314177`.
+Confirmar el subdominio del VPS y correr en `srv1314177`:
+`bash /opt/n8n/scripts/bootstrap_vps.sh --domain <dominio> --email <correo>`.
