@@ -6,6 +6,9 @@
 *.yml           text eol=lf
 *.yaml          text eol=lf
 Caddyfile       text eol=lf
+
+# PowerShell corre en Windows: CRLF es lo nativo ahí.
+*.ps1           text eol=crlf
 .env.example    text eol=lf
 
 # Binarios: que git no intente normalizar nada.
