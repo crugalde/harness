@@ -19,8 +19,18 @@ if [ -z "$SRC" ] || [ ! -f "$SRC/db.sql.gz" ]; then
 fi
 
 cd "$STACK_DIR"
+if [ ! -f .env ]; then
+  echo "ERROR: falta $STACK_DIR/.env — sin él no sé a qué base restaurar." >&2
+  exit 2
+fi
 # shellcheck disable=SC1091
 set -a; . ./.env; set +a
+: "${POSTGRES_USER:?falta POSTGRES_USER en .env}"
+: "${POSTGRES_DB:?falta POSTGRES_DB en .env}"
+if [ -z "${N8N_ENCRYPTION_KEY:-}" ]; then
+  echo "AVISO: .env no define N8N_ENCRYPTION_KEY. Si este respaldo viene de otra" >&2
+  echo "       instancia, sus credenciales NO se van a poder descifrar." >&2
+fi
 
 echo "Vas a SOBRESCRIBIR la base '$POSTGRES_DB' de este stack con $SRC/db.sql.gz."
 read -r -p "Escribe 'restaurar' para continuar: " ANSWER

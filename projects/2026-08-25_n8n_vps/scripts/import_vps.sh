@@ -38,7 +38,9 @@ echo "Importando $COUNT workflows…"
 docker compose exec -T -u node n8n n8n import:workflow --separate --input=/backup/workflows
 
 DOMAIN=""
-if [ -f .env ]; then DOMAIN=$(grep -E "^N8N_DOMAIN=" .env | cut -d= -f2-); fi
+# '|| true': si no hay línea N8N_DOMAIN, grep sale 1 y con pipefail + set -e el
+# script moriría aquí, después de importar pero antes de decir qué sigue.
+if [ -f .env ]; then DOMAIN=$(grep -E "^N8N_DOMAIN=" .env | cut -d= -f2- || true); fi
 echo
 echo "Hecho. Siguiente: abre https://${DOMAIN:-TU-DOMINIO}/home/workflows y revisa que estén todos."
 echo "Los nodos mostrarán 'credential not found' hasta que crees las credenciales y corras"

@@ -48,6 +48,13 @@ chown -R 1000:1000 backup 2>/dev/null || true
 echo "[1/3] Dump de Postgres…"
 docker compose exec -T postgres pg_dump -U "$POSTGRES_USER" -d "$POSTGRES_DB" \
   | gzip -9 > "$DEST/db.sql.gz"
+# Un .gz truncado o de 20 bytes se ve como respaldo hasta el día que lo necesitas.
+BYTES=$(wc -c < "$DEST/db.sql.gz")
+if ! gzip -t "$DEST/db.sql.gz" 2>/dev/null || [ "$BYTES" -lt 1000 ]; then
+  echo "ERROR: el dump salió corrupto o vacío ($BYTES bytes). Se descarta." >&2
+  rm -rf "$DEST"
+  exit 1
+fi
 echo "      $(du -h "$DEST/db.sql.gz" | cut -f1)"
 
 echo "[2/3] Export de workflows (JSON legible, sirve para revisar diffs en git)…"
