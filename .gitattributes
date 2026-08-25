@@ -1,0 +1,19 @@
+# Normaliza a LF los archivos que se ejecutan en Linux/Docker.
+# Sin esto, un checkout en Windows (core.autocrlf=true) los baja con CRLF y en el VPS
+# fallan con: $'\r': command not found  /  env: 'bash\r': No such file or directory
+*.sh            text eol=lf
+*.py            text eol=lf
+*.yml           text eol=lf
+*.yaml          text eol=lf
+Caddyfile       text eol=lf
+
+# PowerShell corre en Windows: CRLF es lo nativo ahí.
+*.ps1           text eol=crlf
+.env.example    text eol=lf
+
+# Binarios: que git no intente normalizar nada.
+*.pptx          binary
+*.docx          binary
+*.pdf           binary
+*.png           binary
+*.jpg           binary

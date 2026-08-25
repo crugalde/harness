@@ -1,0 +1,25 @@
+# Caddyfile — TLS automático (Let's Encrypt) y proxy hacia n8n.
+# Requisitos: el dominio {$N8N_DOMAIN} debe apuntar (A/AAAA) a la IP del VPS y los
+# puertos 80/443 deben estar abiertos, o el desafío ACME falla.
+{
+	email {$ACME_EMAIL}
+}
+
+{$N8N_DOMAIN} {
+	encode zstd gzip
+
+	reverse_proxy n8n:5678 {
+		# El editor usa server-sent events; sin esto la UI se ve "congelada".
+		flush_interval -1
+	}
+
+	header {
+		Strict-Transport-Security "max-age=31536000; includeSubDomains"
+		X-Content-Type-Options "nosniff"
+		Referrer-Policy "strict-origin-when-cross-origin"
+	}
+
+	log {
+		output stdout
+	}
+}

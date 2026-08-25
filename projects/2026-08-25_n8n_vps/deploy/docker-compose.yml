@@ -1,0 +1,105 @@
+# docker-compose.yml — n8n self-hosted (Postgres + Caddy) para VPS Ubuntu con Docker.
+#
+#   cp .env.example .env && nano .env      # completa dominio, clave de cifrado y passwords
+#   docker compose up -d
+#   docker compose logs -f n8n
+#
+# Diseño: solo Caddy publica puertos (80/443). n8n y Postgres viven en la red interna
+# de Docker; nadie los alcanza desde fuera.
+name: n8n
+
+x-logging: &logging
+  driver: json-file
+  options:
+    max-size: "10m"
+    max-file: "3"
+
+services:
+  postgres:
+    image: postgres:16-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_DB: ${POSTGRES_DB}
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER} -d ${POSTGRES_DB}"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+    logging: *logging
+
+  n8n:
+    image: docker.n8n.io/n8nio/n8n:${N8N_IMAGE_TAG}
+    restart: unless-stopped
+    depends_on:
+      postgres:
+        condition: service_healthy
+    environment:
+      # --- Base de datos ---
+      DB_TYPE: postgresdb
+      DB_POSTGRESDB_HOST: postgres
+      DB_POSTGRESDB_PORT: 5432
+      DB_POSTGRESDB_DATABASE: ${POSTGRES_DB}
+      DB_POSTGRESDB_USER: ${POSTGRES_USER}
+      DB_POSTGRESDB_PASSWORD: ${POSTGRES_PASSWORD}
+      # --- Identidad pública: con esto n8n construye las URLs de webhook ---
+      N8N_HOST: ${N8N_DOMAIN}
+      N8N_PORT: 5678
+      N8N_PROTOCOL: https
+      WEBHOOK_URL: https://${N8N_DOMAIN}/
+      N8N_EDITOR_BASE_URL: https://${N8N_DOMAIN}/
+      N8N_PROXY_HOPS: 1                       # va detrás de Caddy: exactamente 1 proxy
+      # --- Cifrado de credenciales. SIN esta clave, las credenciales son irrecuperables ---
+      N8N_ENCRYPTION_KEY: ${N8N_ENCRYPTION_KEY}
+      # --- Zona horaria (schedule/cron se evalúan aquí) ---
+      GENERIC_TIMEZONE: ${TZ}
+      TZ: ${TZ}
+      # --- Retención de ejecuciones: sin esto la BD crece sin techo en un VPS chico ---
+      EXECUTIONS_DATA_PRUNE: "true"
+      EXECUTIONS_DATA_MAX_AGE: ${EXECUTIONS_DATA_MAX_AGE}   # horas (336 = 14 días)
+      # --- Higiene / superficie de ataque ---
+      N8N_DIAGNOSTICS_ENABLED: "false"
+      N8N_HIRING_BANNER_ENABLED: "false"
+      N8N_PERSONALIZATION_ENABLED: "false"
+      N8N_PUBLIC_API_DISABLED: ${N8N_PUBLIC_API_DISABLED}
+      # En n8n 2.x los task runners ya vienen activos (aislamiento del nodo Code) y
+      # N8N_RUNNERS_ENABLED está deprecado: no lo definas. Solo hace falta en 1.x.
+      # Si algún workflow tuyo lee process.env dentro de un nodo Code, en 2.x está
+      # bloqueado por defecto; para permitirlo: N8N_BLOCK_ENV_ACCESS_IN_NODE: "false"
+    volumes:
+      - n8n_data:/home/node/.n8n
+      - ./backup:/backup                      # canal para import/export por CLI
+    healthcheck:
+      test: ["CMD-SHELL", "node -e \"fetch('http://127.0.0.1:5678/healthz').then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))\""]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 60s
+    logging: *logging
+
+  caddy:
+    image: caddy:2-alpine
+    restart: unless-stopped
+    depends_on:
+      - n8n
+    ports:
+      - "80:80"
+      - "443:443"
+      - "443:443/udp"                         # HTTP/3
+    environment:
+      N8N_DOMAIN: ${N8N_DOMAIN}
+      ACME_EMAIL: ${ACME_EMAIL}
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy_data:/data                      # certificados TLS: NO borrar este volumen
+      - caddy_config:/config
+    logging: *logging
+
+volumes:
+  postgres_data:
+  n8n_data:
+  caddy_data:
+  caddy_config:
