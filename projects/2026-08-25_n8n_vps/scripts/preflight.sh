@@ -10,9 +10,17 @@ DOMAIN="${1:-${N8N_DOMAIN:-}}"
 FAIL=0
 WARN=0
 
-ok()   { printf '  \033[32m✓\033[0m %s\n' "$1"; }
-warn() { printf '  \033[33m!\033[0m %s\n' "$1"; WARN=$((WARN+1)); }
-bad()  { printf '  \033[31m✗\033[0m %s\n' "$1"; FAIL=$((FAIL+1)); }
+# Color solo si la salida va a una terminal. Al redirigir a un archivo o pipe
+# (p. ej. `ssh vps 'preflight.sh …' > salida.txt`) sale texto plano, copiable tal cual.
+if [ -t 1 ] && [ -z "${NO_COLOR:-}" ]; then
+  C_OK=$'\033[32m'; C_WARN=$'\033[33m'; C_BAD=$'\033[31m'; C_OFF=$'\033[0m'
+else
+  C_OK=""; C_WARN=""; C_BAD=""; C_OFF=""
+fi
+
+ok()   { printf '  %s✓%s %s\n' "$C_OK" "$C_OFF" "$1"; }
+warn() { printf '  %s!%s %s\n' "$C_WARN" "$C_OFF" "$1"; WARN=$((WARN+1)); }
+bad()  { printf '  %s✗%s %s\n' "$C_BAD" "$C_OFF" "$1"; FAIL=$((FAIL+1)); }
 
 echo "== Docker =="
 if command -v docker >/dev/null 2>&1; then
@@ -65,10 +73,12 @@ fi
 
 echo "== DNS =="
 if [ -z "$DOMAIN" ]; then
-  warn "no pasaste dominio: bash scripts/preflight.sh n8n.tudominio.cl"
+  warn "no pasaste dominio: bash scripts/preflight.sh n8n.neuromuscular.cloud"
 else
   PUBIP=$(curl -fsS --max-time 10 https://api.ipify.org 2>/dev/null || echo "")
-  RESOLVED=$(getent ahostsv4 "$DOMAIN" 2>/dev/null | awk '{print $1; exit}')
+  # '|| true': si el nombre no existe, getent sale 2 y con pipefail+set -e el script
+  # moriría en silencio justo en el caso más común (registro A todavía sin crear).
+  RESOLVED=$(getent ahostsv4 "$DOMAIN" 2>/dev/null | awk '{print $1; exit}' || true)
   if [ -z "$RESOLVED" ]; then
     bad "$DOMAIN no resuelve. Crea el registro A antes de levantar Caddy (o el certificado falla)."
   elif [ -n "$PUBIP" ] && [ "$RESOLVED" != "$PUBIP" ]; then

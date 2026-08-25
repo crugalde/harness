@@ -56,8 +56,26 @@ Verifícalo todo de una (solo lectura, no cambia nada):
 
 ```bash
 ssh root@srv1314177
-bash scripts/preflight.sh n8n.neuromuscular.cloud
+bash /opt/n8n/scripts/preflight.sh n8n.neuromuscular.cloud
 ```
+
+La salida sale por pantalla, en la misma terminal. Para guardarla (y poder pegarla en un
+chat o un issue), córrelo sin entrar al VPS y redirige:
+
+```powershell
+# Windows: se ve en pantalla Y queda en el archivo
+ssh root@srv1314177 "bash /opt/n8n/scripts/preflight.sh n8n.neuromuscular.cloud" |
+    Tee-Object -FilePath $HOME\preflight.txt
+notepad $HOME\preflight.txt
+```
+
+```bash
+# Linux/macOS
+ssh root@srv1314177 'bash /opt/n8n/scripts/preflight.sh n8n.neuromuscular.cloud' | tee ~/preflight.txt
+```
+
+Al redirigir a un archivo el script apaga los colores solo, así que el texto queda limpio.
+Sale con código 0 si todo está listo y 1 si hay algo marcado con `✗`.
 
 ### De dónde sale el subdominio
 
