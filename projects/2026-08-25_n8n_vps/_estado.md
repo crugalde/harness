@@ -88,6 +88,12 @@ todos los workflows desde n8n Cloud, sin ejecuciones duplicadas ni credenciales 
   daemon. La primera corrida real (certificado de Caddy, arranque de n8n contra Postgres,
   `import:workflow` dentro del contenedor) queda para el VPS.
 
+## Checklist operativa
+
+Página con los 21 pasos y los comandos ya armados para este caso (marca lo hecho, se guarda
+en el navegador): https://claude.ai/code/artifact/f4bcd712-8f5c-44cc-ad14-b493ef3e28c7
+Es un espejo del runbook; la fuente de verdad sigue siendo `README.md` de este directorio.
+
 ## Pendiente (retomar aquí)
 
 1. **Dominio decidido:** `n8n.neuromuscular.cloud`. Falta crear el registro `A` → IP del VPS
