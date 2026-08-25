@@ -73,6 +73,21 @@ subdominio libre —`n8n.tudominio.cl`— y creas el registro:
 
 El nombre se pone **solo** (`n8n`), no el dominio completo: el panel le agrega el resto.
 
+Antes de buscar el panel, confirma **quién administra el DNS** de ese dominio — no siempre es
+donde lo compraste:
+
+```bash
+nslookup -type=NS tudominio.cl      # Windows
+dig +short NS tudominio.cl          # Linux/macOS
+```
+
+- `ns1.dns-parking.com` / `ns2.dns-parking.com` → Hostinger: el registro va en hPanel.
+- `*.ns.cloudflare.com` → Cloudflare: el registro va en su panel, y **con el proxy apagado**
+  (la nubecita en gris, "DNS only"). Con el proxy naranja encendido, Cloudflare termina el
+  TLS por su cuenta y el certificado de Caddy nunca se emite o entras en bucle de redirección.
+  Puedes encenderlo después, ya con el certificado emitido, si sabes lo que buscas.
+- Otros nameservers → el panel de ese proveedor.
+
 **b) No tienes dominio.** Compra uno (~US$10–15/año) en Hostinger, Namecheap o Cloudflare, o
 un `.cl` en NIC Chile. Si lo compras en Hostinger, la zona DNS ya queda en el mismo panel.
 
