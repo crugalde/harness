@@ -59,6 +59,37 @@ ssh root@srv1314177
 bash scripts/preflight.sh n8n.tudominio.cl
 ```
 
+### De dónde sale el subdominio
+
+No es un dato que exista en alguna parte: **lo eliges tú** y lo creas como registro DNS.
+Tres casos:
+
+**a) Ya tienes un dominio.** Revísalo en hPanel de Hostinger → **Dominios** (o en el
+registrador donde lo compraste; en Chile, NIC Chile para los `.cl`). Eliges cualquier
+subdominio libre —`n8n.tudominio.cl`— y creas el registro:
+
+- hPanel → **Dominios → tu dominio → DNS / Nameservers → Zona DNS → Añadir registro**
+- Tipo `A` · Nombre `n8n` · Apunta a la IP del VPS · TTL `300`
+
+El nombre se pone **solo** (`n8n`), no el dominio completo: el panel le agrega el resto.
+
+**b) No tienes dominio.** Compra uno (~US$10–15/año) en Hostinger, Namecheap o Cloudflare, o
+un `.cl` en NIC Chile. Si lo compras en Hostinger, la zona DNS ya queda en el mismo panel.
+
+**c) No quieres comprar nada hoy.** Usa `sslip.io`: es un DNS público que resuelve la IP que
+lleva escrita en el nombre, sin configurar nada. Con la IP del VPS:
+
+```bash
+ssh root@srv1314177 'curl -s https://api.ipify.org'   # ej. 203.0.113.45
+# tu dominio pasa a ser:  n8n.203-0-113-45.sslip.io
+bash /opt/n8n/scripts/bootstrap_vps.sh --domain n8n.203-0-113-45.sslip.io --email tu@correo.cl
+```
+
+Caddy le emite certificado igual y funciona hoy mismo. **Pero no muevas los webhooks de
+producción a esa URL:** cambiar de dominio después obliga a reapuntar cada sistema emisor
+otra vez, y ese es justo el paso caro del corte. `sslip.io` sirve para ver el editor andando;
+para el corte definitivo, dominio propio.
+
 ---
 
 ## 3. Paso 1 — Levantar n8n en el VPS
