@@ -90,9 +90,12 @@ todos los workflows desde n8n Cloud, sin ejecuciones duplicadas ni credenciales 
 
 ## Pendiente (retomar aquí)
 
-1. **Único dato que bloquea el arranque:** el subdominio para el VPS (`n8n.???`) con su
-   registro A. Sin dominio propio se puede partir con `sslip.io` sobre la IP, pero entonces
-   no hay que reapuntar webhooks de producción hasta tener el definitivo.
+1. **Dominio decidido:** `n8n.neuromuscular.cloud`. Falta crear el registro `A` → IP del VPS
+   (al 2026-08-25 el subdominio no resuelve; la raíz `neuromuscular.cloud` apunta a
+   `2.57.91.91`, rango de Hostinger). Verificar antes en qué panel vive el DNS
+   (`nslookup -type=NS neuromuscular.cloud`) y, si fuera Cloudflare, dejar el proxy en gris.
+   - Ojo: si `2.57.91.91` es el mismo VPS y ya sirve un sitio en 80/443, hay conflicto de
+     puertos con Caddy. El preflight lo detecta antes de levantar nada.
    - Instancia de origen **confirmada**: `https://cristianub.app.n8n.cloud`.
    - Si el plan de Cloud tiene API pública se sabe corriendo `export_cloud.py`: un 403
      significa trial/API apagada y el export pasa a ser manual desde la UI.

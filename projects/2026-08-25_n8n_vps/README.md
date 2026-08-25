@@ -47,7 +47,7 @@ en el cuello de botella y en la causa nº 1 de bases corruptas tras un reinicio 
 
 ## 2. Prerrequisitos
 
-1. **Subdominio** apuntando al VPS: registro `A` de `n8n.tudominio.cl` → IP del VPS.
+1. **Subdominio** apuntando al VPS: registro `A` de `n8n.neuromuscular.cloud` → IP del VPS.
 2. **Puertos 80 y 443 abiertos** (Caddy los necesita para el desafío ACME).
 3. **Docker + plugin compose v2** en el VPS.
 4. RAM: 4 GB cómodo, 2 GB al límite. Disco: ≥10 GB libres.
@@ -56,7 +56,7 @@ Verifícalo todo de una (solo lectura, no cambia nada):
 
 ```bash
 ssh root@srv1314177
-bash scripts/preflight.sh n8n.tudominio.cl
+bash scripts/preflight.sh n8n.neuromuscular.cloud
 ```
 
 ### De dónde sale el subdominio
@@ -66,7 +66,7 @@ Tres casos:
 
 **a) Ya tienes un dominio.** Revísalo en hPanel de Hostinger → **Dominios** (o en el
 registrador donde lo compraste; en Chile, NIC Chile para los `.cl`). Eliges cualquier
-subdominio libre —`n8n.tudominio.cl`— y creas el registro:
+subdominio libre —`n8n.neuromuscular.cloud`— y creas el registro:
 
 - hPanel → **Dominios → tu dominio → DNS / Nameservers → Zona DNS → Añadir registro**
 - Tipo `A` · Nombre `n8n` · Apunta a la IP del VPS · TTL `300`
@@ -77,8 +77,8 @@ Antes de buscar el panel, confirma **quién administra el DNS** de ese dominio �
 donde lo compraste:
 
 ```bash
-nslookup -type=NS tudominio.cl      # Windows
-dig +short NS tudominio.cl          # Linux/macOS
+nslookup -type=NS neuromuscular.cloud      # Windows
+dig +short NS neuromuscular.cloud          # Linux/macOS
 ```
 
 - `ns1.dns-parking.com` / `ns2.dns-parking.com` → Hostinger: el registro va en hPanel.
@@ -120,7 +120,7 @@ rsync -av projects/2026-08-25_n8n_vps/ root@srv1314177:/opt/n8n/
 
 # En el VPS
 ssh root@srv1314177
-bash /opt/n8n/scripts/bootstrap_vps.sh --domain n8n.tudominio.cl --email tu@correo.cl
+bash /opt/n8n/scripts/bootstrap_vps.sh --domain n8n.neuromuscular.cloud --email tu@correo.cl
 ```
 
 Al terminar te imprime la URL y **la clave de cifrado, una sola vez**: guárdala en tu gestor
@@ -149,7 +149,7 @@ docker compose logs -f n8n     # espera "Editor is now accessible via ..."
 
 </details>
 
-Abre `https://n8n.tudominio.cl` y **crea la cuenta de owner** (email + contraseña). Hazlo
+Abre `https://n8n.neuromuscular.cloud` y **crea la cuenta de owner** (email + contraseña). Hazlo
 ahora: el import por CLI necesita que exista un usuario dueño al que asignar los workflows.
 
 Si el certificado no sale: `docker compose logs caddy` — casi siempre es el DNS aún sin
@@ -199,7 +199,7 @@ export N8N_API_KEY='n8n_api_...'
 python3 projects/2026-08-25_n8n_vps/scripts/export_cloud.py \
     --base-url https://cristianub.app.n8n.cloud \
     --out ~/n8n_export \
-    --new-domain n8n.tudominio.cl
+    --new-domain n8n.neuromuscular.cloud
 ```
 
 Deja tres cosas en `~/n8n_export/`:
@@ -268,7 +268,7 @@ El orden importa: mal hecho, te quedan dos instancias ejecutando los mismos cron
    quedan activos en ambos lados, todo se ejecuta dos veces: correos duplicados, escrituras
    duplicadas.
 2. **Reapunta los webhooks externos.** La URL cambia de
-   `https://cristianub.app.n8n.cloud/webhook/<path>` a `https://n8n.tudominio.cl/webhook/<path>`.
+   `https://cristianub.app.n8n.cloud/webhook/<path>` a `https://n8n.neuromuscular.cloud/webhook/<path>`.
    La tabla ya está armada en `resumen.md`: tócala en cada servicio emisor (Stripe, GitHub,
    Telegram, formularios, CRM…).
 3. **Activa en el VPS uno a uno**, del más crítico al menos, verificando cada ejecución en
@@ -333,7 +333,7 @@ n8n 2.x el nodo Code ya no lee `process.env`).
 
 ## 9. Definición de "hecho"
 
-- [ ] `https://n8n.tudominio.cl` carga con certificado válido y cuenta de owner creada.
+- [ ] `https://n8n.neuromuscular.cloud` carga con certificado válido y cuenta de owner creada.
 - [ ] Nº de workflows en el VPS == nº en Cloud.
 - [ ] Cero nodos con *"credential not found"*.
 - [ ] Cada webhook externo reapuntado y probado con un evento real.
