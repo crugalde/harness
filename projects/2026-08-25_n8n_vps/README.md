@@ -97,7 +97,7 @@ si ese es tu caso, salta a la alternativa manual más abajo.)
 # En tu Mac, desde la raíz del repo
 export N8N_API_KEY='n8n_api_...'
 python projects/2026-08-25_n8n_vps/scripts/export_cloud.py \
-    --base-url https://TU-SUB.app.n8n.cloud \
+    --base-url https://cristianub.app.n8n.cloud \
     --out ~/n8n_export \
     --new-domain n8n.tudominio.cl
 ```
@@ -167,7 +167,7 @@ El orden importa: mal hecho, te quedan dos instancias ejecutando los mismos cron
    quedan activos en ambos lados, todo se ejecuta dos veces: correos duplicados, escrituras
    duplicadas.
 2. **Reapunta los webhooks externos.** La URL cambia de
-   `https://TU-SUB.app.n8n.cloud/webhook/<path>` a `https://n8n.tudominio.cl/webhook/<path>`.
+   `https://cristianub.app.n8n.cloud/webhook/<path>` a `https://n8n.tudominio.cl/webhook/<path>`.
    La tabla ya está armada en `resumen.md`: tócala en cada servicio emisor (Stripe, GitHub,
    Telegram, formularios, CRM…).
 3. **Activa en el VPS uno a uno**, del más crítico al menos, verificando cada ejecución en

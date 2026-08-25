@@ -70,8 +70,10 @@ todos los workflows desde n8n Cloud, sin ejecuciones duplicadas ni credenciales 
 
 ## Pendiente (retomar aquí)
 
-1. **Datos que faltan** para ejecutar: subdominio elegido (`n8n.???`), subdominio de Cloud
-   (`https://???.app.n8n.cloud`) y si el plan tiene API pública habilitada.
+1. **Datos que faltan** para ejecutar: subdominio elegido para el VPS (`n8n.???`) y si el
+   plan de Cloud tiene API pública habilitada (se sabe corriendo `export_cloud.py`: un 403
+   significa trial/API apagada y el export pasa a ser manual desde la UI).
+   - Instancia de origen **confirmada**: `https://cristianub.app.n8n.cloud`.
 2. Correr `preflight.sh` en el VPS y arreglar lo que marque.
 3. Levantar el stack, crear la cuenta de owner, exportar de Cloud.
 4. Recrear credenciales (aprovechar de **rotar** los tokens viejos), importar, remapear.
