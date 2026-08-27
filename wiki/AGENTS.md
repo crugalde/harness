@@ -122,8 +122,10 @@ publicada, y dilo en el cuerpo (`R12`).
 Cuando Cristian deja una fuente en `raw/` (o apunta a un archivo del repo) y pide procesarla:
 
 0. **Si apunta a una carpeta entera, inventaríala primero**:
-   `python tools/wiki.py scan --dir "<carpeta>" --tema "<tema>"`. Deja en
-   `fuentes/Cola de ingesta.md` qué hay, con DOI y título detectados, duplicados exactos,
+   `python tools/wiki.py scan --dir "<carpeta>" --tema "<tema>"`, o
+   `--split` si la carpeta agrupa varios temas en subcarpetas (una cola por subcarpeta más
+   `fuentes/Colas de ingesta.md` como índice). Deja en
+   `fuentes/Cola de ingesta <tema>.md` qué hay, con DOI y título detectados, duplicados exactos,
    archivos de iCloud que están como marcador pero sin descargar, y qué falta por ingerir
    (cruza los nombres y DOI contra las páginas de `fuentes/`). **El scan no ingiere nada**:
    solo dice qué hay. Después trabajas la cola de a una fila, empezando por guías y
@@ -219,6 +221,7 @@ Tipos: `ingest` · `query` · `lint` · `refactor`.
 
 ```bash
 python tools/wiki.py scan --dir "icloud/neuromuscular/CIDP"   # inventaría una carpeta
+python tools/wiki.py scan --dir "icloud/neuromuscular" --split  # una cola por subcarpeta
 python tools/wiki.py index                      # regenera el catálogo de index.md
 python tools/wiki.py lint                       # enlaces rotos, huérfanas, esbozos, sin fuente
 python tools/wiki.py search "bloqueo de conduccion"   # búsqueda BM25 sobre las páginas

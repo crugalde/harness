@@ -12,7 +12,9 @@ Catálogo de todas las páginas. Lo regenera `python tools/wiki.py index` desde 
 front-matter — no lo edites a mano. Para el orden cronológico de lo que fue pasando,
 ver `log.md`; para las convenciones, `AGENTS.md`.
 
-**12 páginas** · 3 fuentes ingeridas · 0 esbozos pendientes
+**11 páginas** · 2 fuentes ingeridas · 0 esbozos pendientes
+
+Por ingerir: [[Cola de ingesta CIDP]] — **20 archivos** en 1 cola(s) de fuentes.
 
 ## Fuentes ingeridas
 

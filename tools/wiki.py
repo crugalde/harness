@@ -139,13 +139,17 @@ def cmd_index() -> int:
              "front-matter — no lo edites a mano. Para el orden cronológico de lo que fue pasando,",
              "ver `log.md`; para las convenciones, `AGENTS.md`.", ""]
 
-    cola = next((p for p in ps if p.get("tipo") == "indice" and p.stem == "Cola de ingesta"), None)
-    total_fuentes = len(by_section.get("fuentes", [])) - (1 if cola else 0)
-    lines += [f"**{len(ps) - (1 if cola else 0)} páginas** · {total_fuentes} fuentes ingeridas · "
+    colas = [p for p in ps if p.get("tipo") == "indice" and p.stem.startswith("Cola de ingesta")]
+    indice_colas = next((p for p in ps if p.stem == "Colas de ingesta"), None)
+    n_indices = len(colas) + (1 if indice_colas else 0)
+    total_fuentes = len(by_section.get("fuentes", [])) - n_indices
+    lines += [f"**{len(ps) - n_indices} páginas** · {total_fuentes} fuentes ingeridas · "
               f"{sum(1 for p in ps if p.get('estado') == 'esbozo')} esbozos pendientes", ""]
-    if cola:
-        lines += [f"Por ingerir: [[Cola de ingesta]] — **{cola.get('pendientes', '?')} archivos** "
-                  "esperando en la carpeta de fuentes.", ""]
+    if colas:
+        pend = sum(int(c.get("pendientes") or 0) for c in colas)
+        destino = "[[Colas de ingesta]]" if indice_colas else f"[[{colas[0].stem}]]"
+        lines += [f"Por ingerir: {destino} — **{pend} archivos** en "
+                  f"{len(colas)} cola(s) de fuentes.", ""]
 
     titles = {"fuentes": "Fuentes ingeridas", "entidades": "Entidades",
               "conceptos": "Conceptos", "sintesis": "Síntesis"}
@@ -320,7 +324,7 @@ def cmd_init(dest: str) -> int:
 # scan — inventario de una carpeta de fuentes (paso 0 del ingest)
 # --------------------------------------------------------------------------- #
 TEXT_SUFFIXES = {".md", ".txt", ".markdown"}
-DOC_SUFFIXES = {".pdf", ".docx", ".rtf", ".epub"} | TEXT_SUFFIXES
+DOC_SUFFIXES = {".pdf", ".docx", ".pptx", ".rtf", ".epub"} | TEXT_SUFFIXES
 DOI_RE = re.compile(r"10\.\d{4,9}/[-._;()/:A-Za-z0-9]+")
 ICLOUD_BASES = [
     Path.home() / "Library" / "Mobile Documents" / "com~apple~CloudDocs",
@@ -402,12 +406,23 @@ def _ingeridos() -> str:
                      if p.section == "fuentes" and p.get("tipo") != "indice").lower()
 
 
-def cmd_scan(raw_dir: str, tema: str | None) -> int:
-    src = resolve_dir(raw_dir)
-    ya = _ingeridos()
-    filas, pendientes, sin_bajar, hashes = [], 0, [], {}
+def _meta_pptx(path: Path) -> dict:
+    """Texto de las primeras diapositivas de un .pptx (zip + XML, sin dependencias)."""
+    try:
+        with zipfile.ZipFile(path) as z:
+            slides = sorted(n for n in z.namelist() if n.startswith("ppt/slides/slide"))
+            xml = " ".join(z.read(n).decode("utf-8", "ignore") for n in slides[:3])
+        texto = re.sub(r"\s+", " ", re.sub(r"<[^>]+>", " ", xml)).strip()
+        return {"titulo": texto[:120], "doi": _doi(texto[:5000]),
+                "paginas": str(len(slides)), "nota": ""}
+    except Exception as e:
+        return {"titulo": "", "doi": "", "paginas": "", "nota": f"ilegible: {type(e).__name__}"}
 
-    for f in sorted(src.rglob("*")):
+
+def _inventario(carpeta: Path, recursivo: bool, ya: str) -> tuple[list[dict], list[str], int]:
+    """Recorre una carpeta y devuelve (filas, archivos_sin_descargar, n_pendientes)."""
+    filas, sin_bajar, hashes, pendientes = [], [], {}, 0
+    for f in sorted(carpeta.rglob("*") if recursivo else carpeta.iterdir()):
         if f.name.startswith(".") and f.suffix == ".icloud":      # placeholder de iCloud
             sin_bajar.append(f.name[1:-7])
             continue
@@ -416,56 +431,97 @@ def cmd_scan(raw_dir: str, tema: str | None) -> int:
         suf = f.suffix.lower()
         meta = (_meta_pdf(f) if suf == ".pdf" else
                 _meta_docx(f) if suf == ".docx" else
+                _meta_pptx(f) if suf == ".pptx" else
                 _meta_text(f) if suf in TEXT_SUFFIXES else
                 {"titulo": "", "doi": "", "paginas": "", "nota": "formato sin extractor"})
         h = hashlib.sha256(f.read_bytes()).hexdigest()[:12]
         dup = hashes.setdefault(h, f.name)
-        clave = f.stem.lower()
-        entrado = clave in ya or (meta["doi"] and meta["doi"].lower() in ya)
+        entrado = f.stem.lower() in ya or (meta["doi"] and meta["doi"].lower() in ya)
         estado = ("duplicado de " + dup if dup != f.name else
                   "ingerido" if entrado else "pendiente")
         pendientes += estado == "pendiente"
-        filas.append({"archivo": f.relative_to(src).as_posix(), "tipo": suf.lstrip("."),
+        filas.append({"archivo": f.relative_to(carpeta).as_posix(), "tipo": suf.lstrip("."),
                       "kb": max(1, math.ceil(f.stat().st_size / 1024)), "estado": estado, **meta})
-
-    nombre = tema or src.name
     orden = {"pendiente": 0, "ingerido": 1}
     filas.sort(key=lambda r: (orden.get(r["estado"], 2), r["archivo"]))
-    _escribir_cola(nombre, src, filas, pendientes, sin_bajar)
+    return filas, sin_bajar, pendientes
 
-    tipos = Counter(r["tipo"] for r in filas)
-    print(f"[wiki] {nombre}: {len(filas)} archivos ({', '.join(f'{v} {k}' for k, v in tipos.items())})")
-    print(f"       {pendientes} pendientes · {sum(r['estado'] == 'ingerido' for r in filas)} ya en el wiki"
-          f" · {sum(r['estado'].startswith('duplicado') for r in filas)} duplicados")
-    if sin_bajar:
-        print(f"\n  ⚠ {len(sin_bajar)} archivos están en iCloud pero NO descargados; bájalos con:")
-        print(f'     find "{src}" -name "*.icloud" -exec brctl download {{}} \\;')
-    if any(r["nota"].startswith("sin pypdf") for r in filas):
-        print("\n  ⚠ sin `pypdf`: título, páginas y DOI de los PDF salen incompletos."
-              "\n     pip install pypdf && vuelve a correr el scan.")
-    print(f"\n       -> wiki/fuentes/Cola de ingesta.md")
+
+def cmd_scan(raw_dir: str, tema: str | None, split: bool, force: bool) -> int:
+    src = resolve_dir(raw_dir)
+    ya = _ingeridos()
+
+    # --split: una cola por subcarpeta de primer nivel, más una para los archivos sueltos.
+    if split:
+        objetivos = [(d, d.name, True) for d in sorted(src.iterdir())
+                     if d.is_dir() and not d.name.startswith(".")]
+        if any(f.is_file() and f.suffix.lower() in DOC_SUFFIXES and not f.name.startswith(".")
+               for f in src.iterdir()):
+            objetivos.append((src, f"{tema or src.name} (sueltos)", False))
+        if not objetivos:
+            sys.exit(f"{src} no tiene subcarpetas ni archivos indexables.")
+    else:
+        objetivos = [(src, tema or src.name, True)]
+
+    total, protegidas = 0, []
+    for carpeta, nombre, recursivo in objetivos:
+        filas, sin_bajar, pendientes = _inventario(carpeta, recursivo, ya)
+        if not filas and not sin_bajar:
+            print(f"[wiki] {nombre}: sin archivos indexables, se omite")
+            continue
+        destino = _escribir_cola(nombre, carpeta, filas, pendientes, sin_bajar, force)
+        if destino is None:
+            protegidas.append(nombre)
+            continue
+        total += 1
+        tipos = Counter(r["tipo"] for r in filas)
+        print(f"[wiki] {nombre}: {len(filas)} archivos "
+              f"({', '.join(f'{v} {k}' for k, v in sorted(tipos.items()))}) · "
+              f"{pendientes} pendientes · "
+              f"{sum(r['estado'] == 'ingerido' for r in filas)} en el wiki · "
+              f"{sum(r['estado'].startswith('duplicado') for r in filas)} duplicados"
+              + (f" · ⚠ {len(sin_bajar)} sin descargar" if sin_bajar else ""))
+        if sin_bajar:
+            print(f'       bájalos: find "{carpeta}" -name "*.icloud" -exec brctl download {{}} \\;')
+        if any(r["nota"].startswith("sin pypdf") for r in filas):
+            print("       ⚠ sin `pypdf` utilizable: DOI y títulos de PDF incompletos "
+                  "(pip install pypdf)")
+
+    if protegidas:
+        print(f"\n  ⚠ {len(protegidas)} cola(s) NO se tocaron porque ya existen con otro origen: "
+              + ", ".join(protegidas))
+        print("     Revísalas y, si quieres reemplazarlas por lo que hay en disco, repite con --force.")
+    if total > 1:
+        _indice_colas()
+    print(f"\n       {total} cola(s) escrita(s) en wiki/fuentes/")
     print("       Siguiente: ingiere UNA fuente pendiente siguiendo wiki/AGENTS.md §4.")
     return 0
 
 
 def _escribir_cola(nombre: str, src: Path, filas: list[dict], pendientes: int,
-                   sin_bajar: list[str]) -> None:
+                   sin_bajar: list[str], force: bool = False) -> Path | None:
+    """Escribe la cola de un tema. Devuelve None si ya existe una con otro origen y no hay --force."""
+    destino = WIKI / "fuentes" / f"Cola de ingesta {nombre}.md"
+    if destino.exists() and not force:
+        previo = _split_frontmatter(destino.read_text(encoding="utf-8"))[0].get("origen", "")
+        if previo != str(src):
+            return None
     hoy = date.today().isoformat()
     out = ["---", "tipo: indice", f"titulo: Cola de ingesta — {nombre}",
-           'aliases: ["Cola de ingesta"]', "tags: [wiki/indice, ingesta]",
+           f'aliases: ["Cola de ingesta {nombre}"]', "tags: [wiki/indice, ingesta]",
            "estado: en-progreso", "confianza: alta", f"pendientes: {pendientes}",
-           "generado: true", f"actualizado: {hoy}", "---", "",
+           f"origen: {src}", "generado: true", f"actualizado: {hoy}", "---", "",
            f"# Cola de ingesta — {nombre}", "",
            f"Inventario de `{src}`, generado por `python tools/wiki.py scan` el {hoy}.",
-           "Lo regenera el comando: no lo edites a mano. Marca `ingerido` cuando el nombre del",
-           "archivo o su DOI ya aparecen en alguna página de `fuentes/`.", "",
+           "Lo regenera el comando: no lo edites a mano. Una fila pasa a `ingerido` cuando el",
+           "nombre del archivo o su DOI ya aparecen en alguna página de `fuentes/`.", "",
            f"**{len(filas)} archivos · {pendientes} pendientes**", ""]
     if sin_bajar:
         out += ["> [!warning] Archivos no descargados de iCloud",
-                "> Estos existen como marcador pero su contenido no está en disco, así que el",
-                "> scan no pudo leerlos: " + ", ".join(f"`{n}`" for n in sin_bajar[:15])
+                "> Existen como marcador pero su contenido no está en disco, así que el scan no",
+                "> pudo leerlos: " + ", ".join(f"`{n}`" for n in sin_bajar[:15])
                 + ("…" if len(sin_bajar) > 15 else ""),
-                f"> ```\n> find \"{src}\" -name \"*.icloud\" -exec brctl download {{}} \\;\n> ```", ""]
+                f'> ```\n> find "{src}" -name "*.icloud" -exec brctl download {{}} \\;\n> ```', ""]
     out += ["| Archivo | Tipo | KB | DOI | Título detectado | Estado |", "|---|---|---|---|---|---|"]
     for r in filas:
         doi = f"[{r['doi']}](https://doi.org/{r['doi']})" if r["doi"] else "—"
@@ -474,14 +530,34 @@ def _escribir_cola(nombre: str, src: Path, filas: list[dict], pendientes: int,
         out.append(f"| `{r['archivo']}` | {r['tipo']} | {r['kb']} | {doi} | {titulo} "
                    f"| {r['estado']}{nota} |")
     out += ["", "## Cómo se usa esta cola", "",
-            "1. Toma **una** fila `pendiente` (empieza por revisiones y guías, no por casos).",
+            "1. Toma **una** fila `pendiente` (empieza por guías y revisiones, no por casos).",
             "2. Léela completa e ingiérela siguiendo `AGENTS.md` §4: página de fuente, propagación",
             "   a entidades y conceptos, contradicciones registradas.",
             "3. `python tools/wiki.py index && python tools/wiki.py log ingest \"<titulo>\"`.",
             "4. Vuelve a correr el scan: la fila pasa sola a `ingerido`.", ""]
-    write_target = WIKI / "fuentes" / "Cola de ingesta.md"
-    write_target.parent.mkdir(parents=True, exist_ok=True)
-    write_target.write_text("\n".join(out), encoding="utf-8")
+    destino.parent.mkdir(parents=True, exist_ok=True)
+    destino.write_text("\n".join(out), encoding="utf-8")
+    return destino
+
+
+def _indice_colas() -> None:
+    """Índice de todas las colas de ingesta, para no perderse entre temas."""
+    colas = sorted(WIKI.glob("fuentes/Cola de ingesta *.md"))
+    filas = []
+    for c in colas:
+        fm, body = _split_frontmatter(c.read_text(encoding="utf-8"))
+        m = re.search(r"\*\*(\d+) archivos", body)
+        filas.append(f"| [[{c.stem}]] | `{fm.get('origen', '?')}` | {m.group(1) if m else '?'} "
+                     f"| {fm.get('pendientes', '?')} | {fm.get('actualizado', '?')} |")
+    (WIKI / "fuentes" / "Colas de ingesta.md").write_text("\n".join(
+        ["---", "tipo: indice", "titulo: Colas de ingesta",
+         'aliases: ["Colas de ingesta"]', "tags: [wiki/indice, ingesta]",
+         "estado: en-progreso", "confianza: alta", "generado: true",
+         f"actualizado: {date.today().isoformat()}", "---", "",
+         "# Colas de ingesta", "",
+         "Una cola por carpeta de fuentes. Lo regenera `python tools/wiki.py scan --split`.", "",
+         "| Cola | Carpeta de origen | Archivos | Pendientes | Actualizado |",
+         "|---|---|---|---|---|"] + filas + [""]), encoding="utf-8")
 
 
 def main() -> int:
@@ -503,6 +579,10 @@ def main() -> int:
     sc = sub.add_parser("scan", help="Inventaría una carpeta de fuentes y arma la cola de ingesta.")
     sc.add_argument("--dir", required=True, help='Ej: "icloud/neuromuscular/CIDP"')
     sc.add_argument("--tema", help="Nombre de la cola (por defecto, el de la carpeta).")
+    sc.add_argument("--split", action="store_true",
+                    help="Una cola por subcarpeta de primer nivel, en vez de una sola recursiva.")
+    sc.add_argument("--force", action="store_true",
+                    help="Reescribe una cola que ya existe con otro origen.")
     it = sub.add_parser("init", help="Crea la estructura del wiki en otra carpeta.")
     it.add_argument("--dest", required=True)
     a = ap.parse_args()
@@ -519,7 +599,7 @@ def main() -> int:
     if a.cmd == "pack":
         return cmd_pack(a.out)
     if a.cmd == "scan":
-        return cmd_scan(a.dir, a.tema)
+        return cmd_scan(a.dir, a.tema, a.split, a.force)
     return cmd_init(a.dest)
 
 

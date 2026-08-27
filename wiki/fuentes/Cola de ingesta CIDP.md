@@ -6,6 +6,7 @@ tags: [wiki/indice, ingesta, cidp]
 estado: en-progreso
 confianza: alta
 pendientes: 20
+origen: Google Drive
 actualizado: 2026-08-27
 ---
 

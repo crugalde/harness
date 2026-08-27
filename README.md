@@ -127,6 +127,7 @@ citación, y las tres operaciones — **ingest** (una fuente toca 5–15 página
 
 ```bash
 python tools/wiki.py scan --dir "icloud/neuromuscular/CIDP"   # inventaría una carpeta de fuentes
+python tools/wiki.py scan --dir "icloud/neuromuscular" --split # una cola por subcarpeta (multi-tema)
 python tools/wiki.py index                     # regenera el catálogo
 python tools/wiki.py lint                       # enlaces rotos, huérfanas, esbozos, sin fuente
 python tools/wiki.py search "bloqueo de conduccion"  # BM25 sobre las páginas
@@ -141,8 +142,11 @@ Desde el harness, la skill `wiki_llm` expone `wiki_search`, `wiki_read`, `wiki_s
 ### Ingerir una carpeta (p. ej. iCloud)
 
 `scan` es el paso 0 del ingest: recorre la carpeta, extrae DOI y título de cada PDF, `.docx`,
-`.md` y `.txt`, detecta duplicados exactos por hash, marca lo que ya está en el wiki y arma
-`wiki/fuentes/Cola de ingesta.md`. Acepta rutas cortas de iCloud Drive (`icloud/...` se expande
+`.pptx`, `.md` y `.txt`, detecta duplicados exactos por hash, marca lo que ya está en el wiki y
+arma `wiki/fuentes/Cola de ingesta <tema>.md`. Con `--split` genera **una cola por subcarpeta de
+primer nivel** —para una carpeta madre tipo `neuromuscular/` con un tema por subcarpeta— más
+`Colas de ingesta.md` como índice de todas. Una cola que ya existe con **otro origen** no se
+sobrescribe sin `--force`, así un inventario hecho desde otra fuente no se pierde por accidente. Acepta rutas cortas de iCloud Drive (`icloud/...` se expande
 a `~/Library/Mobile Documents/com~apple~CloudDocs/...`) y **avisa de los archivos que iCloud
 tiene como marcador sin descargar**, con el `brctl download` para bajarlos. Los metadatos de PDF
 salen completos con `pip install pypdf`; sin él degrada al DOI que asome en los bytes, avisando.
