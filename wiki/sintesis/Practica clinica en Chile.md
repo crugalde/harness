@@ -5,7 +5,7 @@ aliases: [contexto chileno, GES]
 tags: [chile, ges, acceso]
 estado: en-progreso
 confianza: baja
-fuentes: ["[[2026-06-12 DAPT en ACV isquemico]]", "[[2026-08-06 Tolosa-Hunt sintesis clinica]]"]
+fuentes: ["[[2026-06-12 DAPT en ACV isquemico]]", "[[2026-08-06 Tolosa-Hunt sintesis clinica]]", "[[2020 Epidemiologia CIDP Santiago]]"]
 actualizado: 2026-08-27
 ---
 
@@ -45,6 +45,35 @@ corriente, no fuente citable):
 - **Biopsia del seno cavernoso** exige neurocirugía de base de cráneo: solo en centros terciarios.
 - **No hay datos chilenos ni latinoamericanos** de la entidad.
 
+## CIDP
+
+De [[2020 Epidemiologia CIDP Santiago]] — a diferencia del resto de esta página, **esto sí es
+fuente publicada y chilena**:
+
+- **Prevalencia 2,95/100.000 e incidencia 0,46/100.000** en el área sur-oriente de Santiago
+  (población FONASA ≥15 años). Dentro del rango europeo, australiano y japonés: la CIDP no es
+  más rara ni más frecuente acá.
+- El **78% de la población** se atiende en el sistema público, y el estudio se hizo sobre esa
+  base — las cifras representan realidad FONASA, no consulta privada.
+- Edad media de inicio **49,8 años**; razón hombre:mujer **1,1:1**, menos masculina que en la
+  mayoría de las series ([[Preguntas abiertas]] §16).
+- Para dimensionar: en un área de ~500.000 adultos hay **~15 pacientes** con CIDP. Es una
+  enfermedad de baja frecuencia y alto costo de tratamiento, lo que la vuelve un problema de
+  acceso más que de volumen.
+
+### Qué falta verificar sobre acceso
+
+Ninguna de las fuentes ingeridas cubre esto, y es lo que decide la conducta real:
+
+- **Cobertura de IVIg** en el sistema público chileno para CIDP: ¿canasta GES, Ley Ricarte Soto,
+  o resolución caso a caso? La [[2021 Guia EAN-PNS CIDP]] recomienda mantención indefinida en la
+  mayoría de los pacientes; el costo de eso en Chile no está en el wiki.
+- Disponibilidad real de **plasmaféresis** por centro, dado que la guía la pone como tercera
+  opción justamente por razones logísticas.
+- Disponibilidad de **anticuerpos nodo-paranodales** ([[Nodopatias autoinmunes]]): si no se pueden
+  pedir localmente, la recomendación de buscarlos ante mala respuesta a IVIg es inaplicable.
+- Registro ISP de las presentaciones de inmunoglobulina y su dosificación autorizada.
+
 ## Qué falta
 
 - Verificar la versión **vigente** de la guía MINSAL de ACV y si existe canasta GES actualizada.
@@ -56,4 +85,4 @@ corriente, no fuente citable):
 ## Enlaces
 
 [[Doble antiagregacion plaquetaria]] · [[Seleccion de pacientes para DAPT]] ·
-[[Sindrome de Tolosa-Hunt]] · [[RM de seno cavernoso]] · [[Preguntas abiertas]]
+[[CIDP]] · [[Tratamiento de la CIDP]] · [[Sindrome de Tolosa-Hunt]] · [[RM de seno cavernoso]] · [[Preguntas abiertas]]

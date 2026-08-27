@@ -36,3 +36,24 @@ Tipos: `ingest` · `query` · `lint` · `refactor`.
 - Cruza nombres y DOI contra las páginas de fuentes/ para marcar qué ya entró al wiki.
 - Cola inicial generada sobre projects/ del repo: 6 archivos ya ingeridos, 2 pendientes (los _estado.md, que no son fuentes).
 - Pendiente: correr el scan sobre icloud/neuromuscular/CIDP en la máquina de Cristian — este contenedor no ve iCloud.
+
+## [2026-08-27] ingest | Guia EAN/PNS CIDP 2021 (Drive)
+- Fuente: Van den Bergh et al, J Peripher Nerv Syst 2021;26:242-268, doi:10.1111/jns.12455. PDF en Google Drive, bajado con acceso UC.
+- Leída a texto completo (160k caracteres): criterios clínicos, tablas 2-6, recomendaciones de tratamiento.
+- Creadas — entidades: [[CIDP]], [[Nodopatias autoinmunes]]
+- Creadas — conceptos: [[Variantes de CIDP]], [[Criterios electrodiagnosticos de CIDP]], [[Categorias diagnosticas de CIDP]], [[Tratamiento de la CIDP]]
+- Creada — síntesis: [[Diagnostico diferencial de CIDP]]
+- Tensión registrada: la guía existe porque el sobrediagnóstico es frecuente incluso con pruebas bien interpretadas, pero no publica la especificidad resultante de los criterios nuevos ([[Preguntas abiertas]] §10).
+- Cambio de nomenclatura que rompe comparabilidad: «CIDP atípica» → variantes; tres niveles de certeza → dos; nodopatías autoinmunes fuera de CIDP.
+
+## [2026-08-27] ingest | Epidemiologia de CIDP en Santiago (Cea 2020, Drive)
+- Fuente: Cea G et al, J Clin Neurosci 2020, doi:10.1016/j.jocn.2020.02.009. Primera estimación epidemiológica de CIDP en Sudamérica y el Caribe.
+- Página de fuente: [[2020 Epidemiologia CIDP Santiago]]
+- Actualizadas: [[CIDP]] (tabla de epidemiología con datos chilenos vs referencia internacional), [[Practica clinica en Chile]] (sección CIDP)
+- Contradicción registrada: usó criterios EFNS/PNS 2010 (definite/possible), esquema que la guía 2021 eliminó — toda comparación de prevalencia arrastra el cambio de definición ([[Preguntas abiertas]] §11).
+- Hueco abierto: la cobertura de IVIg en el sistema público chileno no está en ninguna fuente ingerida y es lo que decide la conducta real.
+
+## [2026-08-27] lint | Tras las dos ingestas de CIDP
+- 31 páginas · 0 enlaces rotos · 0 huérfanas · 6 esbozos (los ensayos de DAPT, sin cambio).
+- Inventario de Drive en [[Cola de ingesta CIDP]]: 25 archivos, 20 pendientes, 3 duplicados (misma clase en pdf/docx/audio).
+- Siguiente sugerido: Continuum «CIDP and Its Variants» y Allen 2017 para contrastar [[Variantes de CIDP]]; Broers 2022 para contrastar la epidemiología.
