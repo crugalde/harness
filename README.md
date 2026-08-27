@@ -146,9 +146,11 @@ Desde el harness, la skill `wiki_llm` expone `wiki_search`, `wiki_read`, `wiki_s
 arma `wiki/fuentes/Cola de ingesta <tema>.md`. Con `--split` genera **una cola por subcarpeta de
 primer nivel** —para una carpeta madre tipo `neuromuscular/` con un tema por subcarpeta— más
 `Colas de ingesta.md` como índice de todas. Una cola que ya existe con **otro origen** no se
-sobrescribe sin `--force`, así un inventario hecho desde otra fuente no se pierde por accidente. Acepta rutas cortas de iCloud Drive (`icloud/...` se expande
-a `~/Library/Mobile Documents/com~apple~CloudDocs/...`) y **avisa de los archivos que iCloud
-tiene como marcador sin descargar**, con el `brctl download` para bajarlos. Los metadatos de PDF
+sobrescribe sin `--force`, así un inventario hecho desde otra fuente no se pierde por accidente. Acepta rutas cortas de iCloud Drive (`icloud/...` se expande a
+`~/Library/Mobile Documents/com~apple~CloudDocs/` en macOS y a `%USERPROFILE%\iCloudDrive\` en
+Windows) y **avisa de los archivos que la nube tiene como marcador sin descargar** — ficheros
+`.icloud` en macOS, atributos de recall en Windows — sin leerlos, para no disparar descargas
+masivas, e indicando cómo bajarlos en cada sistema. Los metadatos de PDF
 salen completos con `pip install pypdf`; sin él degrada al DOI que asome en los bytes, avisando.
 
 El scan **no ingiere**: solo inventaría. La lectura y la propagación a las páginas las hace el

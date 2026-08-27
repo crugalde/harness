@@ -19,6 +19,7 @@ from __future__ import annotations
 import argparse
 import hashlib
 import math
+import os
 import re
 import shutil
 import sys
@@ -327,10 +328,35 @@ TEXT_SUFFIXES = {".md", ".txt", ".markdown"}
 DOC_SUFFIXES = {".pdf", ".docx", ".pptx", ".rtf", ".epub"} | TEXT_SUFFIXES
 DOI_RE = re.compile(r"10\.\d{4,9}/[-._;()/:A-Za-z0-9]+")
 ICLOUD_BASES = [
-    Path.home() / "Library" / "Mobile Documents" / "com~apple~CloudDocs",
+    Path.home() / "Library" / "Mobile Documents" / "com~apple~CloudDocs",   # macOS
+    Path.home() / "iCloudDrive",                                            # Windows
     Path.home() / "iCloud Drive",
     Path.home() / "Library" / "Mobile Documents",
+    Path.home() / "OneDrive",
 ]
+
+# En Windows los archivos que solo están en la nube no son ficheros `.icloud`: son marcadores
+# con atributos de recall. Leerlos dispara la descarga, así que se detectan y se saltan.
+_ATRIBUTOS_EN_NUBE = 0x00001000 | 0x00040000 | 0x00400000   # OFFLINE | RECALL_ON_OPEN | RECALL_ON_DATA_ACCESS
+
+
+def _solo_en_la_nube(f: Path) -> bool:
+    """True si el archivo es un marcador sin contenido descargado (Windows)."""
+    if os.name != "nt":
+        return False
+    try:
+        return bool(f.stat().st_file_attributes & _ATRIBUTOS_EN_NUBE)
+    except (AttributeError, OSError):
+        return False
+
+
+def _ayuda_descarga(carpeta: Path) -> str:
+    """Cómo bajar a disco lo que la nube tiene solo como marcador, según el sistema."""
+    if os.name == "nt":
+        return ("En el Explorador: clic derecho sobre la carpeta → «Mantener siempre en este "
+                "dispositivo», y espera a que terminen las descargas.")
+    return f'find "{carpeta}" -name "*.icloud" -exec brctl download {{}} \\;'
+
 
 
 def resolve_dir(raw: str) -> Path:
@@ -423,10 +449,13 @@ def _inventario(carpeta: Path, recursivo: bool, ya: str) -> tuple[list[dict], li
     """Recorre una carpeta y devuelve (filas, archivos_sin_descargar, n_pendientes)."""
     filas, sin_bajar, hashes, pendientes = [], [], {}, 0
     for f in sorted(carpeta.rglob("*") if recursivo else carpeta.iterdir()):
-        if f.name.startswith(".") and f.suffix == ".icloud":      # placeholder de iCloud
+        if f.name.startswith(".") and f.suffix == ".icloud":      # marcador de iCloud (macOS)
             sin_bajar.append(f.name[1:-7])
             continue
         if not f.is_file() or f.name.startswith(".") or f.suffix.lower() not in DOC_SUFFIXES:
+            continue
+        if _solo_en_la_nube(f):                                   # marcador de iCloud (Windows)
+            sin_bajar.append(f.name)
             continue
         suf = f.suffix.lower()
         meta = (_meta_pdf(f) if suf == ".pdf" else
@@ -482,7 +511,7 @@ def cmd_scan(raw_dir: str, tema: str | None, split: bool, force: bool) -> int:
               f"{sum(r['estado'].startswith('duplicado') for r in filas)} duplicados"
               + (f" · ⚠ {len(sin_bajar)} sin descargar" if sin_bajar else ""))
         if sin_bajar:
-            print(f'       bájalos: find "{carpeta}" -name "*.icloud" -exec brctl download {{}} \\;')
+            print(f"       bájalos: {_ayuda_descarga(carpeta)}")
         if any(r["nota"].startswith("sin pypdf") for r in filas):
             print("       ⚠ sin `pypdf` utilizable: DOI y títulos de PDF incompletos "
                   "(pip install pypdf)")
@@ -521,7 +550,7 @@ def _escribir_cola(nombre: str, src: Path, filas: list[dict], pendientes: int,
                 "> Existen como marcador pero su contenido no está en disco, así que el scan no",
                 "> pudo leerlos: " + ", ".join(f"`{n}`" for n in sin_bajar[:15])
                 + ("…" if len(sin_bajar) > 15 else ""),
-                f'> ```\n> find "{src}" -name "*.icloud" -exec brctl download {{}} \\;\n> ```', ""]
+                f"> {_ayuda_descarga(src)}", ""]
     out += ["| Archivo | Tipo | KB | DOI | Título detectado | Estado |", "|---|---|---|---|---|---|"]
     for r in filas:
         doi = f"[{r['doi']}](https://doi.org/{r['doi']})" if r["doi"] else "—"
