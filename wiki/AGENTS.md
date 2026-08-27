@@ -69,7 +69,7 @@ wiki/
 
 **Nombres de archivo:** sin tildes ni caracteres especiales (macOS normaliza distinto que Linux y
 rompe git y los wikilinks). El título con tildes va en el front-matter y en el `# H1`.
-`entidades/Sindrome de Tolosa-Hunt.md` → `# Síndrome de Tolosa-Hunt`.
+`conceptos/Criterios electrodiagnosticos de CIDP.md` → `# Criterios electrodiagnósticos de CIDP`.
 
 ---
 
@@ -80,12 +80,12 @@ Front-matter obligatorio en **toda** página (lo consumen Dataview y `tools/wiki
 ```yaml
 ---
 tipo: entidad          # entidad | concepto | fuente | sintesis
-titulo: Síndrome de Tolosa-Hunt
-aliases: [THS, Tolosa-Hunt]
-tags: [neuro/neurooftalmologia, cefalea]
+titulo: Polirradiculoneuropatía desmielinizante inflamatoria crónica (CIDP)
+aliases: [CIDP, PDIC]
+tags: [neuro/neuromuscular, cidp]
 estado: consolidado    # esbozo | en-progreso | consolidado
 confianza: media       # alta | media | baja  (qué tan sólido es lo que afirma la página)
-fuentes: ["[[2026-08-06 Tolosa-Hunt sintesis clinica]]"]
+fuentes: ["[[2021 Guia EAN-PNS CIDP]]"]
 actualizado: 2026-08-27
 ---
 ```
@@ -186,10 +186,10 @@ completa) sin confirmarlos antes.
 Una línea por entrada, prefijo fijo para que `grep "^## \[" log.md | tail -5` sirva:
 
 ```markdown
-## [2026-08-27] ingest | Tolosa-Hunt sintesis clinica
-- Páginas creadas: [[Sindrome de Tolosa-Hunt]], [[Criterios ICHD-3 13.8]]
-- Páginas actualizadas: [[index]]
-- Nota: la fuente declara especificidad ~50% de los criterios; queda como tensión abierta.
+## [2026-08-27] ingest | Guia EAN-PNS CIDP 2021
+- Páginas creadas: [[CIDP]], [[Criterios electrodiagnosticos de CIDP]]
+- Páginas actualizadas: [[Practica clinica en Chile]]
+- Nota: la guía no publica la especificidad de los criterios nuevos; queda como tensión abierta.
 ```
 
 Tipos: `ingest` · `query` · `lint` · `refactor`.
@@ -221,7 +221,7 @@ Tipos: `ingest` · `query` · `lint` · `refactor`.
 python tools/wiki.py scan --dir "icloud/neuromuscular/CIDP"   # inventaría una carpeta
 python tools/wiki.py index                      # regenera el catálogo de index.md
 python tools/wiki.py lint                       # enlaces rotos, huérfanas, esbozos, sin fuente
-python tools/wiki.py search "seno cavernoso"    # búsqueda BM25 sobre las páginas
+python tools/wiki.py search "bloqueo de conduccion"   # búsqueda BM25 sobre las páginas
 python tools/wiki.py log ingest "Titulo" --detalle "..."   # añade entrada a log.md
 python tools/wiki.py stats                      # tamaño y salud del wiki de un vistazo
 python tools/wiki.py pack --out /tmp/wiki.md    # empaqueta el wiki para pegarlo en un LLM

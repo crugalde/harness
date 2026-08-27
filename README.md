@@ -129,7 +129,7 @@ citación, y las tres operaciones — **ingest** (una fuente toca 5–15 página
 python tools/wiki.py scan --dir "icloud/neuromuscular/CIDP"   # inventaría una carpeta de fuentes
 python tools/wiki.py index                     # regenera el catálogo
 python tools/wiki.py lint                       # enlaces rotos, huérfanas, esbozos, sin fuente
-python tools/wiki.py search "seno cavernoso"    # BM25 sobre las páginas
+python tools/wiki.py search "bloqueo de conduccion"  # BM25 sobre las páginas
 python tools/wiki.py log ingest "Titulo" --detalle "..."
 python tools/wiki.py stats                      # salud del wiki de un vistazo
 python tools/wiki.py pack --out /tmp/wiki.md    # empaqueta el wiki para pegarlo en un LLM
