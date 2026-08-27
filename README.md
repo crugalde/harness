@@ -19,11 +19,13 @@ tools/read_emg.py             # de-identificación de estudios EMG (med)
 tools/decompose.py            # pipeline HD-sEMG (signals)
 tools/ha_setup.py             # wizard de conexión/diagnóstico de Home Assistant (home)
 tools/schedule_distill.py     # disparador periódico del autoaprendizaje (cron)
+tools/wiki.py                 # wiki LLM: índice, lint, búsqueda BM25, bitácora, empaquetado
 skills/<nombre>/SKILL.md+tool.py   # pubmed_search · build_docx · build_pptx · home_assistant
 evals/run_evals.py            # red de seguridad offline (routing, guardas, secciones protegidas)
 tests/test_harness.py         # pytest del núcleo
 shared/                       # rules/, notebooklm/, learning/, traces/, templates/
 projects/<fecha_tema>/_estado.md   # continuidad entre sesiones (R5)
+wiki/                         # wiki LLM: schema (AGENTS.md), index.md, log.md, páginas y raw/
 ```
 
 ## Setup
@@ -105,6 +107,53 @@ confirmar la conexión tras el setup.
 Verifica con `ha_states` que el estado cambió tras el toggle y volvió al original tras revertir.
 Nota: `ha_call_service` puede responder "sin cambios de estado reportados" aunque la acción sí
 se aplique; confírmalo releyendo el estado.
+
+## Wiki LLM (`wiki/`)
+
+Base de conocimiento que el agente **construye y mantiene**, en vez de re-derivar la respuesta
+desde los documentos crudos en cada pregunta. Tres capas:
+
+| Capa | Dónde | Quién escribe |
+|---|---|---|
+| Fuentes crudas | `wiki/raw/` (+ los PDF y notas ya en `projects/`) | Tú. **Inmutables** |
+| Wiki | `wiki/fuentes/`, `entidades/`, `conceptos/`, `sintesis/` | El agente, entero |
+| Schema | `wiki/AGENTS.md` | Tú y el agente, en conjunto |
+
+El schema es la pieza clave: define el front-matter obligatorio, las convenciones de enlace y
+citación, y las tres operaciones — **ingest** (una fuente toca 5–15 páginas, no una), **query**
+(responder citando páginas, y archivar la respuesta si tiene estructura propia) y **lint**
+(contradicciones, afirmaciones superadas, huérfanas, huecos). `wiki/index.md` es el catálogo;
+`wiki/log.md`, la bitácora append-only.
+
+```bash
+python tools/wiki.py index                     # regenera el catálogo
+python tools/wiki.py lint                       # enlaces rotos, huérfanas, esbozos, sin fuente
+python tools/wiki.py search "seno cavernoso"    # BM25 sobre las páginas
+python tools/wiki.py log ingest "Titulo" --detalle "..."
+python tools/wiki.py stats                      # salud del wiki de un vistazo
+python tools/wiki.py pack --out /tmp/wiki.md    # empaqueta el wiki para pegarlo en un LLM
+```
+
+Desde el harness, la skill `wiki_llm` expone `wiki_search`, `wiki_read`, `wiki_index`,
+`wiki_lint` y `wiki_log` al agente (las descubre `tools/registry.py` sola).
+
+### Abrirlo en Obsidian
+
+Si este repo vive dentro de tu vault (`obsidianneuro/harness/`), **Obsidian ya ve `wiki/`**: no
+hay que copiar ni sincronizar nada, y las páginas quedan versionadas en git. Conviene añadir
+`.git`, `.venv` y `__pycache__` a Ajustes → Archivos y enlaces → *Archivos excluidos* para que no
+ensucien búsqueda ni grafo. Para dejar las imágenes clipeadas en disco, apunta la carpeta de
+adjuntos a `harness/wiki/raw/assets`.
+
+Si prefieres el wiki en otro punto de la vault:
+
+```bash
+python tools/wiki.py init --dest ~/obsidianneuro/Wiki   # crea la estructura y copia el schema
+```
+
+El grafo de Obsidian muestra la forma real del wiki (hubs y huérfanas), y Dataview puede consultar
+el front-matter (`tipo`, `estado`, `confianza`, `fuentes`, `actualizado`) para armar tablas
+dinámicas — por ejemplo, todo lo que esté en `estado: esbozo`.
 
 ## Flujo de seguridad
 
