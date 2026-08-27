@@ -14,12 +14,15 @@ ver `log.md`; para las convenciones, `AGENTS.md`.
 
 **20 páginas** · 2 fuentes ingeridas · 6 esbozos pendientes
 
+Por ingerir: [[Cola de ingesta]] — **2 archivos** esperando en la carpeta de fuentes.
+
 ## Fuentes ingeridas
 
 | Página | Qué contiene | Estado | Actualizado |
 |---|---|---|---|
 | [[2026-06-12 DAPT en ACV isquemico]] | Guía clínica propia que sistematiza el inicio precoz de doble antiagregación plaquetaria en prevención secundaria de ACV isquémico **no… | consolidado | 2026-08-27 |
 | [[2026-08-06 Tolosa-Hunt sintesis clinica]] | Revisión propia de 18 fuentes (2008–2026) generada el 6 de agosto de 2026 con la skill | consolidado | 2026-08-27 |
+| [[Cola de ingesta]] | Inventario de `projects`, generado por `python tools/wiki.py scan` el 2026-08-27. Lo regenera el comando: no lo edites a mano. Marca `ingerido`… | en-progreso | 2026-08-27 |
 
 ## Entidades
 

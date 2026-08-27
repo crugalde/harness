@@ -126,6 +126,7 @@ citación, y las tres operaciones — **ingest** (una fuente toca 5–15 página
 `wiki/log.md`, la bitácora append-only.
 
 ```bash
+python tools/wiki.py scan --dir "icloud/neuromuscular/CIDP"   # inventaría una carpeta de fuentes
 python tools/wiki.py index                     # regenera el catálogo
 python tools/wiki.py lint                       # enlaces rotos, huérfanas, esbozos, sin fuente
 python tools/wiki.py search "seno cavernoso"    # BM25 sobre las páginas
@@ -134,8 +135,20 @@ python tools/wiki.py stats                      # salud del wiki de un vistazo
 python tools/wiki.py pack --out /tmp/wiki.md    # empaqueta el wiki para pegarlo en un LLM
 ```
 
-Desde el harness, la skill `wiki_llm` expone `wiki_search`, `wiki_read`, `wiki_index`,
-`wiki_lint` y `wiki_log` al agente (las descubre `tools/registry.py` sola).
+Desde el harness, la skill `wiki_llm` expone `wiki_search`, `wiki_read`, `wiki_scan`,
+`wiki_index`, `wiki_lint` y `wiki_log` al agente (las descubre `tools/registry.py` sola).
+
+### Ingerir una carpeta (p. ej. iCloud)
+
+`scan` es el paso 0 del ingest: recorre la carpeta, extrae DOI y título de cada PDF, `.docx`,
+`.md` y `.txt`, detecta duplicados exactos por hash, marca lo que ya está en el wiki y arma
+`wiki/fuentes/Cola de ingesta.md`. Acepta rutas cortas de iCloud Drive (`icloud/...` se expande
+a `~/Library/Mobile Documents/com~apple~CloudDocs/...`) y **avisa de los archivos que iCloud
+tiene como marcador sin descargar**, con el `brctl download` para bajarlos. Los metadatos de PDF
+salen completos con `pip install pypdf`; sin él degrada al DOI que asome en los bytes, avisando.
+
+El scan **no ingiere**: solo inventaría. La lectura y la propagación a las páginas las hace el
+agente, de a una fuente, siguiendo `wiki/AGENTS.md` §4.
 
 ### Abrirlo en Obsidian
 

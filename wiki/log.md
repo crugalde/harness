@@ -30,3 +30,9 @@ Tipos: `ingest` · `query` · `lint` · `refactor`.
 - Acción propuesta 3: verificar criterios ICHD-3 contra el documento oficial (hoy dependen de dos revisiones).
 - Acción propuesta 4: buscar guía AHA/ASA 2024 o posterior para cerrar [[Preguntas abiertas]] §9.
 - Hueco detectado: [[Enfermedad relacionada con IgG4]] y [[Seno cavernoso]] están escritas solo desde la óptica de Tolosa-Hunt; ambas piden fuente propia.
+
+## [2026-08-27] refactor | Escáner de carpetas (paso 0 del ingest)
+- Nuevo `python tools/wiki.py scan --dir <carpeta>`: inventaría PDFs, .docx, .md y .txt con DOI y título, detecta duplicados por hash y archivos de iCloud sin descargar.
+- Cruza nombres y DOI contra las páginas de fuentes/ para marcar qué ya entró al wiki.
+- Cola inicial generada sobre projects/ del repo: 6 archivos ya ingeridos, 2 pendientes (los _estado.md, que no son fuentes).
+- Pendiente: correr el scan sobre icloud/neuromuscular/CIDP en la máquina de Cristian — este contenedor no ve iCloud.

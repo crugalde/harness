@@ -17,11 +17,13 @@ Sin dependencias externas (stdlib). El contrato del wiki está en wiki/AGENTS.md
 from __future__ import annotations
 
 import argparse
+import hashlib
 import math
 import re
 import shutil
 import sys
 import unicodedata
+import zipfile
 from collections import Counter
 from datetime import date, datetime
 from pathlib import Path
@@ -137,9 +139,13 @@ def cmd_index() -> int:
              "front-matter — no lo edites a mano. Para el orden cronológico de lo que fue pasando,",
              "ver `log.md`; para las convenciones, `AGENTS.md`.", ""]
 
-    total_fuentes = len(by_section.get("fuentes", []))
-    lines += [f"**{len(ps)} páginas** · {total_fuentes} fuentes ingeridas · "
+    cola = next((p for p in ps if p.get("tipo") == "indice" and p.stem == "Cola de ingesta"), None)
+    total_fuentes = len(by_section.get("fuentes", [])) - (1 if cola else 0)
+    lines += [f"**{len(ps) - (1 if cola else 0)} páginas** · {total_fuentes} fuentes ingeridas · "
               f"{sum(1 for p in ps if p.get('estado') == 'esbozo')} esbozos pendientes", ""]
+    if cola:
+        lines += [f"Por ingerir: [[Cola de ingesta]] — **{cola.get('pendientes', '?')} archivos** "
+                  "esperando en la carpeta de fuentes.", ""]
 
     titles = {"fuentes": "Fuentes ingeridas", "entidades": "Entidades",
               "conceptos": "Conceptos", "sintesis": "Síntesis"}
@@ -190,7 +196,10 @@ def cmd_lint(stale_days: int) -> int:
         elif d > stale_days:
             warnings.append(f"{p.rel}: sin tocar hace {d} días — ¿sigue vigente? (R1)")
 
+    # Los índices generados (cola de ingesta) se enlazan desde index.md, que no es una página
+    # de contenido: exigirles enlaces entrantes sería una falsa alarma permanente.
     orphans = [p.rel for p in ps if incoming[p.stem] == 0
+               and p.get("tipo") != "indice"
                and not any(incoming[a] for a in p.list("aliases"))]
 
     print(f"lint: {len(ps)} páginas · {len(errors)} errores · {len(warnings)} avisos · "
@@ -307,6 +316,174 @@ def cmd_init(dest: str) -> int:
     return 0
 
 
+# --------------------------------------------------------------------------- #
+# scan — inventario de una carpeta de fuentes (paso 0 del ingest)
+# --------------------------------------------------------------------------- #
+TEXT_SUFFIXES = {".md", ".txt", ".markdown"}
+DOC_SUFFIXES = {".pdf", ".docx", ".rtf", ".epub"} | TEXT_SUFFIXES
+DOI_RE = re.compile(r"10\.\d{4,9}/[-._;()/:A-Za-z0-9]+")
+ICLOUD_BASES = [
+    Path.home() / "Library" / "Mobile Documents" / "com~apple~CloudDocs",
+    Path.home() / "iCloud Drive",
+    Path.home() / "Library" / "Mobile Documents",
+]
+
+
+def resolve_dir(raw: str) -> Path:
+    """Resuelve la carpeta de fuentes, tolerando rutas cortas de iCloud Drive.
+
+    Acepta la ruta real, o abreviaturas como `icloud/neuromuscular/CIDP`, que en macOS
+    viven bajo ~/Library/Mobile Documents/com~apple~CloudDocs/.
+    """
+    p = Path(raw).expanduser()
+    if p.is_dir():
+        return p
+    rel = re.sub(r"^(icloud drive|icloud)[/\\]", "", raw.strip().lstrip("/"), flags=re.I)
+    for base in ICLOUD_BASES:
+        cand = (base / rel).expanduser()
+        if cand.is_dir():
+            return cand
+    probados = "\n  ".join(str(b / rel) for b in ICLOUD_BASES)
+    sys.exit(f"No encuentro la carpeta '{raw}'. Probé:\n  {p}\n  {probados}\n"
+             "Pásame la ruta completa con --dir.")
+
+
+def _doi(text: str) -> str:
+    m = DOI_RE.search(text or "")
+    return m.group(0).rstrip(".,;)") if m else ""
+
+
+def _meta_pdf(path: Path) -> dict:
+    """Título, páginas y DOI de un PDF. Usa pypdf si está; si no, degrada con aviso."""
+    try:
+        from pypdf import PdfReader                              # import perezoso
+    except Exception:
+        # Ausente, o presente pero inservible (backend de cryptography roto): en ambos casos
+        # se degrada al DOI que asome en los bytes, con aviso — nunca se falla en silencio.
+        raw = path.read_bytes()[:400_000].decode("latin-1", "ignore")
+        return {"titulo": "", "doi": _doi(raw), "paginas": "",
+                "nota": "sin pypdf utilizable: metadatos incompletos"}
+    try:
+        r = PdfReader(str(path))
+        titulo = (r.metadata.title or "").strip() if r.metadata else ""
+        texto = "\n".join((pg.extract_text() or "") for pg in r.pages[:2])
+        return {"titulo": titulo, "doi": _doi(titulo + " " + texto),
+                "paginas": str(len(r.pages)), "nota": ""}
+    except Exception as e:                                        # PDF corrupto o cifrado
+        return {"titulo": "", "doi": "", "paginas": "", "nota": f"ilegible: {type(e).__name__}"}
+
+
+def _meta_docx(path: Path) -> dict:
+    """Primer texto de un .docx sin dependencias (zip + XML de Word)."""
+    try:
+        with zipfile.ZipFile(path) as z:
+            xml = z.read("word/document.xml").decode("utf-8", "ignore")
+        texto = re.sub(r"<[^>]+>", " ", xml)
+        texto = re.sub(r"\s+", " ", texto).strip()
+        return {"titulo": texto[:120], "doi": _doi(texto[:5000]), "paginas": "", "nota": ""}
+    except Exception as e:
+        return {"titulo": "", "doi": "", "paginas": "", "nota": f"ilegible: {type(e).__name__}"}
+
+
+def _meta_text(path: Path) -> dict:
+    texto = path.read_text(encoding="utf-8", errors="replace")
+    titulo = next((l.lstrip("# ").strip() for l in texto.splitlines()
+                   if l.strip() and not re.match(r"([-*+>|]|\s)", l)), "")
+    return {"titulo": titulo[:120], "doi": _doi(texto[:5000]), "paginas": "", "nota": ""}
+
+
+def _ingeridos() -> str:
+    """Texto de las páginas de fuentes/, para saber qué ya entró al wiki.
+
+    Excluye los índices — la cola de ingesta vive en `fuentes/` y lista los nombres de
+    archivo, así que contarla se auto-cumpliría: todo saldría «ingerido».
+    """
+    return "\n".join(p.body for p in pages()
+                     if p.section == "fuentes" and p.get("tipo") != "indice").lower()
+
+
+def cmd_scan(raw_dir: str, tema: str | None) -> int:
+    src = resolve_dir(raw_dir)
+    ya = _ingeridos()
+    filas, pendientes, sin_bajar, hashes = [], 0, [], {}
+
+    for f in sorted(src.rglob("*")):
+        if f.name.startswith(".") and f.suffix == ".icloud":      # placeholder de iCloud
+            sin_bajar.append(f.name[1:-7])
+            continue
+        if not f.is_file() or f.name.startswith(".") or f.suffix.lower() not in DOC_SUFFIXES:
+            continue
+        suf = f.suffix.lower()
+        meta = (_meta_pdf(f) if suf == ".pdf" else
+                _meta_docx(f) if suf == ".docx" else
+                _meta_text(f) if suf in TEXT_SUFFIXES else
+                {"titulo": "", "doi": "", "paginas": "", "nota": "formato sin extractor"})
+        h = hashlib.sha256(f.read_bytes()).hexdigest()[:12]
+        dup = hashes.setdefault(h, f.name)
+        clave = f.stem.lower()
+        entrado = clave in ya or (meta["doi"] and meta["doi"].lower() in ya)
+        estado = ("duplicado de " + dup if dup != f.name else
+                  "ingerido" if entrado else "pendiente")
+        pendientes += estado == "pendiente"
+        filas.append({"archivo": f.relative_to(src).as_posix(), "tipo": suf.lstrip("."),
+                      "kb": max(1, math.ceil(f.stat().st_size / 1024)), "estado": estado, **meta})
+
+    nombre = tema or src.name
+    orden = {"pendiente": 0, "ingerido": 1}
+    filas.sort(key=lambda r: (orden.get(r["estado"], 2), r["archivo"]))
+    _escribir_cola(nombre, src, filas, pendientes, sin_bajar)
+
+    tipos = Counter(r["tipo"] for r in filas)
+    print(f"[wiki] {nombre}: {len(filas)} archivos ({', '.join(f'{v} {k}' for k, v in tipos.items())})")
+    print(f"       {pendientes} pendientes · {sum(r['estado'] == 'ingerido' for r in filas)} ya en el wiki"
+          f" · {sum(r['estado'].startswith('duplicado') for r in filas)} duplicados")
+    if sin_bajar:
+        print(f"\n  ⚠ {len(sin_bajar)} archivos están en iCloud pero NO descargados; bájalos con:")
+        print(f'     find "{src}" -name "*.icloud" -exec brctl download {{}} \\;')
+    if any(r["nota"].startswith("sin pypdf") for r in filas):
+        print("\n  ⚠ sin `pypdf`: título, páginas y DOI de los PDF salen incompletos."
+              "\n     pip install pypdf && vuelve a correr el scan.")
+    print(f"\n       -> wiki/fuentes/Cola de ingesta.md")
+    print("       Siguiente: ingiere UNA fuente pendiente siguiendo wiki/AGENTS.md §4.")
+    return 0
+
+
+def _escribir_cola(nombre: str, src: Path, filas: list[dict], pendientes: int,
+                   sin_bajar: list[str]) -> None:
+    hoy = date.today().isoformat()
+    out = ["---", "tipo: indice", f"titulo: Cola de ingesta — {nombre}",
+           'aliases: ["Cola de ingesta"]', "tags: [wiki/indice, ingesta]",
+           "estado: en-progreso", "confianza: alta", f"pendientes: {pendientes}",
+           "generado: true", f"actualizado: {hoy}", "---", "",
+           f"# Cola de ingesta — {nombre}", "",
+           f"Inventario de `{src}`, generado por `python tools/wiki.py scan` el {hoy}.",
+           "Lo regenera el comando: no lo edites a mano. Marca `ingerido` cuando el nombre del",
+           "archivo o su DOI ya aparecen en alguna página de `fuentes/`.", "",
+           f"**{len(filas)} archivos · {pendientes} pendientes**", ""]
+    if sin_bajar:
+        out += ["> [!warning] Archivos no descargados de iCloud",
+                "> Estos existen como marcador pero su contenido no está en disco, así que el",
+                "> scan no pudo leerlos: " + ", ".join(f"`{n}`" for n in sin_bajar[:15])
+                + ("…" if len(sin_bajar) > 15 else ""),
+                f"> ```\n> find \"{src}\" -name \"*.icloud\" -exec brctl download {{}} \\;\n> ```", ""]
+    out += ["| Archivo | Tipo | KB | DOI | Título detectado | Estado |", "|---|---|---|---|---|---|"]
+    for r in filas:
+        doi = f"[{r['doi']}](https://doi.org/{r['doi']})" if r["doi"] else "—"
+        titulo = (r["titulo"] or "—").replace("|", "/")[:90]
+        nota = f" · {r['nota']}" if r["nota"] else ""
+        out.append(f"| `{r['archivo']}` | {r['tipo']} | {r['kb']} | {doi} | {titulo} "
+                   f"| {r['estado']}{nota} |")
+    out += ["", "## Cómo se usa esta cola", "",
+            "1. Toma **una** fila `pendiente` (empieza por revisiones y guías, no por casos).",
+            "2. Léela completa e ingiérela siguiendo `AGENTS.md` §4: página de fuente, propagación",
+            "   a entidades y conceptos, contradicciones registradas.",
+            "3. `python tools/wiki.py index && python tools/wiki.py log ingest \"<titulo>\"`.",
+            "4. Vuelve a correr el scan: la fila pasa sola a `ingerido`.", ""]
+    write_target = WIKI / "fuentes" / "Cola de ingesta.md"
+    write_target.parent.mkdir(parents=True, exist_ok=True)
+    write_target.write_text("\n".join(out), encoding="utf-8")
+
+
 def main() -> int:
     ap = argparse.ArgumentParser(description="Herramientas del wiki LLM.")
     sub = ap.add_subparsers(dest="cmd", required=True)
@@ -323,6 +500,9 @@ def main() -> int:
     sub.add_parser("stats", help="Salud del wiki de un vistazo.")
     pk = sub.add_parser("pack", help="Empaqueta el wiki en un archivo de contexto.")
     pk.add_argument("--out", default="wiki-volcado.md")
+    sc = sub.add_parser("scan", help="Inventaría una carpeta de fuentes y arma la cola de ingesta.")
+    sc.add_argument("--dir", required=True, help='Ej: "icloud/neuromuscular/CIDP"')
+    sc.add_argument("--tema", help="Nombre de la cola (por defecto, el de la carpeta).")
     it = sub.add_parser("init", help="Crea la estructura del wiki en otra carpeta.")
     it.add_argument("--dest", required=True)
     a = ap.parse_args()
@@ -338,6 +518,8 @@ def main() -> int:
         return cmd_stats()
     if a.cmd == "pack":
         return cmd_pack(a.out)
+    if a.cmd == "scan":
+        return cmd_scan(a.dir, a.tema)
     return cmd_init(a.dest)
 
 

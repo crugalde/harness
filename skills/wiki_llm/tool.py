@@ -1,8 +1,8 @@
 """Skill wiki_llm — acceso del harness al wiki LLM de `wiki/`.
 
 Envuelve `tools/wiki.py` (misma lógica que el CLI, sin duplicarla) y la expone como tools del
-ToolRegistry. Solo lectura salvo `wiki_index` (regenera el catálogo) y `wiki_log` (append a la
-bitácora); ninguna crea, edita ni borra páginas — eso lo hace el agente siguiendo el flujo de
+ToolRegistry. Solo lectura salvo `wiki_index` (regenera el catálogo), `wiki_scan` (actualiza la cola de
+ingesta) y `wiki_log` (append a la bitácora); ninguna crea, edita ni borra páginas — eso lo hace el agente siguiendo el flujo de
 ingest de wiki/AGENTS.md §4.
 """
 from __future__ import annotations
@@ -51,6 +51,14 @@ def wiki_read(args: dict) -> str:
             "wiki/index.md antes de asumir que el wiki cubre el tema.")
 
 
+def wiki_scan(args: dict) -> str:
+    """Inventaría una carpeta de fuentes y actualiza la cola de ingesta."""
+    carpeta = (args.get("carpeta") or "").strip()
+    if not carpeta:
+        return "ERROR: falta 'carpeta'."
+    return _capture(_wiki().cmd_scan, carpeta, args.get("tema"))
+
+
 def wiki_index(args: dict) -> str:
     return _capture(_wiki().cmd_index)
 
@@ -86,6 +94,14 @@ def register_skill(reg) -> None:
         {"type": "object", "properties": {"pagina": {"type": "string"}},
          "required": ["pagina"]},
         wiki_read)
+    reg.register(
+        "wiki_scan",
+        "Inventaría una carpeta de fuentes (PDF, md, docx): DOI, títulos, duplicados, "
+        "archivos de iCloud sin descargar, y qué falta por ingerir.",
+        {"type": "object",
+         "properties": {"carpeta": {"type": "string"}, "tema": {"type": "string"}},
+         "required": ["carpeta"]},
+        wiki_scan)
     reg.register(
         "wiki_index",
         "Regenera wiki/index.md desde el front-matter de las páginas.",

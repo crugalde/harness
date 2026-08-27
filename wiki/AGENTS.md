@@ -121,6 +121,14 @@ publicada, y dilo en el cuerpo (`R12`).
 
 Cuando Cristian deja una fuente en `raw/` (o apunta a un archivo del repo) y pide procesarla:
 
+0. **Si apunta a una carpeta entera, inventaríala primero**:
+   `python tools/wiki.py scan --dir "<carpeta>" --tema "<tema>"`. Deja en
+   `fuentes/Cola de ingesta.md` qué hay, con DOI y título detectados, duplicados exactos,
+   archivos de iCloud que están como marcador pero sin descargar, y qué falta por ingerir
+   (cruza los nombres y DOI contra las páginas de `fuentes/`). **El scan no ingiere nada**:
+   solo dice qué hay. Después trabajas la cola de a una fila, empezando por guías y
+   revisiones — son las que más páginas siembran y las que fijan el vocabulario del tema.
+
 1. **Lee la fuente completa.** No el abstract, no las primeras páginas: completa. Si es un PDF
    con imágenes relevantes, míralas aparte.
 2. **Conversa antes de escribir.** Dile qué encontraste, qué cambia respecto de lo que ya hay en
@@ -210,6 +218,7 @@ Tipos: `ingest` · `query` · `lint` · `refactor`.
 ## 8. Comandos
 
 ```bash
+python tools/wiki.py scan --dir "icloud/neuromuscular/CIDP"   # inventaría una carpeta
 python tools/wiki.py index                      # regenera el catálogo de index.md
 python tools/wiki.py lint                       # enlaces rotos, huérfanas, esbozos, sin fuente
 python tools/wiki.py search "seno cavernoso"    # búsqueda BM25 sobre las páginas
