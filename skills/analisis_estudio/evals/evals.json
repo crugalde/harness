@@ -1,6 +1,6 @@
 {
   "skill_name": "analisis-estudio",
-  "notas": "Casos elegidos para forzar las decisiones que rompen la ficha: diseño mal etiquetado por el editor, publicación con metadatos incompletos, patología ausente del vocabulario, reanálisis del mismo paper (idempotencia) y solo-abstract. Ejecutar con la skill cargada y NOTION_DB_RESUMEN apuntando a una copia de prueba, nunca a la base real.",
+  "notas": "Casos elegidos para forzar las decisiones que rompen la ficha: diseño mal etiquetado por el editor, publicación con metadatos incompletos, patología ausente del vocabulario, reanálisis del mismo paper (idempotencia), solo-abstract, y la fase de lote sobre una carpeta. Ejecutar con la skill cargada y NOTION_DB_RESUMEN apuntando a una copia de prueba, nunca a la base real.",
   "evals": [
     {
       "id": 0,
@@ -80,6 +80,34 @@
         "Explicó que sin DOI ni PMID no hay clave para detectar duplicados",
         "Ofreció la salida --sin-verificar en lugar de simplemente fallar",
         "No inventó un DOI"
+      ],
+      "files": []
+    },
+    {
+      "id": 6,
+      "nombre": "lote-sobre-carpeta",
+      "prompt": "Tengo la carpeta iCloudDrive/neuromuscular con unos 30 PDFs. Procésalos.",
+      "expected_output": "Corre la fase A (lote_fichas.py), deja LOTE.md con la lista priorizada y un metadatos.json por paper, y explica que el análisis crítico sigue siendo de a uno. NO intenta analizar y publicar los 30 en una corrida.",
+      "assertions": [
+        "Corrió lote_fichas.py sobre la carpeta en vez de leer los PDFs uno por uno",
+        "No intentó redactar 30 fichas en una sola pasada",
+        "Explicó por qué el análisis no se batchea, sin limitarse a decir que no puede",
+        "Reportó cuántos ya estaban publicados en Notion",
+        "Listó los bloqueos (sin DOI, patología por asignar) agrupados, no paper por paper",
+        "No infirió patología ni aspecto para poder avanzar"
+      ],
+      "files": []
+    },
+    {
+      "id": 7,
+      "nombre": "lote-con-pdf-sin-doi",
+      "prompt": "Corre el lote otra vez, arreglé los que faltaban.",
+      "expected_output": "Reanuda: se salta lo ya verificado sin volver a la red, reprocesa solo lo que cambió, y el LOTE.md refleja el estado nuevo. Los que siguen sin DOI aparecen con la instrucción exacta de qué archivo crear.",
+      "assertions": [
+        "No repitió las peticiones a Crossref/PubMed de los papers ya verificados",
+        "El informe distingue 'listo para analizar' de 'ficha ya escrita' y de 'ya publicado'",
+        "Para cada PDF sin DOI nombra el sidecar exacto a crear",
+        "La columna 'Falta' no dice '—' en papers a los que aún les falta patología o aspecto"
       ],
       "files": []
     }

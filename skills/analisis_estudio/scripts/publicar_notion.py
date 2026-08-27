@@ -42,6 +42,7 @@ import argparse
 import json
 import os
 import sys
+import time
 import urllib.error
 import urllib.request
 from pathlib import Path
@@ -61,6 +62,7 @@ except Exception:                          # sin env_loader seguimos con os.envi
 
 API = "https://api.notion.com/v1"
 VERSION_API = "2022-06-28"
+REINTENTOS = 5
 
 # Destino fijo: base «Resumen de estudios» dentro de 📚 Biblioteca de Investigación.
 # Se puede sobreescribir por entorno para pruebas, nunca por argumento suelto.
@@ -107,15 +109,35 @@ def _peticion(metodo: str, ruta: str, token: str, cuerpo: dict | None = None) ->
         "Notion-Version": VERSION_API,
         "Content-Type": "application/json",
     })
-    try:
-        with urllib.request.urlopen(req, timeout=60) as r:
-            return json.loads(r.read().decode("utf-8"))
-    except urllib.error.HTTPError as e:
-        detalle = e.read().decode("utf-8", "replace")[:600]
-        # El token nunca se imprime; el mensaje de Notion sí, que es lo accionable.
-        raise ErrorPublicacion(f"{metodo} {ruta} -> HTTP {e.code}: {detalle}") from None
-    except urllib.error.URLError as e:
-        raise ErrorPublicacion(f"{metodo} {ruta} -> sin conexión: {e.reason}") from None
+    # Notion permite ~3 peticiones/s y devuelve 429 al pasarse. Una ficha son 5-7
+    # peticiones, así que un lote las acumula rápido: sin reintento, el primer 429
+    # deja la mitad de las fichas publicadas y la otra mitad no.
+    espera = 1.0
+    for intento in range(REINTENTOS):
+        try:
+            with urllib.request.urlopen(req, timeout=60) as r:
+                return json.loads(r.read().decode("utf-8"))
+        except urllib.error.HTTPError as e:
+            transitorio = e.code == 429 or 500 <= e.code < 600
+            if transitorio and intento < REINTENTOS - 1:
+                # Notion dice cuánto esperar en Retry-After; hacerle caso evita
+                # entrar en un bucle de 429 por reintentar demasiado pronto.
+                pausa = float(e.headers.get("Retry-After") or espera)
+                print(f"[reintento {intento + 1}/{REINTENTOS - 1}] HTTP {e.code}, "
+                      f"espero {pausa:.0f}s", file=sys.stderr)
+                time.sleep(pausa)
+                espera = min(espera * 2, 30)
+                continue
+            detalle = e.read().decode("utf-8", "replace")[:600]
+            # El token nunca se imprime; el mensaje de Notion sí, que es lo accionable.
+            raise ErrorPublicacion(f"{metodo} {ruta} -> HTTP {e.code}: {detalle}") from None
+        except urllib.error.URLError as e:
+            if intento < REINTENTOS - 1:
+                time.sleep(espera)
+                espera = min(espera * 2, 30)
+                continue
+            raise ErrorPublicacion(f"{metodo} {ruta} -> sin conexión: {e.reason}") from None
+    raise ErrorPublicacion(f"{metodo} {ruta} -> agotados los reintentos")
 
 
 def token_notion() -> str | None:

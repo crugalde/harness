@@ -286,3 +286,139 @@ def test_ficha_de_ejemplo_pasa_la_validacion_de_publicacion(tmp_path):
     cuerpo = PN.cuerpo_ficha(ficha, META, sin_verificar=False)
     assert "METADATOS NUNCA VERIFICADOS" not in cuerpo   # están verificados
     assert len(NM.trocear(NM.a_bloques(cuerpo))) == 1    # cabe en una sola petición
+
+
+# --------------------------------------------------------------- lote_fichas (fase A)
+
+LF = _load("lote_fichas")
+
+
+def _pdf_xmp(doi: str) -> bytes:
+    return (b"%PDF-1.7\n<x:xmpmeta xmlns:x='adobe:ns:meta/'><rdf:RDF><rdf:Description>"
+            b"<prism:doi>" + doi.encode() + b"</prism:doi>"
+            b"</rdf:Description></rdf:RDF></x:xmpmeta>\n%%EOF")
+
+
+def test_doi_desde_xmp(tmp_path):
+    p = tmp_path / "a.pdf"
+    p.write_bytes(_pdf_xmp("10.1186/s12967-023-03905-1"))
+    assert LF.doi_de_pdf(p) == ("10.1186/s12967-023-03905-1", "XMP")
+
+
+def test_doi_desde_stream_comprimido(tmp_path):
+    import zlib
+    cuerpo = zlib.compress(b"BT (https://doi.org/10.1212/WNL.0000000000207200) Tj ET")
+    p = tmp_path / "c.pdf"
+    p.write_bytes(b"%PDF-1.5\n4 0 obj<</Filter/FlateDecode>>stream\n" + cuerpo
+                  + b"\nendstream endobj\n%%EOF")
+    doi, origen = LF.doi_de_pdf(p)
+    assert doi == "10.1212/WNL.0000000000207200" and origen == "stream"
+
+
+def test_pdf_sin_doi_no_inventa(tmp_path):
+    p = tmp_path / "d.pdf"
+    p.write_bytes(b"%PDF-1.4\nsin nada util\n%%EOF")
+    assert LF.doi_de_pdf(p) == (None, "no encontrado")
+
+
+def test_sidecar_rescata_el_doi(tmp_path):
+    p = tmp_path / "d.pdf"
+    p.write_bytes(b"%PDF-1.4\n%%EOF")
+    (tmp_path / "d.doi").write_text("https://doi.org/10.1093/brain/awad123\n")
+    assert LF.doi_de_sidecar(p) == "10.1093/brain/awad123"
+
+
+def test_limpiar_doi_quita_la_basura_del_pdf():
+    # El DOI extraído de un PDF arrastra el paréntesis o el punto que lo seguía.
+    assert LF.limpiar_doi("10.1186/s12967-023-03905-1).") == "10.1186/s12967-023-03905-1"
+    assert LF.limpiar_doi("doi:10.1002/mus.27832,") == "10.1002/mus.27832"
+    assert LF.limpiar_doi("https://doi.org/10.1212/WNL.207200") == "10.1212/WNL.207200"
+
+
+def _stub_red(monkeypatch, pubtypes=("Journal Article", "Review")):
+    """Simula Crossref + PubMed sin tocar la red."""
+    monkeypatch.setattr(LF.VM, "resolver_ids", lambda d, p, c: (d, "36765380"))
+    monkeypatch.setattr(LF.VM, "de_crossref", lambda d, c: {
+        "titulo": "The genetic basis of multiple system atrophy", "anio": 2023,
+        "revista": "J Transl Med", "autor": "Tseng FS et al.", "tipo_crossref": "journal-article"})
+    monkeypatch.setattr(LF.VM, "de_pubmed", lambda p, c: {
+        "titulo": "The genetic basis of multiple system atrophy", "anio": 2023,
+        "revista": "J Transl Med", "autor": "Tseng FS et al.", "pubtypes": list(pubtypes)})
+    monkeypatch.setattr(LF.time, "sleep", lambda s: None)
+
+
+def test_lote_escribe_metadatos_verificados(tmp_path, monkeypatch):
+    _stub_red(monkeypatch)
+    pdf = tmp_path / "msa.pdf"
+    pdf.write_bytes(_pdf_xmp("10.1186/s12967-023-03905-1"))
+
+    e = LF.procesar(pdf, None, "x@y.cl", rehacer=False)
+    assert e["estado"] == "listo"
+    assert e["tipo_estudio"] == "Revisión narrativa" and e["guia"] == "SANRA"
+
+    meta = json.loads((tmp_path / "msa.metadatos.json").read_text(encoding="utf-8"))
+    assert meta["verificacion"]["verificado"] is True
+    assert meta["archivo_local"].startswith("file://")     # ruta clicable, ya resuelta
+    # Lo que ningún script puede derivar queda pendiente y visible.
+    assert set(e["falta"]) == {"patologia", "aspecto", "calidad", "aporte"}
+
+
+def test_lote_es_reanudable(tmp_path, monkeypatch):
+    _stub_red(monkeypatch)
+    pdf = tmp_path / "msa.pdf"
+    pdf.write_bytes(_pdf_xmp("10.1186/s12967-023-03905-1"))
+    LF.procesar(pdf, None, "x@y.cl", rehacer=False)
+
+    llamadas = []
+    monkeypatch.setattr(LF.VM, "de_crossref",
+                        lambda d, c: llamadas.append(d) or {})
+    e = LF.procesar(pdf, None, "x@y.cl", rehacer=False)
+    assert e["estado"] == "ya_verificado"
+    assert llamadas == []                                  # no volvió a la red
+
+
+def test_reanudar_no_miente_sobre_lo_que_falta(tmp_path, monkeypatch):
+    """El bug que tuvo: al reanudar decía «Falta: —» con patología aún sin asignar."""
+    _stub_red(monkeypatch)
+    pdf = tmp_path / "msa.pdf"
+    pdf.write_bytes(_pdf_xmp("10.1186/s12967-023-03905-1"))
+    LF.procesar(pdf, None, "x@y.cl", rehacer=False)
+
+    e = LF.procesar(pdf, None, "x@y.cl", rehacer=False)
+    assert "patologia" in e["falta"] and "aspecto" in e["falta"]
+    assert e["anio"] == 2023 and e["guia"] == "SANRA"      # y trae los datos, no "?"
+
+
+def test_ficha_ya_escrita_se_distingue(tmp_path, monkeypatch):
+    _stub_red(monkeypatch)
+    pdf = tmp_path / "msa.pdf"
+    pdf.write_bytes(_pdf_xmp("10.1186/s12967-023-03905-1"))
+    LF.procesar(pdf, None, "x@y.cl", rehacer=False)
+    (tmp_path / "msa.md").write_text("## Identificación del estudio\n", encoding="utf-8")
+    assert LF.procesar(pdf, None, "x@y.cl", rehacer=False)["estado"] == "ficha_escrita"
+
+
+def test_sin_doi_da_instruccion_accionable(tmp_path, monkeypatch):
+    _stub_red(monkeypatch)
+    pdf = tmp_path / "capitulo.pdf"
+    pdf.write_bytes(b"%PDF-1.4\nsin doi\n%%EOF")
+    e = LF.procesar(pdf, None, "x@y.cl", rehacer=False)
+    assert e["estado"] == "sin_doi"
+    assert "capitulo.doi" in e["nota"]                      # dice exactamente qué crear
+
+
+def test_informe_del_lote_se_escribe_y_es_legible(tmp_path, monkeypatch):
+    _stub_red(monkeypatch)
+    for n in ("a", "b"):
+        (tmp_path / f"{n}.pdf").write_bytes(_pdf_xmp(f"10.1186/s1296{n and 7}-023-0390{5}-1"))
+    (tmp_path / "roto.pdf").write_bytes(b"%PDF-1.4\nsin doi\n%%EOF")
+
+    entradas = [LF.procesar(p, None, "x@y.cl", rehacer=False)
+                for p in sorted(tmp_path.glob("*.pdf"))]
+    destino = LF.escribir_lote(tmp_path, entradas)
+    texto = destino.read_text(encoding="utf-8")
+
+    assert destino.name == "LOTE.md"
+    assert "Listo para analizar" in texto and "Sin DOI" in texto
+    assert "publicar_notion.py" in texto                    # el siguiente paso, a mano
+    assert "patologia" in texto                             # y el bloqueo recordado

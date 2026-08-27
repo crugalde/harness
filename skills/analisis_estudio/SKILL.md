@@ -23,16 +23,64 @@ señales el defecto que el lector no vio, no que resumas lo que ya leyó.
 
 ---
 
+## Dónde viven los archivos
+
+Las fichas **se guardan junto a su PDF**, con el mismo nombre:
+
+```
+iCloudDrive/neuromuscular/
+├── msa_jtranslmed_2023.pdf              ← el paper
+├── msa_jtranslmed_2023.metadatos.json   ← identificación verificada (paso 1)
+└── msa_jtranslmed_2023.md               ← la ficha (paso 4)
+```
+
+Así el `.md` y su PDF viajan juntos, y la copia en la nube sale gratis por el propio iCloud —
+no hay un segundo sitio que sincronizar ni que recordar. **La copia en Notion es la ficha
+renderizada, no el archivo**: si quieres el `.md`, está en iCloud.
+
+---
+
 ## Flujo
+
+### Paso 0 — ¿Uno o una carpeta entera?
+
+Con **un** estudio, salta al paso 1. Con **una carpeta de PDFs**, corre antes la fase de lote:
+
+```bash
+export ENTREZ_EMAIL="cristian.ugalde@gmail.com"
+python3 skills/analisis_estudio/scripts/lote_fichas.py \
+    "C:/Users/Usuario/iCloudDrive/neuromuscular"
+```
+
+Recorre la carpeta y por cada PDF saca el DOI del propio archivo (metadatos XMP, diccionario
+Info, o los streams inflados), lo verifica, **deduplica contra Notion** y escribe su
+`metadatos.json`. Deja dos salidas: `LOTE.md`, que es la lista de trabajo priorizada, y
+`manifiesto.json` para reanudar.
+
+**El lote llega hasta aquí y no más.** Los pasos 2 a 5 siguen siendo de a un paper, y es
+deliberado: leer cuarenta papers de corrido degrada el juicio crítico, y peor, obliga a inferir
+patología y aspecto en vez de preguntarlos — que es justo lo que fragmenta los filtros de la
+base. Lo que el lote te ahorra es la parte determinista y tediosa: saber **qué falta, qué ya
+está publicado y qué está bloqueado**, todo de una vez.
+
+Lo que aparece bloqueado en `LOTE.md` se resuelve una sola vez, para toda la tanda:
+
+- **Sin DOI** → crea `<pdf>.doi` con el DOI dentro, o añádelo a «Actualización de estudio»
+  (el lote lo busca ahí solo, calzando por `Nombre esperado archivo`).
+- **DOI no resuelto** → el aviso trae el DOI extraído; casi siempre viene con un sufijo de más.
+- **Falta patología / aspecto** → se completan a mano en cada `metadatos.json`.
+
+Es reanudable: lo ya verificado se salta, así que correrlo dos veces no repite red ni trabajo.
 
 ### Paso 1 — Identificación verificada
 
-Antes de leer nada con opinión, fija qué estudio es. Un DOI o un PMID basta:
+Antes de leer nada con opinión, fija qué estudio es. Un DOI o un PMID basta (si vienes del
+paso 0, esto ya está hecho y el `metadatos.json` está junto al PDF):
 
 ```bash
 export ENTREZ_EMAIL="cristian.ugalde@gmail.com"
 python3 skills/analisis_estudio/scripts/verificar_metadatos.py \
-    --doi 10.1186/s12967-023-03905-1 -o <dir>/metadatos.json
+    --doi 10.1186/s12967-023-03905-1 -o <ruta-del-pdf>.metadatos.json
 ```
 
 Resuelve el identificador que falte, baja título, autores, año y revista de ambas bases,
@@ -92,6 +140,8 @@ Sigue `references/plantilla_ficha.md`. Seis secciones, todas obligatorias: ident
 resumen clínico, evaluación de calidad, discusión y limitaciones, explicación fisiopatológica,
 aporte al área.
 
+Escríbela en `<mismo-nombre-que-el-pdf>.md`, junto al PDF.
+
 Reglas que no se negocian:
 
 - **Cifras con su contexto.** Un n, un intervalo de confianza y la población de origen. "Mejoró
@@ -109,8 +159,8 @@ estudios»** dentro de **📚 Biblioteca de Investigación**. No hay que buscar 
 padre, ni confirmar ubicación. Al terminar la ficha, se publica:
 
 ```bash
-python3 skills/analisis_estudio/scripts/publicar_notion.py <dir>/ficha.md \
-    --metadatos <dir>/metadatos.json
+python3 skills/analisis_estudio/scripts/publicar_notion.py <paper>.md \
+    --metadatos <paper>.metadatos.json
 ```
 
 Eso es todo el paso. El script hace lo demás: mapea las once propiedades, convierte el markdown
@@ -140,8 +190,8 @@ solo por la API REST — es la vía automática, sin modelo de por medio. Sin to
 para el conector:
 
 ```bash
-python3 skills/analisis_estudio/scripts/publicar_notion.py <dir>/ficha.md \
-    --metadatos <dir>/metadatos.json --payload-mcp <dir>/payload.json
+python3 skills/analisis_estudio/scripts/publicar_notion.py <paper>.md \
+    --metadatos <paper>.metadatos.json --payload-mcp <paper>.payload.json
 ```
 
 y se publica con **una sola** llamada a `notion-create-pages` pasando ese objeto tal cual. No
@@ -204,14 +254,16 @@ año o el diseño equivocado se cita después como si fuera correcta.
 
 | Archivo | Cuándo usarlo |
 |---|---|
+| `scripts/lote_fichas.py` | Paso 0, solo con una carpeta. Inventaría, verifica y deduplica; deja `LOTE.md`. |
 | `scripts/verificar_metadatos.py` | Paso 1, siempre primero. Crossref + PubMed → `metadatos.json`. |
 | `references/guias_reporte.md` | Paso 3. Qué mirar en cada ítem de cada guía de reporte. |
 | `references/plantilla_ficha.md` | Paso 4. Las seis secciones y las restricciones de Notion. |
 | `scripts/publicar_notion.py` | Paso 5. Publica solo. Valida, deduplica y enlaza de vuelta. |
 | `scripts/notion_md.py` | Lo usa el publicador; suelto sirve para depurar el renderizado. |
 | `references/destino_notion.md` | Los identificadores del destino y el esquema de la base. |
+| `references/hermes.md` | Cómo instalarla y correrla en la workstation con Hermes. |
 | `evals/evals.json` | Solo si vas a modificar la skill: casos de prueba con sus aserciones. |
 
-Los tres scripts corren con el `python3` del sistema, sin `pip install` — solo biblioteca
+Los cuatro scripts corren con el `python3` del sistema, sin `pip install` — solo biblioteca
 estándar. Es deliberado: una skill que exige instalar dependencias falla justo cuando la
 necesitas.

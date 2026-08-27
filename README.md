@@ -21,6 +21,7 @@ tools/ha_setup.py             # wizard de conexión/diagnóstico de Home Assista
 tools/schedule_distill.py     # disparador periódico del autoaprendizaje (cron)
 skills/<nombre>/SKILL.md+tool.py   # pubmed_search · build_docx · build_pptx · home_assistant
 skills/analisis_estudio/      # ficha crítica de UN estudio, publicada sola en Notion
+skills/analisis_estudio/scripts/lote_fichas.py  # fase A: inventaría una carpeta de PDFs
 skills/medicalinfosummary/    # síntesis clínica de un tema completo, referenciada
 skills/uc_library_fetcher/    # acceso a papers con paywall vía proxy UC
 evals/run_evals.py            # red de seguridad offline (routing, guardas, secciones protegidas)
