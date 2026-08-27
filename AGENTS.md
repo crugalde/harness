@@ -125,6 +125,24 @@ Patrón heredado de medbrief, generalizado. **No se salta ningún gate.**
   requiere confirmación explícita por turno. Una aprobación no se generaliza a acciones
   futuras.
 
+**Excepción acotada a Gate 2 (destino preautorizado).** Una skill puede declarar **un** destino
+persistente concreto como preautorizado y escribir en él sin pedir aprobación por turno. Es lo
+que permite que una skill termine sola en vez de morir a un paso del final. Solo vale si se
+cumplen las cuatro condiciones, todas:
+
+1. El destino es **fijo y nombrado** en la propia skill —una base, una página—, no elegido en
+   ejecución.
+2. La escritura es **idempotente**: repetir la operación actualiza en vez de duplicar.
+3. Es **reversible en un clic** por el usuario (archivar una fila lo es; borrar un repo no).
+4. La skill define **detenciones automáticas** que sustituyen al criterio humano: datos sin
+   verificar, campos obligatorios ausentes o vocabularios cerrados violados **detienen la
+   escritura** con un mensaje accionable.
+
+La excepción cubre ese destino y nada más: cualquier otro sigue con Gate 2, y el **Gate de
+acción** no se levanta nunca — borrar, enviar mensajes o cambiar permisos siguen requiriendo
+confirmación por turno, ahí y en todas partes. Hoy la usa `skills/analisis_estudio`, sobre la
+base «Resumen de estudios».
+
 ---
 
 ## 5. Convenciones de código Python

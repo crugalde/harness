@@ -1,0 +1,87 @@
+{
+  "skill_name": "analisis-estudio",
+  "notas": "Casos elegidos para forzar las decisiones que rompen la ficha: diseño mal etiquetado por el editor, publicación con metadatos incompletos, patología ausente del vocabulario, reanálisis del mismo paper (idempotencia) y solo-abstract. Ejecutar con la skill cargada y NOTION_DB_RESUMEN apuntando a una copia de prueba, nunca a la base real.",
+  "evals": [
+    {
+      "id": 0,
+      "nombre": "revision-mal-etiquetada",
+      "prompt": "Analiza este paper: 10.1186/s12967-023-03905-1",
+      "expected_output": "Ficha publicada en «Resumen de estudios» con Tipo de estudio = Revisión narrativa (no 'Revisión sistemática' pese a que el texto se autodenomina comprehensive review), evaluada con SANRA, Calidad = Baja argumentada por la ausencia de método de búsqueda declarado, y la URL de la página devuelta al final.",
+      "assertions": [
+        "Corrió verificar_metadatos.py antes de opinar sobre el estudio",
+        "Tipo de estudio es 'Revisión narrativa' y la guía aplicada es SANRA",
+        "La calificación Baja se atribuye a la naturaleza del diseño, no a defectos de ejecución",
+        "El veredicto va en un callout y nombra el ítem de SANRA que lo determinó",
+        "Las seis secciones de la plantilla están presentes",
+        "Devolvió la URL de la página de Notion sin que se la pidieran",
+        "No preguntó dónde publicar"
+      ],
+      "files": []
+    },
+    {
+      "id": 1,
+      "nombre": "guia-que-se-dice-revision",
+      "prompt": "Evalúa la guía EAN/PNS de CIDP, segunda revisión.",
+      "expected_output": "Ficha con Tipo de estudio = Guía de práctica clínica evaluada con AGREE-II, explicando en la identificación por qué no se evalúa como revisión sistemática pese a la autodenominación del documento.",
+      "assertions": [
+        "Aplica AGREE-II, no PRISMA ni AMSTAR-2",
+        "La identificación explica el desacuerdo con la etiqueta del propio documento",
+        "Evalúa el vínculo entre recomendaciones y nivel de evidencia",
+        "Patología = CIDP y Área = Neuromuscular"
+      ],
+      "files": []
+    },
+    {
+      "id": 2,
+      "nombre": "patologia-ausente-del-vocabulario",
+      "prompt": "Analiza este estudio sobre síndrome de Susac.",
+      "expected_output": "La publicación se detiene con un mensaje accionable: 'Síndrome de Susac' no es una opción de Patología. La skill propone añadir la opción a la base y NO publica con una patología aproximada ni con 'Transversal / no aplica'.",
+      "assertions": [
+        "No publicó la ficha con una patología distinta a la real",
+        "Nombró explícitamente que hay que añadir la opción a la base primero",
+        "No inventó una opción nueva por su cuenta en la base",
+        "El análisis en sí se completó; lo único bloqueado fue la escritura"
+      ],
+      "files": []
+    },
+    {
+      "id": 3,
+      "nombre": "reanalisis-idempotente",
+      "prompt": "Vuelve a analizar el paper de atrofia multisistémica, ahora que conseguí el PDF completo.",
+      "expected_output": "La ficha existente se actualiza —mismas propiedades refrescadas, cuerpo reemplazado— en vez de crear una segunda fila para el mismo DOI. El pie pasa de 'texto abstract' a 'texto completo'.",
+      "assertions": [
+        "No existe una segunda fila con el mismo DOI tras la ejecución",
+        "El mensaje final dice ACTUALIZADA, no PUBLICADA",
+        "El pie de la ficha refleja que ahora se leyó el texto completo",
+        "Los ítems que antes eran 'no evaluable' ahora tienen juicio"
+      ],
+      "files": []
+    },
+    {
+      "id": 4,
+      "nombre": "solo-abstract-declarado",
+      "prompt": "Analiza este paper, no tengo acceso al texto completo: PMID 12345678",
+      "expected_output": "Ficha publicada, con el pie marcando 'texto abstract' y los ítems de la guía que requieren el cuerpo del artículo marcados como no evaluables, no como adecuados.",
+      "assertions": [
+        "El pie de la ficha dice 'texto abstract'",
+        "Al menos un ítem de la guía está marcado como no evaluable por falta de texto completo",
+        "Ningún ítem no evaluable fue calificado como adecuado",
+        "La limitación se declara también en el mensaje de entrega"
+      ],
+      "files": []
+    },
+    {
+      "id": 5,
+      "nombre": "sin-doi-ni-pmid",
+      "prompt": "Analiza este PDF que te adjunto (capítulo de libro, sin DOI).",
+      "expected_output": "El análisis se hace, pero la publicación automática se detiene: sin DOI ni PMID no hay enlace ni clave de deduplicación. La skill lo dice y ofrece publicar con --sin-verificar dejando constancia del aviso.",
+      "assertions": [
+        "No publicó silenciosamente una ficha sin enlace al estudio",
+        "Explicó que sin DOI ni PMID no hay clave para detectar duplicados",
+        "Ofreció la salida --sin-verificar en lugar de simplemente fallar",
+        "No inventó un DOI"
+      ],
+      "files": []
+    }
+  ]
+}
