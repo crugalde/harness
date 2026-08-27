@@ -70,16 +70,35 @@ class ToolRegistry:
         return self._fns[name](args)
 
 
+def skill_frontmatter(path: Path) -> dict[str, str]:
+    """Lee el front-matter de un SKILL.md.
+
+    Acepta valores en una línea y bloques YAML plegados (`>-`, `>`, `|`): con estos, el
+    valor va en las líneas indentadas siguientes, y leer solo la primera dejaba la
+    descripción en ">-" — es decir, invisible para el router.
+    """
+    m = re.match(r"---\n(.*?)\n---", path.read_text(encoding="utf-8"), re.DOTALL)
+    if not m:
+        return {}
+    data: dict[str, str] = {}
+    key = None
+    for line in m.group(1).splitlines():
+        kv = re.match(r"([\w-]+):\s*(.*)", line)
+        if kv and not line.startswith((" ", "\t")):
+            key, val = kv.group(1), kv.group(2).strip()
+            data[key] = "" if val in (">", ">-", "|", "|-") else val.strip("\"'")
+        elif key and line.strip():                      # continuación de un bloque plegado
+            data[key] = f"{data[key]} {line.strip()}".strip()
+    return data
+
+
 def load_skills() -> str:
     if not SKILLS_DIR.exists():
         return "(sin skills)"
     out = []
     for sk in sorted(SKILLS_DIR.glob("*/SKILL.md")):
-        head = sk.read_text(encoding="utf-8")
-        name = re.search(r"name:\s*(.+)", head)
-        desc = re.search(r"description:\s*(.+)", head)
-        out.append(f"- {(name.group(1).strip() if name else sk.parent.name)}: "
-                   f"{(desc.group(1).strip() if desc else '')}")
+        fm = skill_frontmatter(sk)
+        out.append(f"- {fm.get('name') or sk.parent.name}: {fm.get('description', '')}")
     return "\n".join(out) or "(sin skills)"
 
 

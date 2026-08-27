@@ -47,6 +47,18 @@ def test_skills_discovery():
         assert name in idx
 
 
+def test_skills_frontmatter_plegado():
+    """Un `description: >-` multilínea debe aportar su texto al contexto.
+
+    Si no, la skill llega al router sin decir cuándo usarla y queda invisible (R11).
+    """
+    idx = L.load_skills()
+    assert ">-" not in idx and '"' not in idx
+    linea = next(l for l in idx.splitlines() if l.startswith("- uc-library-fetcher"))
+    assert "paywall" in linea.lower()
+    assert all(len(l.split(": ", 1)[1].strip()) > 20 for l in idx.splitlines())
+
+
 def test_trace_roundtrip():
     t = TR.Trace("med", "test")
     t.turn("assistant", "ok"); t.tool("read_shell", True); t.usage("claude-sonnet-4-6", 100, 50)
