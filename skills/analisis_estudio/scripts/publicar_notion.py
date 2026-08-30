@@ -270,6 +270,96 @@ def _vaciar(token: str, page_id: str) -> int:
     return len(ids)
 
 
+# --------------------------------------------------------------------------- PDF
+
+# La subida en una sola parte tope en 20 MB. Más que eso exige subida multiparte,
+# que es otro flujo; un paper con muchas figuras lo supera de vez en cuando.
+LIMITE_PDF = 20 * 1024 * 1024
+
+
+def _multipart(nombre: str, datos: bytes, tipo: str) -> tuple[bytes, str]:
+    """Arma un cuerpo multipart/form-data a mano. La API de subida no acepta JSON."""
+    from uuid import uuid4
+    frontera = "----harness" + uuid4().hex
+    cuerpo = b"".join([
+        f'--{frontera}\r\nContent-Disposition: form-data; name="file"; '
+        f'filename="{nombre}"\r\nContent-Type: {tipo}\r\n\r\n'.encode(),
+        datos,
+        f"\r\n--{frontera}--\r\n".encode(),
+    ])
+    return cuerpo, f"multipart/form-data; boundary={frontera}"
+
+
+def _enviar_bytes(url: str, token: str, cuerpo: bytes, tipo: str) -> dict:
+    req = urllib.request.Request(url, data=cuerpo, method="POST", headers={
+        "Authorization": f"Bearer {token}",
+        "Notion-Version": VERSION_API,
+        "Content-Type": tipo,
+    })
+    try:
+        with urllib.request.urlopen(req, timeout=300) as r:
+            return json.loads(r.read().decode("utf-8"))
+    except urllib.error.HTTPError as e:
+        detalle = e.read().decode("utf-8", "replace")[:400]
+        raise ErrorPublicacion(f"subida -> HTTP {e.code}: {detalle}") from None
+    except urllib.error.URLError as e:
+        raise ErrorPublicacion(f"subida -> sin conexión: {e.reason}") from None
+
+
+def subir_pdf(token: str, pdf: Path) -> str:
+    """Sube el PDF a Notion y devuelve el id del file_upload. Tres pasos."""
+    datos = pdf.read_bytes()
+    if len(datos) > LIMITE_PDF:
+        raise ErrorPublicacion(
+            f"{pdf.name} pesa {len(datos) / 1e6:.1f} MB y el tope de subida en una "
+            f"parte son 20 MB. Adjúntalo a mano en la fila, o comprímelo primero.")
+
+    creado = _peticion("POST", "/file_uploads", token,
+                       {"filename": pdf.name, "content_type": "application/pdf"})
+    url = creado.get("upload_url") or f"{API}/file_uploads/{creado['id']}/send"
+    cuerpo, tipo = _multipart(pdf.name, datos, "application/pdf")
+    _enviar_bytes(url, token, cuerpo, tipo)
+    return creado["id"]
+
+
+def adjuntar_pdf(token: str, page_id: str, pdf: Path) -> str:
+    """Sube el PDF y lo deja en la propiedad `PDF` de la fila.
+
+    Es lo que hace que el paper se abra desde el móvil y desde cualquier otro
+    computador. La columna `Archivo` guarda la ruta local, que solo sirve en la
+    máquina que tiene el archivo; las dos se complementan, no se sustituyen.
+    """
+    subida = subir_pdf(token, pdf)
+    _peticion("PATCH", f"/pages/{page_id}", token, {"properties": {"PDF": {
+        "files": [{"type": "file_upload", "name": pdf.name,
+                   "file_upload": {"id": subida}}]}}})
+    return subida
+
+
+def pdf_de_la_ficha(ficha: Path, meta: dict) -> Path | None:
+    """El PDF que acompaña a la ficha, por la convención de nombre compartido."""
+    hermano = ficha.with_suffix(".pdf")
+    if hermano.is_file():
+        return hermano
+    ruta = (meta.get("archivo_local") or "").strip()
+    if ruta.startswith("file://"):
+        from urllib.parse import unquote, urlparse
+        local = Path(unquote(urlparse(ruta).path).lstrip("/"))
+        if local.is_file():
+            return local
+        # En Windows la ruta del URI queda como /C:/Users/... ; sin el corte inicial
+        # no existe, y con él sí. Probar ambas evita un falso negativo.
+        if Path("/" + str(local)).is_file():
+            return Path("/" + str(local))
+    return None
+
+
+def tiene_pdf(token: str, page_id: str) -> bool:
+    """True si la fila ya trae un archivo adjunto: no se resube en cada corrida."""
+    pagina = _peticion("GET", f"/pages/{page_id}", token)
+    return bool(pagina.get("properties", {}).get("PDF", {}).get("files"))
+
+
 def publicar(token: str, meta: dict, bloques: list[dict], *, forzar_nueva: bool) -> tuple[str, str, bool]:
     """Crea o actualiza la ficha. Devuelve (page_id, url, era_actualizacion)."""
     lotes = trocear(bloques)
@@ -360,6 +450,10 @@ def main() -> int:
                     help="publica con metadatos no verificados, estampando el aviso")
     ap.add_argument("--forzar-nueva", action="store_true",
                     help="crea fila nueva aunque ya exista una para este DOI/PMID")
+    ap.add_argument("--sin-pdf", action="store_true",
+                    help="no sube el PDF a la propiedad «PDF» de la fila")
+    ap.add_argument("--resubir-pdf", action="store_true",
+                    help="vuelve a subir el PDF aunque la fila ya tenga uno adjunto")
     a = ap.parse_args()
 
     ficha = Path(a.ficha).expanduser()
@@ -416,6 +510,23 @@ def main() -> int:
     verbo = "ACTUALIZADA" if actualizada else "PUBLICADA"
     print(f"{verbo}: {url}")
     print(f"  {len(bloques)} bloques · {len(lotes)} peticiones · página {page_id}")
+
+    # El PDF va después de la ficha y nunca puede tumbarla: si la subida falla, la
+    # fila ya está publicada y lo único que falta es un adjunto que se pone a mano.
+    if not a.sin_pdf:
+        pdf = pdf_de_la_ficha(ficha, meta)
+        if not pdf:
+            print("  [aviso] no encontré el PDF junto a la ficha; la columna «PDF» "
+                  "queda vacía y hay que adjuntarlo a mano.", file=sys.stderr)
+        else:
+            try:
+                if a.resubir_pdf or not tiene_pdf(token, page_id):
+                    adjuntar_pdf(token, page_id, pdf)
+                    print(f"  PDF adjuntado: {pdf.name} ({pdf.stat().st_size / 1e6:.1f} MB)")
+                else:
+                    print("  PDF ya adjunto; no lo resubo (usa --resubir-pdf para forzar)")
+            except ErrorPublicacion as e:
+                print(f"  [aviso] no pude subir el PDF: {e}", file=sys.stderr)
 
     try:
         if enlazar_origen(token, meta, url):

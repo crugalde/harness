@@ -84,7 +84,8 @@ preapruebas el comando concreto de `publicar_notion.py` en vez de aflojar el mod
   deja la columna `Archivo` rota.
 - **iCloud descarga bajo demanda.** Un PDF que aparece en el explorador puede ser solo un
   marcador; el lote lo leería vacío y lo daría por *sin DOI*. Antes de una tanda grande, marca la
-  carpeta como *Conservar siempre en este dispositivo*.
+  carpeta como *Conservar siempre en este dispositivo*. Lo mismo vale para la subida del PDF a
+  Notion: un marcador de iCloud pesa unos bytes y subiría un archivo vacío.
 - **Nombres largos.** Con rutas de más de 260 caracteres Windows falla al abrir el archivo.
   `neuromuscular/` colgando del perfil de usuario está muy por debajo, pero no anides mucho más.
 - **El `.md` y el PDF comparten nombre.** Es a propósito: así iCloud los sincroniza juntos y el

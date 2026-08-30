@@ -43,7 +43,7 @@ publiques borradores en la base buena para verlos y luego archivarlos.
 | `Calidad` | select | del análisis, tras aplicar la guía de reporte |
 | `Aporte` | text | del análisis: una línea, qué cambia |
 | `Archivo` | url | ruta `file://` al PDF local |
-| `PDF` | file | **manual**. La subida de archivos es otro flujo de la API |
+| `PDF` | file | subido por el script (tope 20 MB en una parte) |
 
 ## Vocabularios cerrados
 

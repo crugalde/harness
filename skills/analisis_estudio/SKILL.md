@@ -206,10 +206,24 @@ Al terminar, devuelve **la URL** y cierra con el veredicto en dos líneas: la ca
 
 ### Paso 6 — El PDF
 
-El script no sube el PDF: la API de archivos de Notion es un flujo aparte y un `file://` de
-iCloud no viaja. La ficha deja la ruta local en `Archivo`, que es clicable en el escritorio. Si
-quieres el PDF adjunto en la fila, súbelo a la propiedad `PDF` desde Notion — una vez, a mano.
-Dilo al entregar en lugar de dejar el campo vacío sin explicación.
+Se sube solo, en el mismo comando del paso 5. No hay que hacer nada.
+
+La fila termina con **las dos formas de llegar al paper**, que se complementan: `Archivo` guarda
+la ruta local `file://`, clicable en la máquina que tiene el archivo; `PDF` guarda el archivo
+subido a Notion, que se abre **desde el móvil y desde cualquier otro computador**. Solo la
+primera no sirve fuera de la workstation.
+
+El script encuentra el PDF por la convención de nombre compartido (`<paper>.md` → `<paper>.pdf`)
+y, si no está ahí, por la ruta de `archivo_local`. Detalles que importan:
+
+- **No resube.** Si la fila ya trae adjunto, lo deja. `--resubir-pdf` fuerza.
+- **Tope de 20 MB.** La subida en una parte no admite más; un paper con muchas figuras a veces
+  lo pasa. En ese caso lo dice y hay que adjuntarlo a mano.
+- **Nunca tumba la publicación.** El PDF va después de la ficha: si la subida falla, la fila ya
+  existe y lo único que falta es el adjunto. El aviso sale por `stderr`, no un error.
+- `--sin-pdf` lo salta.
+
+Si el PDF no aparece por ningún lado, el aviso lo dice — no dejes el campo vacío en silencio.
 
 ---
 

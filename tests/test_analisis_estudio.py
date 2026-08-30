@@ -422,3 +422,89 @@ def test_informe_del_lote_se_escribe_y_es_legible(tmp_path, monkeypatch):
     assert "Listo para analizar" in texto and "Sin DOI" in texto
     assert "publicar_notion.py" in texto                    # el siguiente paso, a mano
     assert "patologia" in texto                             # y el bloqueo recordado
+
+
+# --------------------------------------------------------------- subida del PDF
+
+def test_multipart_bien_formado():
+    cuerpo, tipo = PN._multipart("msa.pdf", b"%PDF-1.7 datos", "application/pdf")
+    frontera = tipo.split("boundary=")[1]
+    assert tipo.startswith("multipart/form-data; boundary=")
+    assert cuerpo.startswith(f"--{frontera}\r\n".encode())
+    assert cuerpo.endswith(f"\r\n--{frontera}--\r\n".encode())
+    assert b'name="file"; filename="msa.pdf"' in cuerpo
+    assert b"Content-Type: application/pdf" in cuerpo
+    assert b"%PDF-1.7 datos" in cuerpo          # los bytes viajan intactos
+
+
+def test_pdf_grande_no_se_intenta_subir(tmp_path, monkeypatch):
+    """21 MB por la vía de una parte devuelve 400; mejor decirlo antes de subirlo."""
+    pdf = tmp_path / "gordo.pdf"
+    pdf.write_bytes(b"x" * (PN.LIMITE_PDF + 1))
+    llamadas = []
+    monkeypatch.setattr(PN, "_peticion", lambda *a, **k: llamadas.append(a) or {})
+
+    try:
+        PN.subir_pdf("tok", pdf)
+        assert False, "debió negarse"
+    except PN.ErrorPublicacion as e:
+        assert "20 MB" in str(e) and "gordo.pdf" in str(e)
+    assert llamadas == []                        # ni siquiera abrió la petición
+
+
+def test_pdf_se_encuentra_por_el_nombre_compartido(tmp_path):
+    (tmp_path / "msa.md").write_text("## x", encoding="utf-8")
+    pdf = tmp_path / "msa.pdf"
+    pdf.write_bytes(b"%PDF-1.7")
+    assert PN.pdf_de_la_ficha(tmp_path / "msa.md", {}) == pdf
+
+
+def test_pdf_se_encuentra_por_archivo_local(tmp_path):
+    pdf = tmp_path / "otro_nombre.pdf"
+    pdf.write_bytes(b"%PDF-1.7")
+    hallado = PN.pdf_de_la_ficha(tmp_path / "msa.md", {"archivo_local": pdf.as_uri()})
+    assert hallado == pdf
+
+
+def test_sin_pdf_devuelve_none_en_vez_de_fallar(tmp_path):
+    assert PN.pdf_de_la_ficha(tmp_path / "msa.md", {}) is None
+    assert PN.pdf_de_la_ficha(tmp_path / "msa.md",
+                              {"archivo_local": "file:///no/existe/x.pdf"}) is None
+
+
+def test_subida_encadena_los_dos_pasos(tmp_path, monkeypatch):
+    pdf = tmp_path / "msa.pdf"
+    pdf.write_bytes(b"%PDF-1.7 contenido")
+    enviados = {}
+    monkeypatch.setattr(PN, "_peticion", lambda m, r, t, c=None: {
+        "id": "fu_123", "upload_url": "https://api.notion.com/v1/file_uploads/fu_123/send"})
+    monkeypatch.setattr(PN, "_enviar_bytes",
+                        lambda url, tok, cuerpo, tipo: enviados.update(url=url, n=len(cuerpo)))
+
+    assert PN.subir_pdf("tok", pdf) == "fu_123"
+    assert enviados["url"].endswith("/send")
+    assert enviados["n"] > len(b"%PDF-1.7 contenido")   # multipart envuelve los bytes
+
+
+def test_adjuntar_usa_el_tipo_file_upload(tmp_path, monkeypatch):
+    pdf = tmp_path / "msa.pdf"
+    pdf.write_bytes(b"%PDF-1.7")
+    monkeypatch.setattr(PN, "subir_pdf", lambda t, p: "fu_999")
+    capturado = {}
+    monkeypatch.setattr(PN, "_peticion",
+                        lambda m, r, t, c=None: capturado.update(metodo=m, ruta=r, cuerpo=c) or {})
+
+    PN.adjuntar_pdf("tok", "page_1", pdf)
+    archivos = capturado["cuerpo"]["properties"]["PDF"]["files"]
+    assert capturado["metodo"] == "PATCH" and capturado["ruta"] == "/pages/page_1"
+    assert archivos[0]["type"] == "file_upload"
+    assert archivos[0]["file_upload"]["id"] == "fu_999"
+    assert archivos[0]["name"] == "msa.pdf"
+
+
+def test_no_resube_si_la_fila_ya_trae_adjunto(monkeypatch):
+    monkeypatch.setattr(PN, "_peticion",
+                        lambda *a, **k: {"properties": {"PDF": {"files": [{"name": "x.pdf"}]}}})
+    assert PN.tiene_pdf("tok", "page_1") is True
+    monkeypatch.setattr(PN, "_peticion", lambda *a, **k: {"properties": {"PDF": {"files": []}}})
+    assert PN.tiene_pdf("tok", "page_1") is False
