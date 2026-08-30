@@ -8,6 +8,7 @@ que las necesitan se saltan si no están instaladas.
 from __future__ import annotations
 
 import json
+import os
 import sys
 import zlib
 from pathlib import Path
@@ -586,3 +587,59 @@ def test_prompt_docx_omite_el_slug_cuando_viene_vacio(tmp_path: Path):
     sin_slug = hm.prompt_docx(cfg, tmp_path / "x.docx", "", "")
     assert '--slug "miastenia"' in con_slug
     assert "--slug" not in sin_slug
+
+
+# --------------------------------------------------------------------------- detección del CLI
+def test_detecta_ejecutable_en_el_path_y_captura_su_ayuda(tmp_path: Path, monkeypatch):
+    from hermes_brain import detectar as det
+
+    binario = tmp_path / "bin"
+    binario.mkdir()
+    falso = binario / ("hermes.cmd" if os.name == "nt" else "hermes")
+    falso.write_text("#!/bin/sh\necho 'hermes 0.9 — uso: hermes chat --skill <nombre>'\n",
+                     encoding="utf-8")
+    falso.chmod(0o755)
+    monkeypatch.setenv("PATH", str(binario), prepend=os.pathsep)
+
+    candidatos = det.en_path("hermes")
+    assert any(str(falso) == c.ruta for c in candidatos), candidatos
+    if os.name != "nt":
+        ayuda = det.pedir_ayuda(next(c for c in candidatos if c.ruta == str(falso)))
+        assert "hermes chat" in ayuda.ayuda
+
+
+def test_procesos_filtra_por_nombre(monkeypatch):
+    """La línea de comandos de un Hermes ya abierto es la pista firme; hay que reconocerla."""
+    from hermes_brain import detectar as det
+
+    salida = ("  PID ARGS\n"
+              " 1639 /opt/hermes/hermes chat --new --skill analisis-estudio\n"
+              " 1700 /usr/bin/python -m hermes_brain detectar\n"
+              " 1800 /usr/bin/firefox\n")
+    monkeypatch.setattr(det, "_correr", lambda cmd, timeout=20: (0, salida))
+    monkeypatch.setattr(det.os, "name", "posix")
+    encontrados = det.procesos("hermes")
+    assert len(encontrados) == 1                      # el propio worker no cuenta
+    assert "--skill analisis-estudio" in encontrados[0]
+
+
+def test_informe_propone_el_bloque_yaml_y_los_pasos(tmp_path: Path):
+    from hermes_brain import detectar as det
+
+    hallazgos = det.Hallazgos(ejecutables=[det.Candidato("C:/Apps/hermes.exe", "PATH", "uso: …")])
+    texto = det.formatear(hallazgos, "hermes")
+    assert "C:/Apps/hermes.exe" in texto
+    assert "hermes:" in texto and "comando:" in texto
+    assert "{prompt_file}" in texto and "{salida_json}" in texto
+
+
+def test_deteccion_vacia_sugiere_otro_nombre(monkeypatch):
+    from hermes_brain import detectar as det
+
+    monkeypatch.setattr(det, "en_path", lambda base: [])
+    monkeypatch.setattr(det, "en_carpetas", lambda *a, **k: [])
+    monkeypatch.setattr(det, "procesos", lambda base: [])
+    monkeypatch.setattr(det, "paquetes", lambda base: [])
+    monkeypatch.setattr(det, "registro", lambda base: [])
+    hallazgos = det.detectar("zzz", con_ayuda=False)
+    assert hallazgos.notas and "--nombre" in hallazgos.notas[0]

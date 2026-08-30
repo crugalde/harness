@@ -73,6 +73,18 @@ setx HERMES_TOKEN "<el mismo token del VPS>"
 Lo único que hay que averiguar es la línea de comandos real de Hermes agent. El worker no
 asume su sintaxis: se declara en `hermes.comando` con marcadores.
 
+**Si no la tienes a mano, el worker la busca por ti** (no necesita configuración previa):
+
+```powershell
+python hermes_brain.py detectar --salida hermes.txt
+```
+
+Mira, por este orden: procesos en ejecución —si Hermes está abierto, su línea de comandos es
+la respuesta exacta—, el `PATH`, las carpetas donde se instalan aplicaciones de escritorio,
+npm/pipx/pip y el registro de Windows; después ejecuta `--help` sobre cada candidato y termina
+proponiendo el bloque `hermes:` a completar. Con `--puertos` sondea además APIs HTTP locales,
+por si Hermes resulta ser un servicio y no un CLI.
+
 ```yaml
 hermes:
   comando: ["hermes", "chat", "--new", "--skill", "{skill}", "--attach", "{archivo}",
@@ -161,4 +173,5 @@ mando, informe y vigilancia. Úsalo tras editar cualquier nodo Code antes de rei
 | Todos los PDF salen `dudoso` | son escaneos sin capa de texto: necesitan OCR antes del pipeline |
 | Muchos Word clínicos salen `no_clinico` | usan negrita en vez de estilos de título: baja `docx_umbral_si` a 3.0 |
 | Hermes termina sin `.md` | la skill no escribió en `destino_md`; revisa la salida con `probar-hermes` |
+| No sé cómo se invoca Hermes | `python hermes_brain.py detectar` (con Hermes abierto, para que aparezca su línea de comandos) |
 | Los envíos quedan pendientes | el VPS no respondió: se reintentan solos en la siguiente corrida (`estado` los muestra) |

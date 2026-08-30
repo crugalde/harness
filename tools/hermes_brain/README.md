@@ -8,6 +8,7 @@ Hermes. La puesta en marcha completa (incluido el flujo n8n del VPS) está en
 ## Comandos
 
 ```bash
+python hermes_brain.py detectar                     # encuentra el CLI de Hermes en este PC
 python hermes_brain.py correr --carpeta "C:\ruta"   # escanear + procesar + informe
 python hermes_brain.py escanear --lote papers-2026  # solo inventario
 python hermes_brain.py procesar --max 50            # procesa lo pendiente (tope opcional)
@@ -17,6 +18,7 @@ python hermes_brain.py reintentar                   # devuelve los errores a la 
 python hermes_brain.py informe --stdout             # informe Markdown del lote
 python hermes_brain.py clasificar "C:\x.pdf"        # prueba el clasificador (no toca Hermes)
 python hermes_brain.py probar-hermes "C:\x.pdf"     # valida la configuración del CLI
+python hermes_brain.py detectar --puertos           # …y sondea APIs HTTP locales
 ```
 
 Todos aceptan `--config <ruta>` y `--lote <nombre>`. Sin `--lote` se usa el último.
@@ -26,6 +28,7 @@ Todos aceptan `--config <ruta>` y `--lote <nombre>`. Sin `--lote` se usa el últ
 | Archivo | Responsabilidad |
 |---|---|
 | `config.py` | carga y valida el YAML (`~/.config/harness/hermes_brain.yaml`) |
+| `detectar.py` | encuentra el CLI de Hermes: procesos, PATH, carpetas, paquetes, registro |
 | `inventario.py` | recorrido recursivo, SHA-256, exclusiones, tope de tamaño |
 | `clasificador.py` | PDF de revista científica / Word de resumen clínico, con evidencia |
 | `hermes.py` | adaptador del CLI: un proceso = un chat; timeout, reintentos, parseo |

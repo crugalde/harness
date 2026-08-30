@@ -26,6 +26,7 @@ script_docx_md: "C:/Users/Usuario/harness/skills/resumen_clinico_md/scripts/docx
 # Un proceso = un chat: se abre para el archivo, se completa y se cierra.
 # Marcadores: {archivo} {skill} {prompt} {prompt_file} {destino} {adjuntos} {slug} {salida_json}
 hermes:
+  # ¿No sabes la sintaxis? `python hermes_brain.py detectar` la busca y te propone el bloque.
   comando:                             # <-- AJUSTAR a la sintaxis real de tu CLI
     - "hermes"
     - "chat"

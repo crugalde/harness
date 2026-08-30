@@ -14,6 +14,7 @@ import sys
 from datetime import datetime
 from pathlib import Path
 
+from . import detectar as det
 from . import informe as inf
 from .clasificador import clasificar
 from .cliente_n8n import ClienteN8n
@@ -197,6 +198,20 @@ def cmd_clasificar(args) -> int:
     return 0
 
 
+def cmd_detectar(args) -> int:
+    """Encuentra el CLI de Hermes en este PC. No necesita configuración previa."""
+    base = args.nombre or "hermes"
+    print(f"Buscando «{base}»… (procesos, PATH, carpetas de instalación, paquetes, registro)")
+    hallazgos = det.detectar(base, con_ayuda=not args.sin_ejecutar, con_puertos=args.puertos,
+                             profundidad=args.profundidad)
+    texto = det.formatear(hallazgos, base)
+    print("\n" + texto)
+    if args.salida:
+        Path(args.salida).write_text(texto, encoding="utf-8")
+        print(f"\nInforme guardado en {args.salida}")
+    return 0
+
+
 def cmd_probar_hermes(args) -> int:
     """Abre un chat de Hermes con un archivo para validar la configuración del CLI."""
     cfg = cargar(args.config)
@@ -266,6 +281,15 @@ def construir_parser() -> argparse.ArgumentParser:
     cl.add_argument("archivo")
     cl.set_defaults(func=cmd_clasificar)
 
+    dt = sub.add_parser("detectar", help="busca el CLI de Hermes en este PC (sin configuración)")
+    dt.add_argument("--nombre", default="hermes", help="nombre a buscar (defecto: hermes)")
+    dt.add_argument("--puertos", action="store_true", help="sondea también APIs HTTP locales")
+    dt.add_argument("--sin-ejecutar", action="store_true", help="no invocar --help en lo encontrado")
+    dt.add_argument("--profundidad", type=int, default=det.PROFUNDIDAD,
+                    help="niveles de subcarpeta a recorrer (defecto: 4)")
+    dt.add_argument("--salida", help="guarda el informe en un archivo de texto")
+    dt.set_defaults(func=cmd_detectar)
+
     ph = sub.add_parser("probar-hermes", help="valida la configuración del CLI de Hermes")
     ph.add_argument("archivo")
     ph.set_defaults(func=cmd_probar_hermes)
@@ -274,7 +298,8 @@ def construir_parser() -> argparse.ArgumentParser:
 
 def main(argv: list[str] | None = None) -> int:
     args = construir_parser().parse_args(argv)
-    for opcional in ("lote", "max", "salida", "stdout", "no_procesar", "todos_si", "todos_no", "carpeta"):
+    for opcional in ("lote", "max", "salida", "stdout", "no_procesar", "todos_si", "todos_no",
+                     "carpeta", "nombre", "puertos", "sin_ejecutar", "profundidad"):
         if not hasattr(args, opcional):
             setattr(args, opcional, None)
     try:
