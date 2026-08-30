@@ -1,0 +1,75 @@
+# Configuración del worker hermes_brain.
+# Cópiala a  C:\Users\Usuario\.config\harness\hermes_brain.yaml
+# (o exporta HERMES_BRAIN_CONFIG con otra ruta) y ajusta lo marcado con  <-- AJUSTAR.
+
+# --- Qué recorrer -----------------------------------------------------------
+carpetas:                                    # <-- AJUSTAR: se recorren recursivamente
+  - "C:/Users/Usuario/OneDrive/Papers"
+  - "C:/Users/Usuario/Documentos/Resúmenes"
+
+extensiones: [".pdf", ".docx", ".doc"]
+excluir: ["~$*", ".*", "_adjuntos", "Thumbs.db"]   # temporales de Word, ocultos, salidas propias
+tamano_max_mb: 200
+concurrencia: 1        # chats de Hermes en paralelo. 1 si el modelo corre local en este PC.
+
+# --- Dónde dejar los .md ----------------------------------------------------
+destino_md: "C:/Users/Usuario/OneDrive/brain md"
+adjuntos: "_adjuntos"                 # subcarpeta de figuras dentro de destino_md
+deidentificar: true                    # enmascara RUT/nombres/teléfonos al convertir Word
+
+# --- Estado local -----------------------------------------------------------
+db: "C:/Users/Usuario/.hermes_brain/cola.sqlite3"
+python: ""                             # intérprete para el script de conversión ("" = el actual)
+script_docx_md: "C:/Users/Usuario/harness/skills/resumen_clinico_md/scripts/docx_a_md.py"
+
+# --- Hermes agent (CLI local) ----------------------------------------------
+# Un proceso = un chat: se abre para el archivo, se completa y se cierra.
+# Marcadores: {archivo} {skill} {prompt} {prompt_file} {destino} {adjuntos} {slug} {salida_json}
+hermes:
+  comando:                             # <-- AJUSTAR a la sintaxis real de tu CLI
+    - "hermes"
+    - "chat"
+    - "--new"
+    - "--skill"
+    - "{skill}"
+    - "--attach"
+    - "{archivo}"
+    - "--prompt-file"
+    - "{prompt_file}"
+    - "--output-json"
+    - "{salida_json}"
+  comando_cierre: []                   # opcional, p. ej. ["hermes", "chat", "close", "{sesion}"]
+  timeout_s: 900                       # tope por archivo; al vencerse mata el árbol de procesos
+  reintentos: 2
+  espera_reintento_s: 20
+  cwd: null
+  env: {}
+  skill_pdf: "analisis-estudio"        # skill ya existente para papers
+  skill_docx: "resumen-clinico-md"     # skill nueva para Word clínico
+  # Prompts propios (opcionales). Si los dejas vacíos se usan los del worker, que ya piden
+  # la línea JSON final con la ruta del .md.
+  prompt_pdf: ""
+  prompt_docx: ""
+
+# --- Umbrales del clasificador ---------------------------------------------
+# Entre "no" y "sí" está la zona gris: esos archivos quedan como dudosos para la revisión
+# final. Sube docx_umbral_si si te llegan demasiados falsos positivos clínicos.
+clasificador:
+  pdf_umbral_si: 4.0
+  pdf_umbral_no: 2.0
+  docx_umbral_si: 4.0
+  docx_umbral_no: 2.0
+  paginas_pdf: 2                       # páginas leídas para decidir
+  palabras_docx: 1200
+  convertir_doc_con_soffice: false     # true si tienes LibreOffice y quieres procesar .doc
+  soffice: "soffice"
+
+# --- n8n (VPS) --------------------------------------------------------------
+# Deja base_url vacío para trabajar sin VPS: todo funciona igual, solo sin panel remoto.
+n8n:
+  base_url: "https://n8n.tudominio.cl/webhook"     # <-- AJUSTAR (sin barra final)
+  token: "${HERMES_TOKEN}"                          # el mismo valor que HERMES_TOKEN en n8n
+  timeout_s: 30
+  lote_resultados: 25                  # registros por envío
+  enviar_nombres: false                # true filtra nombres de archivo al VPS: no lo actives con PHI
+  verificar_tls: true

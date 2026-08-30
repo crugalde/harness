@@ -1,0 +1,670 @@
+{
+  "name": "Hermes — brain md (documentos → Hermes agent)",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "hermes-inventario",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "id": "inventario",
+      "name": "Inventario",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [
+        -160,
+        -280
+      ],
+      "webhookId": "hermes-hermes-inventario"
+    },
+    {
+      "parameters": {
+        "jsCode": "// === CONFIG ===\n// El token compartido con el worker. Se lee de la variable de entorno HERMES_TOKEN del\n// contenedor de n8n; si tu instancia bloquea $env, reemplaza '' por el token literal.\nconst TOKEN = (() => { try { return $env.HERMES_TOKEN || ''; } catch (e) { return ''; } })();\n\nconst entrada = $input.first().json;\nconst cabeceras = entrada.headers || {};\nconst cuerpo = entrada.body || {};\nif (!TOKEN) { throw new Error('Falta HERMES_TOKEN en el entorno de n8n'); }\nif ((cabeceras['x-hermes-token'] || '') !== TOKEN) { throw new Error('Token invalido'); }\nconst estado = $getWorkflowStaticData('global');\nestado.lotes = estado.lotes || {};\nconst lote = String(cuerpo.lote || 'sin-lote');\n\nestado.lotes[lote] = {\n  host: cuerpo.host || '',\n  carpetas: cuerpo.carpetas || 0,\n  inventario: cuerpo.inventario || {},\n  contadores: { hecho: 0, omitido: 0, dudoso: 0, error: 0 },\n  procesados: 0,\n  iniciado: Date.now(),\n  ultimo_latido: Date.now(),\n  cerrado: false,\n};\nestado.lote_activo = lote;\nestado.accion = 'seguir';   // el mando puede cambiarla a 'pausa' o 'detener'\nreturn [{ json: { ok: true, lote, inventario: cuerpo.inventario || {} } }];\n"
+      },
+      "id": "registrar-inventario",
+      "name": "Registrar inventario",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        80,
+        -280
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "toJson",
+        "mode": "all",
+        "options": {
+          "fileName": "inventario.json"
+        }
+      },
+      "id": "inventario-a-json",
+      "name": "Inventario a JSON",
+      "type": "n8n-nodes-base.convertToFile",
+      "typeVersion": 1.1,
+      "position": [
+        320,
+        -280
+      ],
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "operation": "write",
+        "fileName": "=/home/node/.n8n/hermes/{{ $('Registrar inventario').first().json.lote }}/inventario.json",
+        "dataPropertyName": "data",
+        "options": {}
+      },
+      "id": "guardar-inventario",
+      "name": "Guardar inventario",
+      "type": "n8n-nodes-base.readWriteFile",
+      "typeVersion": 1,
+      "position": [
+        540,
+        -280
+      ],
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ JSON.stringify($('Registrar inventario').first().json) }}",
+        "options": {}
+      },
+      "id": "responder-inventario",
+      "name": "Responder inventario",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [
+        760,
+        -280
+      ]
+    },
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "hermes-resultado",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "id": "resultados",
+      "name": "Resultados",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [
+        -160,
+        -80
+      ],
+      "webhookId": "hermes-hermes-resultado"
+    },
+    {
+      "parameters": {
+        "jsCode": "// === CONFIG ===\n// El token compartido con el worker. Se lee de la variable de entorno HERMES_TOKEN del\n// contenedor de n8n; si tu instancia bloquea $env, reemplaza '' por el token literal.\nconst TOKEN = (() => { try { return $env.HERMES_TOKEN || ''; } catch (e) { return ''; } })();\n\nconst entrada = $input.first().json;\nconst cabeceras = entrada.headers || {};\nconst cuerpo = entrada.body || {};\nif (!TOKEN) { throw new Error('Falta HERMES_TOKEN en el entorno de n8n'); }\nif ((cabeceras['x-hermes-token'] || '') !== TOKEN) { throw new Error('Token invalido'); }\nconst estado = $getWorkflowStaticData('global');\nestado.lotes = estado.lotes || {};\nconst lote = String(cuerpo.lote || 'sin-lote');\n\nconst registros = Array.isArray(cuerpo.registros) ? cuerpo.registros : [];\nconst info = estado.lotes[lote] || (estado.lotes[lote] = {\n  contadores: { hecho: 0, omitido: 0, dudoso: 0, error: 0 }, procesados: 0,\n  iniciado: Date.now(), inventario: {}, host: cuerpo.host || '', cerrado: false });\nfor (const r of registros) {\n  const e = String(r.estado || 'desconocido');\n  info.contadores[e] = (info.contadores[e] || 0) + 1;\n  info.procesados = (info.procesados || 0) + 1;\n}\ninfo.ultimo_latido = Date.now();\n// Solo metadatos: el worker nunca envia rutas, nombres ni contenido de los documentos.\nreturn [{ json: { ok: true, lote, host: info.host, contadores: info.contadores,\n                  procesados: info.procesados, n: registros.length, registros } }];\n"
+      },
+      "id": "acumular-resultados",
+      "name": "Acumular resultados",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        80,
+        -80
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "toJson",
+        "mode": "all",
+        "options": {
+          "fileName": "parte.json"
+        }
+      },
+      "id": "registros-a-json",
+      "name": "Registros a JSON",
+      "type": "n8n-nodes-base.convertToFile",
+      "typeVersion": 1.1,
+      "position": [
+        320,
+        -80
+      ],
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "operation": "write",
+        "fileName": "=/home/node/.n8n/hermes/{{ $('Acumular resultados').first().json.lote }}/parte-{{ $now.toMillis() }}.json",
+        "dataPropertyName": "data",
+        "options": {}
+      },
+      "id": "guardar-registros",
+      "name": "Guardar registros",
+      "type": "n8n-nodes-base.readWriteFile",
+      "typeVersion": 1,
+      "position": [
+        540,
+        -80
+      ],
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ JSON.stringify({ ok: true, contadores: $('Acumular resultados').first().json.contadores }) }}",
+        "options": {}
+      },
+      "id": "responder-resultados",
+      "name": "Responder resultados",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [
+        760,
+        -80
+      ]
+    },
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "hermes-control",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "id": "control",
+      "name": "Control",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [
+        -160,
+        120
+      ],
+      "webhookId": "hermes-hermes-control"
+    },
+    {
+      "parameters": {
+        "jsCode": "// === CONFIG ===\n// El token compartido con el worker. Se lee de la variable de entorno HERMES_TOKEN del\n// contenedor de n8n; si tu instancia bloquea $env, reemplaza '' por el token literal.\nconst TOKEN = (() => { try { return $env.HERMES_TOKEN || ''; } catch (e) { return ''; } })();\n\nconst entrada = $input.first().json;\nconst cabeceras = entrada.headers || {};\nconst cuerpo = entrada.body || {};\nif (!TOKEN) { throw new Error('Falta HERMES_TOKEN en el entorno de n8n'); }\nif ((cabeceras['x-hermes-token'] || '') !== TOKEN) { throw new Error('Token invalido'); }\nconst estado = $getWorkflowStaticData('global');\nestado.lotes = estado.lotes || {};\nconst lote = String(cuerpo.lote || 'sin-lote');\n\nconst info = estado.lotes[lote];\nif (info) {\n  info.ultimo_latido = Date.now();\n  info.avance = cuerpo.avance || {};\n}\nconst accion = String(estado.accion || 'seguir');\nreturn [{ json: { accion, mensaje: estado.mensaje || '',\n                  lote, ts: Date.now() } }];\n"
+      },
+      "id": "ordenes-al-worker",
+      "name": "Ordenes al worker",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        80,
+        120
+      ]
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ JSON.stringify($json) }}",
+        "options": {}
+      },
+      "id": "responder-control",
+      "name": "Responder control",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [
+        320,
+        120
+      ]
+    },
+    {
+      "parameters": {
+        "httpMethod": "GET",
+        "path": "hermes-mando",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "id": "mando",
+      "name": "Mando",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [
+        -160,
+        300
+      ],
+      "webhookId": "hermes-hermes-mando"
+    },
+    {
+      "parameters": {
+        "jsCode": "// === CONFIG ===\nconst TOKEN = (() => { try { return $env.HERMES_TOKEN || ''; } catch (e) { return ''; } })();\nconst entrada = $input.first().json;\nconst consulta = entrada.query || {};\nconst cuerpo = entrada.body || {};\nconst token = (entrada.headers || {})['x-hermes-token'] || consulta.token || cuerpo.token || '';\nif (!TOKEN || token !== TOKEN) { throw new Error('Token invalido'); }\nconst validas = ['seguir', 'pausa', 'detener'];\nconst accion = String(consulta.accion || cuerpo.accion || 'seguir');\nif (!validas.includes(accion)) { throw new Error('accion debe ser: ' + validas.join(', ')); }\nconst estado = $getWorkflowStaticData('global');\nestado.accion = accion;\nestado.mensaje = String(consulta.mensaje || cuerpo.mensaje || '');\n// El worker lee esto entre archivo y archivo: nunca corta un chat de Hermes por la mitad.\nreturn [{ json: { ok: true, accion, mensaje: estado.mensaje, lote_activo: estado.lote_activo || '' } }];\n"
+      },
+      "id": "fijar-accion",
+      "name": "Fijar accion",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        80,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ JSON.stringify($json) }}",
+        "options": {}
+      },
+      "id": "responder-mando",
+      "name": "Responder mando",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [
+        320,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "hermes-fin",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "id": "fin-de-lote",
+      "name": "Fin de lote",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [
+        -160,
+        500
+      ],
+      "webhookId": "hermes-hermes-fin"
+    },
+    {
+      "parameters": {
+        "jsCode": "// === CONFIG ===\n// El token compartido con el worker. Se lee de la variable de entorno HERMES_TOKEN del\n// contenedor de n8n; si tu instancia bloquea $env, reemplaza '' por el token literal.\nconst TOKEN = (() => { try { return $env.HERMES_TOKEN || ''; } catch (e) { return ''; } })();\n\nconst entrada = $input.first().json;\nconst cabeceras = entrada.headers || {};\nconst cuerpo = entrada.body || {};\nif (!TOKEN) { throw new Error('Falta HERMES_TOKEN en el entorno de n8n'); }\nif ((cabeceras['x-hermes-token'] || '') !== TOKEN) { throw new Error('Token invalido'); }\nconst estado = $getWorkflowStaticData('global');\nestado.lotes = estado.lotes || {};\nconst lote = String(cuerpo.lote || 'sin-lote');\n\nconst info = estado.lotes[lote] || {};\ninfo.cerrado = true;\ninfo.terminado = Date.now();\nconst resumen = cuerpo.resumen || {};\nconst clases = cuerpo.clasificaciones || {};\nconst errores = Array.isArray(cuerpo.errores) ? cuerpo.errores : [];\nconst dudosos = Number(cuerpo.dudosos || 0);\nconst minutos = info.iniciado ? Math.round((Date.now() - info.iniciado) / 60000) : 0;\nconst fila = (o) => Object.entries(o).map(([k, v]) => `| ${k} | ${v} |`).join('\\n');\n\nconst informe = [\n  `# Lote ${lote}`, '',\n  `- host: ${info.host || cuerpo.host || '?'}`,\n  `- duracion: ${minutos} min`,\n  `- archivos inventariados: ${(info.inventario || {}).nuevos ?? '?'}`, '',\n  '## Estado', '', '| estado | n |', '| --- | ---: |', fila(resumen), '',\n  '## Clasificacion', '', '| clase | n |', '| --- | ---: |', fila(clases), '',\n  dudosos ? `## Pendiente de revision\\n\\nQuedan **${dudosos}** archivos dudosos. Resuelvelos en el PC con:\\n\\n\\`\\`\\`\\npython hermes_brain.py revisar --lote ${lote}\\n\\`\\`\\`\\n` : '',\n  errores.length ? `## Errores (${errores.length})\\n\\n` + errores.map(e => `- \\`${e.id}\\`: ${e.error}`).join('\\n') : '',\n].join('\\n');\n\nconst aviso = `Hermes/brain — lote ${lote} terminado en ${minutos} min: ` +\n  `${resumen.hecho || 0} procesados, ${resumen.omitido || 0} omitidos, ` +\n  `${dudosos} dudosos por revisar, ${resumen.error || 0} errores.`;\n\nreturn [{ json: { ok: true, lote, informe, aviso, resumen, clasificaciones: clases,\n                  dudosos, errores: errores.length } }];\n"
+      },
+      "id": "armar-informe",
+      "name": "Armar informe",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        80,
+        500
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "toText",
+        "sourceProperty": "informe",
+        "options": {
+          "fileName": "informe.md",
+          "encoding": "utf8"
+        }
+      },
+      "id": "informe-a-archivo",
+      "name": "Informe a archivo",
+      "type": "n8n-nodes-base.convertToFile",
+      "typeVersion": 1.1,
+      "position": [
+        320,
+        500
+      ],
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "operation": "write",
+        "fileName": "=/home/node/.n8n/hermes/informe-{{ $('Armar informe').first().json.lote }}.md",
+        "dataPropertyName": "data",
+        "options": {}
+      },
+      "id": "guardar-informe",
+      "name": "Guardar informe",
+      "type": "n8n-nodes-base.readWriteFile",
+      "typeVersion": 1,
+      "position": [
+        540,
+        500
+      ],
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "chatId": "={{ $env.HERMES_TELEGRAM_CHAT || '' }}",
+        "text": "={{ $('Armar informe').first().json.aviso }}",
+        "additionalFields": {
+          "appendAttribution": false
+        }
+      },
+      "id": "avisar-fin-de-lote",
+      "name": "Avisar fin de lote",
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        760,
+        620
+      ],
+      "disabled": true,
+      "notes": "Desactivado. Conecta una credencial de Telegram (o cambia este nodo por Gmail, Slack o Send Email) y habilitalo para recibir el resumen al terminar cada lote.",
+      "notesInFlow": true
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ JSON.stringify({ ok: true, lote: $('Armar informe').first().json.lote, dudosos: $('Armar informe').first().json.dudosos }) }}",
+        "options": {}
+      },
+      "id": "responder-fin",
+      "name": "Responder fin",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [
+        760,
+        440
+      ]
+    },
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "minutes",
+              "minutesInterval": 30
+            }
+          ]
+        }
+      },
+      "id": "cada-30-minutos",
+      "name": "Cada 30 minutos",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.2,
+      "position": [
+        -160,
+        720
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "// Vigilancia: avisa si un lote abierto dejo de dar senales de vida.\n// === CONFIG ===\nconst MINUTOS_SIN_LATIDO = 45;\n\nconst estado = $getWorkflowStaticData('global');\nconst lotes = estado.lotes || {};\nconst salida = [];\nfor (const [lote, info] of Object.entries(lotes)) {\n  if (!info || info.cerrado) { continue; }\n  const minutos = Math.round((Date.now() - (info.ultimo_latido || 0)) / 60000);\n  if (minutos >= MINUTOS_SIN_LATIDO) {\n    salida.push({ json: {\n      lote, minutos, host: info.host || '?',\n      procesados: info.procesados || 0,\n      aviso: `Hermes/brain — el lote ${lote} lleva ${minutos} min sin reportar ` +\n             `(${info.procesados || 0} archivos procesados). Revisa el worker en ${info.host || 'el PC'}.`,\n    } });\n  }\n}\nreturn salida;   // sin items = todo en orden, la rama no continua\n"
+      },
+      "id": "revisar-latido",
+      "name": "Revisar latido",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        80,
+        720
+      ]
+    },
+    {
+      "parameters": {
+        "chatId": "={{ $env.HERMES_TELEGRAM_CHAT || '' }}",
+        "text": "={{ $json.aviso }}",
+        "additionalFields": {
+          "appendAttribution": false
+        }
+      },
+      "id": "avisar-worker-caido",
+      "name": "Avisar worker caido",
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        320,
+        720
+      ],
+      "disabled": true,
+      "notes": "Desactivado. Habilitalo (con credencial de Telegram o cambiandolo por Gmail/Slack) para enterarte si el worker del PC se cuelga a mitad de un lote.",
+      "notesInFlow": true
+    },
+    {
+      "parameters": {
+        "content": "## Hermes -> brain md\n\nPlano de control del pipeline documental. **El VPS no ve archivos**: el worker\n`hermes_brain` corre en el PC (donde estan las carpetas, OneDrive y Hermes agent)\ny aqui solo llegan contadores e identificadores opacos (R8).\n\n### Puesta en marcha\n1. En el contenedor de n8n define `HERMES_TOKEN` (y opcionalmente\n   `HERMES_TELEGRAM_CHAT`). Reinicia n8n.\n2. Activa el flujo y copia la URL **de produccion** de cualquier webhook.\n   La parte hasta `/webhook` es el `n8n.base_url` del worker.\n3. Crea la carpeta de datos dentro del volumen de n8n: `/home/node/.n8n/hermes`.\n4. En el PC: `python hermes_brain.py correr --carpeta C:/ruta/a/papers`\n\n### Aviso sobre el estado\nLos contadores viven en *workflow static data*, que **solo persiste en ejecuciones\nde produccion** (flujo activo). En modo prueba se pierden: la fuente de verdad\nsiempre es la cola SQLite del PC.",
+        "height": 620,
+        "width": 560,
+        "color": 4
+      },
+      "id": "nota--780--300",
+      "name": "nota--780--300",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        -780,
+        -300
+      ]
+    },
+    {
+      "parameters": {
+        "content": "### Pausar / reanudar / detener\n\nEl worker consulta `hermes-control` cada 10 archivos y obedece entre documentos,\nnunca a mitad de un chat de Hermes.\n\n```\nGET /webhook/hermes-mando?token=TOKEN&accion=pausa\nGET /webhook/hermes-mando?token=TOKEN&accion=seguir\nGET /webhook/hermes-mando?token=TOKEN&accion=detener\n```",
+        "height": 260,
+        "width": 560,
+        "color": 5
+      },
+      "id": "nota--780-340",
+      "name": "nota--780-340",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        -780,
+        340
+      ]
+    },
+    {
+      "parameters": {
+        "content": "### Cola de revision\n\nLos dudosos **no se preguntan uno a uno**: con miles de archivos eso detiene el lote.\nSe acumulan y al terminar el informe dice cuantos quedaron. Se resuelven en bloque\nen el PC (`python hermes_brain.py revisar`), que es donde se puede abrir el documento\nsin sacar contenido clinico del computador.",
+        "height": 240,
+        "width": 460,
+        "color": 3
+      },
+      "id": "nota-1000-420",
+      "name": "nota-1000-420",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        1000,
+        420
+      ]
+    }
+  ],
+  "connections": {
+    "Inventario": {
+      "main": [
+        [
+          {
+            "node": "Registrar inventario",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Registrar inventario": {
+      "main": [
+        [
+          {
+            "node": "Inventario a JSON",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Inventario a JSON": {
+      "main": [
+        [
+          {
+            "node": "Guardar inventario",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Guardar inventario": {
+      "main": [
+        [
+          {
+            "node": "Responder inventario",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Resultados": {
+      "main": [
+        [
+          {
+            "node": "Acumular resultados",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Acumular resultados": {
+      "main": [
+        [
+          {
+            "node": "Registros a JSON",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Registros a JSON": {
+      "main": [
+        [
+          {
+            "node": "Guardar registros",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Guardar registros": {
+      "main": [
+        [
+          {
+            "node": "Responder resultados",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Control": {
+      "main": [
+        [
+          {
+            "node": "Ordenes al worker",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Ordenes al worker": {
+      "main": [
+        [
+          {
+            "node": "Responder control",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Mando": {
+      "main": [
+        [
+          {
+            "node": "Fijar accion",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Fijar accion": {
+      "main": [
+        [
+          {
+            "node": "Responder mando",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Fin de lote": {
+      "main": [
+        [
+          {
+            "node": "Armar informe",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Armar informe": {
+      "main": [
+        [
+          {
+            "node": "Informe a archivo",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Informe a archivo": {
+      "main": [
+        [
+          {
+            "node": "Guardar informe",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Guardar informe": {
+      "main": [
+        [
+          {
+            "node": "Responder fin",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Avisar fin de lote",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Cada 30 minutos": {
+      "main": [
+        [
+          {
+            "node": "Revisar latido",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Revisar latido": {
+      "main": [
+        [
+          {
+            "node": "Avisar worker caido",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "saveManualExecutions": true,
+    "callerPolicy": "workflowsFromSameOwner"
+  },
+  "pinData": {},
+  "tags": []
+}
