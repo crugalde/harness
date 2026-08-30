@@ -12,7 +12,10 @@ import time
 from dataclasses import dataclass
 from typing import Any
 
-import requests
+try:
+    import requests
+except ImportError:          # solo se necesita si hay un n8n configurado
+    requests = None
 
 # Rutas de los webhooks del flujo n8n. Se concatenan a `n8n.base_url`, que ya incluye
 # el prefijo del servidor (…/webhook para producción, …/webhook-test para pruebas).
@@ -45,13 +48,19 @@ class ClienteN8n:
         self.cfg = cfg_n8n
         self.cola = cola
         self.activo = bool(cfg_n8n.base_url)
+        self.ultimo_error = ""
+        self.sesion = None
+        if not self.activo:
+            return                      # sin VPS el worker trabaja igual, solo sin panel
+        if requests is None:
+            raise RuntimeError("Configuraste 'n8n.base_url' pero falta la librería requests. "
+                               "Instala con: pip install requests (o deja base_url vacío).")
         self.sesion = requests.Session()
         self.sesion.headers.update({
             "X-Hermes-Token": cfg_n8n.token,
             "Content-Type": "application/json",
             "User-Agent": "hermes-brain-worker/1.0",
         })
-        self.ultimo_error = ""
 
     # ------------------------------------------------------------------ interno
     def _post(self, ruta: str, payload: dict, reintentos: int = 2) -> dict | None:

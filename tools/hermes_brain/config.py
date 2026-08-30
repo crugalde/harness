@@ -6,11 +6,6 @@ from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Any
 
-try:
-    import yaml
-except ImportError as exc:  # pragma: no cover - dependencia declarada en requirements
-    raise SystemExit("Falta PyYAML. Instala con: pip install pyyaml") from exc
-
 RUTA_CONFIG_DEFECTO = Path.home() / ".config" / "harness" / "hermes_brain.yaml"
 
 
@@ -99,6 +94,11 @@ def cargar(ruta: Path | str | None = None) -> Config:
 
     Busca en este orden: `ruta` explícita, `$HERMES_BRAIN_CONFIG`, `~/.config/harness/hermes_brain.yaml`.
     """
+    try:
+        import yaml
+    except ImportError as exc:   # se importa aquí para que `detectar` corra sin dependencias
+        raise ErrorConfig("Falta PyYAML. Instala con: pip install pyyaml") from exc
+
     candidata = Path(ruta) if ruta else Path(os.environ.get("HERMES_BRAIN_CONFIG", RUTA_CONFIG_DEFECTO))
     if not candidata.exists():
         raise ErrorConfig(

@@ -8,7 +8,7 @@ Hermes. La puesta en marcha completa (incluido el flujo n8n del VPS) está en
 ## Comandos
 
 ```bash
-python hermes_brain.py detectar                     # encuentra el CLI de Hermes en este PC
+python hermes_brain.py detectar                     # encuentra el CLI de Hermes (sin dependencias)
 python hermes_brain.py correr --carpeta "C:\ruta"   # escanear + procesar + informe
 python hermes_brain.py escanear --lote papers-2026  # solo inventario
 python hermes_brain.py procesar --max 50            # procesa lo pendiente (tope opcional)

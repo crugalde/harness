@@ -73,7 +73,8 @@ setx HERMES_TOKEN "<el mismo token del VPS>"
 Lo único que hay que averiguar es la línea de comandos real de Hermes agent. El worker no
 asume su sintaxis: se declara en `hermes.comando` con marcadores.
 
-**Si no la tienes a mano, el worker la busca por ti** (no necesita configuración previa):
+**Si no la tienes a mano, el worker la busca por ti** (no necesita configuración previa ni
+dependencias: `detectar` corre solo con la librería estándar de Python):
 
 ```powershell
 python hermes_brain.py detectar --salida hermes.txt

@@ -9,6 +9,7 @@ from __future__ import annotations
 
 import json
 import os
+import subprocess
 import sys
 import zlib
 from pathlib import Path
@@ -643,3 +644,23 @@ def test_deteccion_vacia_sugiere_otro_nombre(monkeypatch):
     monkeypatch.setattr(det, "registro", lambda base: [])
     hallazgos = det.detectar("zzz", con_ayuda=False)
     assert hallazgos.notas and "--nombre" in hallazgos.notas[0]
+
+
+def test_detectar_funciona_sin_pyyaml_ni_requests():
+    """`detectar` es el primer comando que se corre: no puede exigir instalar nada antes."""
+    guion = (
+        "import sys\n"
+        "class Bloqueo:\n"
+        "    def find_spec(self, nombre, ruta=None, destino=None):\n"
+        "        if nombre.split('.')[0] in ('yaml', 'requests'):\n"
+        "            raise ImportError(nombre)\n"
+        "        return None\n"
+        "sys.meta_path.insert(0, Bloqueo())\n"
+        f"sys.path.insert(0, {str(RAIZ / 'tools')!r})\n"
+        "from hermes_brain import cli\n"
+        "print('DETECTAR' if 'detectar' in cli.construir_parser().format_help() else 'FALTA')\n"
+    )
+    salida = subprocess.run([sys.executable, "-c", guion], capture_output=True, text=True,
+                            timeout=60, check=False)
+    assert salida.returncode == 0, salida.stderr
+    assert "DETECTAR" in salida.stdout
