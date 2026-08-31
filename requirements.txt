@@ -1,6 +1,12 @@
 # Núcleo del harness (loop + autoaprendizaje)
 anthropic>=0.40
 
+# Pipeline documental (n8n + Hermes agent → brain md): tools/hermes_brain/
+# pyyaml>=6.0            # configuración del worker
+# requests>=2.31         # webhooks del flujo n8n
+# pypdf>=4.0             # reconocimiento de PDF de revista científica
+# python-docx>=1.1       # reconocimiento y conversión de Word clínico
+
 # Opcionales por skill/subagente (descomenta lo que uses)
 # biopython>=1.83        # skill pubmed_search (Entrez)
 # python-docx>=1.1        # skill build_docx (subagente docs)

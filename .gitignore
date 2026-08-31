@@ -13,3 +13,9 @@ __pycache__/
 
 # Office temp/lock files
 ~$*
+
+# Observabilidad y estado local (se regeneran)
+shared/traces/*.jsonl
+*.sqlite3
+*.sqlite3-wal
+*.sqlite3-shm

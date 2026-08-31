@@ -20,6 +20,9 @@ tools/decompose.py            # pipeline HD-sEMG (signals)
 tools/ha_setup.py             # wizard de conexión/diagnóstico de Home Assistant (home)
 tools/schedule_distill.py     # disparador periódico del autoaprendizaje (cron)
 skills/<nombre>/SKILL.md+tool.py   # pubmed_search · build_docx · build_pptx · home_assistant
+skills/resumen_clinico_md/    # Word clínico → .md con figuras (skill de Hermes agent)
+tools/hermes_brain/           # worker local: carpetas → 1 chat de Hermes por archivo → brain md
+n8n/flujo_hermes_brain.json   # flujo n8n del VPS que orquesta y vigila esos lotes
 evals/run_evals.py            # red de seguridad offline (routing, guardas, secciones protegidas)
 tests/test_harness.py         # pytest del núcleo
 shared/                       # rules/, notebooklm/, learning/, traces/, templates/
@@ -61,6 +64,26 @@ python tools/compose.py --spec spec.json --out deck.pptx --demo   # sin API (mar
 # Disparador periódico del autoaprendizaje (genera propuestas para todos los agentes)
 python tools/schedule_distill.py
 ```
+
+## Pipeline documental (n8n + Hermes agent)
+
+Vacía carpetas de documentos hacia Notion y hacia `OneDrive\brain md`, abriendo **un chat de
+Hermes agent por archivo**. El worker corre en el PC (donde están los archivos y Hermes) y n8n
+en el VPS actúa como plano de control: estado por lote, mando de pausa y aviso si el worker
+se cuelga. Al VPS solo viajan contadores e identificadores opacos — nunca rutas ni PHI (R8).
+
+```bash
+# En el PC
+python hermes_brain.py detectar                                   # encuentra el CLI de Hermes
+python hermes_brain.py comprobar                                  # qué falta para que funcione
+python hermes_brain.py probar-hermes "C:\ruta\a\un_paper.pdf"   # valida el CLI de Hermes
+python hermes_brain.py correr --carpeta "C:\Users\Usuario\OneDrive\Papers"
+python hermes_brain.py revisar                                    # dudosos, en bloque
+```
+
+Puesta en marcha completa (VPS + PC, endpoints, operación con miles de archivos) en
+[`n8n/README.md`](n8n/README.md); referencia del worker en
+[`tools/hermes_brain/README.md`](tools/hermes_brain/README.md).
 
 ## Home Assistant (subagente `home`)
 
