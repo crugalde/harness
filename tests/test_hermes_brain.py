@@ -841,3 +841,68 @@ def test_ruta_del_conversor_no_depende_del_directorio_de_trabajo():
     cfg = Config(carpetas=[RAIZ], destino_md=RAIZ, hermes=ConfigHermes(comando=["x"]))
     assert cfg.script_docx_md.is_absolute() and cfg.script_docx_md.exists()
     assert SCRIPT_DOCX_MD.name == "docx_a_md.py"
+
+
+# ------------------------------------------------- la carpeta cambia en cada corrida
+def test_config_no_exige_carpetas(tmp_path: Path):
+    """La carpeta se pide por corrida, así que el YAML puede no traer ninguna."""
+    ruta = tmp_path / "cfg.yaml"
+    ruta.write_text("destino_md: '/tmp/brain'\nhermes:\n  comando: ['hermes']\n", encoding="utf-8")
+    cfg = cargar(ruta)
+    assert cfg.carpetas == []
+
+
+def test_normalizar_carpeta_acepta_lo_que_pega_windows(tmp_path: Path):
+    """«Copiar como ruta» del Explorador entrega la ruta entre comillas."""
+    from hermes_brain.cli import _normalizar_carpeta
+
+    assert _normalizar_carpeta(f'  "{tmp_path}"  ') == tmp_path
+    assert _normalizar_carpeta(f"'{tmp_path}'") == tmp_path
+    assert _normalizar_carpeta(str(tmp_path)) == tmp_path
+
+
+def test_el_lote_toma_el_nombre_de_la_carpeta(tmp_path: Path):
+    """Con una carpeta distinta cada vez, el lote la nombra en vez de ser un sello anónimo."""
+    from hermes_brain.cli import _lote_por_defecto
+
+    assert _lote_por_defecto([Path("C:/Users/Usuario/OneDrive/Papers ELA")]).startswith("papers-ela-")
+    assert _lote_por_defecto([Path("/a"), Path("/b")]).startswith("lote-")
+    assert _lote_por_defecto(None).startswith("lote-")
+
+
+def test_la_carpeta_del_argumento_manda_sobre_la_configuracion(tmp_path: Path):
+    from hermes_brain.cli import _resolver_carpetas
+
+    class Args:
+        carpeta = [str(tmp_path / "de_argumento")]
+
+    cfg = Config(carpetas=[tmp_path / "de_config"], destino_md=tmp_path,
+                 hermes=ConfigHermes(comando=["x"]))
+    assert _resolver_carpetas(cfg, Args()) == [tmp_path / "de_argumento"]
+
+    Args.carpeta = []
+    assert _resolver_carpetas(cfg, Args()) == [tmp_path / "de_config"]
+
+
+def test_escanear_sin_carpeta_falla_con_instruccion(tmp_path: Path, monkeypatch, capsys):
+    """Sin carpeta ni terminal donde preguntar, sale con código 2 y dice qué falta."""
+    from hermes_brain import cli
+
+    ruta = tmp_path / "cfg.yaml"
+    ruta.write_text(f"destino_md: '{(tmp_path / 'brain').as_posix()}'\n"
+                    f"db: '{(tmp_path / 'c.sqlite3').as_posix()}'\n"
+                    "hermes:\n  comando: ['hermes']\n", encoding="utf-8")
+    monkeypatch.setattr(cli.sys, "stdin", None)
+    assert cli.main(["--config", str(ruta), "escanear"]) == 2
+    assert "--carpeta" in capsys.readouterr().err
+
+
+def test_escanear_avisa_si_la_carpeta_no_existe(tmp_path: Path, capsys):
+    from hermes_brain import cli
+
+    ruta = tmp_path / "cfg.yaml"
+    ruta.write_text(f"destino_md: '{(tmp_path / 'brain').as_posix()}'\n"
+                    f"db: '{(tmp_path / 'c.sqlite3').as_posix()}'\n"
+                    "hermes:\n  comando: ['hermes']\n", encoding="utf-8")
+    codigo = cli.main(["--config", str(ruta), "escanear", "--carpeta", str(tmp_path / "fantasma")])
+    assert codigo == 2 and "No existe" in capsys.readouterr().err

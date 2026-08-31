@@ -61,8 +61,8 @@ class ConfigN8n:
 
 @dataclass
 class Config:
-    carpetas: list[Path]
     destino_md: Path
+    carpetas: list[Path] = field(default_factory=list)
     adjuntos: str = "_adjuntos"
     db: Path = Path.home() / ".hermes_brain" / "cola.sqlite3"
     extensiones: list[str] = field(default_factory=lambda: [".pdf", ".docx", ".doc"])
@@ -117,9 +117,9 @@ def cargar(ruta: Path | str | None = None) -> Config:
     if not isinstance(datos, dict):
         raise ErrorConfig(f"{candidata}: el YAML raíz debe ser un mapa de claves.")
 
-    carpetas = [_ruta(c) for c in datos.get("carpetas", [])]
-    if not carpetas:
-        raise ErrorConfig("Configura al menos una carpeta en 'carpetas:'.")
+    # `carpetas:` es opcional: lo normal es indicarla por corrida (--carpeta), porque cambia
+    # cada vez. Lo que hay aquí, si lo hay, es el valor por defecto.
+    carpetas = [_ruta(c) for c in datos.get("carpetas") or []]
     destino = datos.get("destino_md")
     if not destino:
         raise ErrorConfig("Falta 'destino_md:' (carpeta OneDrive donde se guardan los .md).")

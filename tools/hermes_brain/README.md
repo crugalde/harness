@@ -22,7 +22,11 @@ python hermes_brain.py probar-hermes "C:\x.pdf"     # valida la configuración d
 python hermes_brain.py detectar --puertos           # …y sondea APIs HTTP locales
 ```
 
-Todos aceptan `--config <ruta>` y `--lote <nombre>`. Sin `--lote` se usa el último.
+Todos aceptan `--config <ruta>` y `--lote <nombre>`. Sin `--lote`, `escanear` y `correr`
+derivan el nombre de la carpeta (`papers-ela-20260831-1135`) y el resto usa el último.
+
+**La carpeta es un argumento de la corrida, no configuración.** Prioridad: `--carpeta`, luego
+`carpetas:` del YAML si lo hay, luego se pregunta por consola. Acepta rutas entre comillas.
 
 ## Módulos
 

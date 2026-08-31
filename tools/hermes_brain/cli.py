@@ -26,8 +26,48 @@ from .inventario import escanear
 from .procesador import DetenerLote, Progreso, procesar_lote
 
 
-def _lote_por_defecto() -> str:
-    return datetime.now().strftime("lote-%Y%m%d-%H%M")
+def _lote_por_defecto(carpetas: list[Path] | None = None) -> str:
+    """Nombre del lote. Si hay una carpeta, va en el nombre: cada carpeta es su propio lote."""
+    sello = datetime.now().strftime("%Y%m%d-%H%M")
+    if carpetas and len(carpetas) == 1:
+        return f"{slug(carpetas[0].name)[:40]}-{sello}"
+    return f"lote-{sello}"
+
+
+def _normalizar_carpeta(texto: str) -> Path:
+    """Acepta lo que pega el usuario: «Copiar como ruta» de Windows trae comillas."""
+    return Path(texto.strip().strip('"').strip("'")).expanduser()
+
+
+def _pedir_carpeta() -> list[Path]:
+    """Pregunta la carpeta cuando no vino por argumento ni por configuración."""
+    print("¿Qué carpeta quieres recorrer? (Enter vacío para cancelar)")
+    print("  Tip: en el Explorador, Mayús+clic derecho sobre la carpeta → «Copiar como ruta».")
+    for intento in range(3):
+        crudo = input("  Carpeta: ").strip()
+        if not crudo:
+            return []
+        carpeta = _normalizar_carpeta(crudo)
+        if carpeta.is_dir():
+            return [carpeta]
+        print(f"  No existe o no es una carpeta: {carpeta}"
+              + ("" if intento == 2 else "  ·  inténtalo de nuevo"))
+    return []
+
+
+def _resolver_carpetas(cfg: Config, args) -> list[Path]:
+    """Orden de prioridad: --carpeta de esta corrida, luego el YAML, luego preguntar.
+
+    La carpeta cambia en cada uso, así que el argumento manda sobre la configuración y la
+    configuración es solo un valor por defecto que puede no existir.
+    """
+    if getattr(args, "carpeta", None):
+        return [_normalizar_carpeta(c) for c in args.carpeta]
+    if cfg.carpetas:
+        return list(cfg.carpetas)
+    if sys.stdin is not None and sys.stdin.isatty():
+        return _pedir_carpeta()
+    return []
 
 
 def _abrir(args) -> tuple[Config, Cola]:
@@ -43,9 +83,21 @@ def _imprimir_avance(prog: Progreso, total: int) -> None:
 # --------------------------------------------------------------------------- comandos
 def cmd_escanear(args) -> int:
     cfg, cola = _abrir(args)
-    lote = args.lote or _lote_por_defecto()
-    carpetas = [Path(c) for c in args.carpeta] if args.carpeta else None
-    print(f"Escaneando {'; '.join(str(c) for c in (carpetas or cfg.carpetas))} …")
+    carpetas = _resolver_carpetas(cfg, args)
+    if not carpetas:
+        cola.cerrar()
+        print("Sin carpeta que recorrer. Indícala con --carpeta \"C:\\ruta\\a\\la\\carpeta\".",
+              file=sys.stderr)
+        return 2
+    faltan = [c for c in carpetas if not c.is_dir()]
+    if faltan:
+        cola.cerrar()
+        for c in faltan:
+            print(f"No existe o no es una carpeta: {c}", file=sys.stderr)
+        return 2
+    lote = args.lote or _lote_por_defecto(carpetas)
+    args.lote = lote                      # para que `correr` procese este mismo lote
+    print(f"Escaneando {'; '.join(str(c) for c in carpetas)} …")
     res = escanear(cfg, cola, lote, carpetas,
                    progreso=lambda n: print(f"  {n} archivos vistos…", end="\r", flush=True))
     cola.set_meta("ultimo_lote", lote)
@@ -57,7 +109,7 @@ def cmd_escanear(args) -> int:
               "petición») y se saltaron: procesarlos obliga a descargarlos.\n"
               "  Descárgalos con clic derecho → «Conservar siempre en este dispositivo», o pon "
               "`procesar_solo_en_la_nube: true` para que el worker fuerce la descarga.")
-    ClienteN8n(cfg.n8n, cola).inventario(lote, res.como_dict(), len(carpetas or cfg.carpetas))
+    ClienteN8n(cfg.n8n, cola).inventario(lote, res.como_dict(), len(carpetas))
     cola.cerrar()
     return 0
 
@@ -87,8 +139,7 @@ def cmd_procesar(args) -> int:
 
 def cmd_correr(args) -> int:
     """Escanear + procesar + informe, que es el uso normal sobre una carpeta nueva."""
-    args.lote = args.lote or _lote_por_defecto()
-    codigo = cmd_escanear(args)
+    codigo = cmd_escanear(args)          # fija args.lote con el nombre derivado de la carpeta
     if codigo:
         return codigo
     codigo = cmd_procesar(args)

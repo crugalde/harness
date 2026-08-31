@@ -123,10 +123,21 @@ lo detecta lanzando un chat con esa skill, antes de que te cueste un lote entero
 
 ### 4. Correr un lote
 
+La carpeta se indica **en cada corrida**, no en la configuración: cambia cada vez.
+
 ```powershell
-python hermes_brain.py correr --carpeta "C:\Users\Usuario\OneDrive\Papers"
+python hermes_brain.py correr --carpeta "C:\Users\Usuario\OneDrive\Papers ELA"
 python hermes_brain.py revisar          # al terminar: resuelve los dudosos en bloque
 ```
+
+Sin `--carpeta` y sin `carpetas:` en el YAML, el worker la pregunta. Acepta la ruta tal como
+la entrega el Explorador con Mayús+clic derecho → «Copiar como ruta», comillas incluidas.
+
+Cada carpeta produce **su propio lote**, nombrado con ella: `papers-ela-20260831-1135`. Así el
+informe, los contadores y la cola de dudosos quedan separados por carpeta en vez de mezclarse
+en un lote gigante. Para volver a uno anterior, `--lote <nombre>`.
+
+Lo que sí queda fijo en la configuración es el destino (`brain md`), porque no cambia.
 
 ## Por qué el Word no pasa por Hermes para convertirse
 

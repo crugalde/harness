@@ -78,6 +78,10 @@ def _dependencias(d: Diagnostico, cfg: Config | None) -> None:
 def _carpetas(d: Diagnostico, cfg: Config) -> None:
     from .inventario import recorrer, solo_en_la_nube
 
+    if not cfg.carpetas:
+        d.añadir("Carpeta a recorrer", OK,
+                 "se indica en cada corrida (--carpeta), no en la configuración")
+        return
     for carpeta in cfg.carpetas:
         if not carpeta.exists():
             d.añadir(f"Carpeta {carpeta}", FALLA, "no existe",
@@ -250,7 +254,8 @@ def diagnosticar(ruta_config: str | None = None, rapido: bool = False) -> Diagno
                  "~/.config/harness/hermes_brain.yaml y ajústalo.")
         _dependencias(d, None)
         return d
-    d.añadir("Configuración", OK, f"{len(cfg.carpetas)} carpeta(s) · destino {cfg.destino_md.name}")
+    carpetas = f"{len(cfg.carpetas)} carpeta(s) por defecto" if cfg.carpetas else "sin carpeta fija"
+    d.añadir("Configuración", OK, f"{carpetas} · destino {cfg.destino_md.name}")
     _dependencias(d, cfg)
     _carpetas(d, cfg)
     _destino(d, cfg)
