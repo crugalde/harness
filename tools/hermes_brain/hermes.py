@@ -56,10 +56,20 @@ def slug(texto: str, largo: int = 80) -> str:
 
 
 def _sustituir(plantilla: list[str], valores: dict[str, str]) -> list[str]:
-    salida = []
-    for arg in plantilla:
+    """Rellena los marcadores. Un marcador vacío se lleva consigo la bandera que lo precede.
+
+    Sin esto, una skill sin nombre produce `-s ""`, que el CLI rechaza; con esto la bandera
+    simplemente no se pasa, que es lo que corresponde cuando no hay skill que precargar.
+    """
+    salida: list[str] = []
+    for original in plantilla:
+        arg = original
         for clave, valor in valores.items():
             arg = arg.replace("{" + clave + "}", valor)
+        if arg == "" and original != "":
+            if salida and salida[-1].startswith("-"):
+                salida.pop()
+            continue
         salida.append(arg)
     return salida
 

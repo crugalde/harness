@@ -107,7 +107,21 @@ python hermes_brain.py probar-hermes "C:\ruta\a\un_paper.pdf"
 Si Hermes no imprime la línea JSON, el worker todavía se recupera: busca una ruta `.md`
 en la salida y, en último término, detecta el `.md` recién aparecido en `brain md`.
 
-### 3. Correr un lote
+### 3. Comprobar antes de correr
+
+```powershell
+python hermes_brain.py comprobar
+```
+
+Audita lo que el lote va a usar, tocándolo de verdad: dependencias instaladas, carpetas
+legibles, destino escribible, el conversor convirtiendo un `.docx` de prueba, un chat real de
+Hermes, cada nombre de skill, y el flujo n8n aceptando el token. Cada fallo trae su arreglo
+exacto; devuelve código 1 si queda algo pendiente. Con `--rapido` omite los chats de prueba.
+
+El fallo más probable en la primera corrida es un **nombre de skill equivocado**: `comprobar`
+lo detecta lanzando un chat con esa skill, antes de que te cueste un lote entero.
+
+### 4. Correr un lote
 
 ```powershell
 python hermes_brain.py correr --carpeta "C:\Users\Usuario\OneDrive\Papers"
@@ -192,6 +206,7 @@ mando, informe y vigilancia. Úsalo tras editar cualquier nodo Code antes de rei
 | El worker registra todo pero n8n no muestra nada | el flujo está inactivo: los webhooks de producción solo responden con el flujo activo |
 | `404` en los webhooks | estás usando la URL `/webhook-test/…`, que solo vive mientras escuchas desde el editor |
 | Todos los PDF salen `dudoso` | son escaneos sin capa de texto: necesitan OCR antes del pipeline |
+| El inventario encuentra menos archivos de los que ves | están solo en la nube (OneDrive «Archivos a petición»); el escaneo los cuenta aparte y los salta |
 | Muchos Word clínicos salen `no_clinico` | usan negrita en vez de estilos de título: baja `docx_umbral_si` a 3.0 |
 | Hermes termina sin `.md` | la skill no escribió en `destino_md`; revisa la salida con `probar-hermes` |
 | El `.md` clínico sale sin revisar | Hermes falló en la pasada de revisión; el `.md` igual está escrito y la nota queda en `estado`. Con `revisar_docx_con_hermes: false` se omite esa pasada |

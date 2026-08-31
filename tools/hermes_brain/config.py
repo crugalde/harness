@@ -7,6 +7,9 @@ from pathlib import Path
 from typing import Any
 
 RUTA_CONFIG_DEFECTO = Path.home() / ".config" / "harness" / "hermes_brain.yaml"
+# El conversor vive en el repo, no en el directorio desde el que se lance el worker.
+RAIZ_REPO = Path(__file__).resolve().parents[2]
+SCRIPT_DOCX_MD = RAIZ_REPO / "skills" / "resumen_clinico_md" / "scripts" / "docx_a_md.py"
 
 
 class ErrorConfig(RuntimeError):
@@ -66,12 +69,13 @@ class Config:
     excluir: list[str] = field(default_factory=lambda: ["~$*", ".*", "_adjuntos"])
     tamano_max_mb: int = 200
     concurrencia: int = 1
+    procesar_solo_en_la_nube: bool = False
     hermes: ConfigHermes = field(default_factory=lambda: ConfigHermes(comando=[]))
     clasificador: ConfigClasificador = field(default_factory=ConfigClasificador)
     n8n: ConfigN8n = field(default_factory=ConfigN8n)
     deidentificar: bool = True
     python: str = ""
-    script_docx_md: Path = Path("skills/resumen_clinico_md/scripts/docx_a_md.py")
+    script_docx_md: Path = SCRIPT_DOCX_MD
 
     @property
     def dir_adjuntos(self) -> Path:
@@ -179,11 +183,12 @@ def cargar(ruta: Path | str | None = None) -> Config:
         excluir=list(datos.get("excluir") or ["~$*", ".*", "_adjuntos"]),
         tamano_max_mb=int(datos.get("tamano_max_mb", 200)),
         concurrencia=max(1, int(datos.get("concurrencia", 1))),
+        procesar_solo_en_la_nube=bool(datos.get("procesar_solo_en_la_nube", False)),
         hermes=hermes,
         clasificador=clasificador,
         n8n=n8n,
         deidentificar=bool(datos.get("deidentificar", True)),
         python=datos.get("python", ""),
-        script_docx_md=_ruta(datos.get("script_docx_md", "skills/resumen_clinico_md/scripts/docx_a_md.py")),
+        script_docx_md=_ruta(datos.get("script_docx_md") or SCRIPT_DOCX_MD),
     )
     return cfg

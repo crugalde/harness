@@ -8,6 +8,7 @@ Hermes. La puesta en marcha completa (incluido el flujo n8n del VPS) está en
 ## Comandos
 
 ```bash
+python hermes_brain.py comprobar                    # qué falta para que funcione
 python hermes_brain.py detectar                     # encuentra el CLI de Hermes (sin dependencias)
 python hermes_brain.py correr --carpeta "C:\ruta"   # escanear + procesar + informe
 python hermes_brain.py escanear --lote papers-2026  # solo inventario
@@ -28,6 +29,7 @@ Todos aceptan `--config <ruta>` y `--lote <nombre>`. Sin `--lote` se usa el últ
 | Archivo | Responsabilidad |
 |---|---|
 | `config.py` | carga y valida el YAML (`~/.config/harness/hermes_brain.yaml`) |
+| `comprobar.py` | diagnóstico previo: dependencias, carpetas, destino, conversor, Hermes, n8n |
 | `detectar.py` | encuentra el CLI de Hermes: procesos, PATH, carpetas, paquetes, registro |
 | `inventario.py` | recorrido recursivo, SHA-256, exclusiones, tope de tamaño |
 | `clasificador.py` | PDF de revista científica / Word de resumen clínico, con evidencia |

@@ -75,6 +75,7 @@ se cuelga. Al VPS solo viajan contadores e identificadores opacos — nunca ruta
 ```bash
 # En el PC
 python hermes_brain.py detectar                                   # encuentra el CLI de Hermes
+python hermes_brain.py comprobar                                  # qué falta para que funcione
 python hermes_brain.py probar-hermes "C:\ruta\a\un_paper.pdf"   # valida el CLI de Hermes
 python hermes_brain.py correr --carpeta "C:\Users\Usuario\OneDrive\Papers"
 python hermes_brain.py revisar                                    # dudosos, en bloque

@@ -737,7 +737,107 @@ def test_chat_sin_md_puede_ser_exito_cuando_no_se_exige(tmp_path: Path):
     """La pasada de revisión no produce un .md nuevo: no puede fallar por no devolver ruta."""
     script = _cli_falso(tmp_path, CLI_SIN_MD)
     cfg = ConfigHermes(comando=[sys.executable, str(script)], reintentos=0, timeout_s=60)
-    comun = dict(archivo=tmp_path / "x.md", skill="s", prompt="p", destino=tmp_path / "brain",
-                 adjuntos=tmp_path, nombre_slug="x")
+    comun = {"archivo": tmp_path / "x.md", "skill": "s", "prompt": "p",
+             "destino": tmp_path / "brain", "adjuntos": tmp_path, "nombre_slug": "x"}
     assert hm.ejecutar_chat(cfg, exige_md=False, **comun).ok is True
     assert hm.ejecutar_chat(cfg, exige_md=True, **comun).ok is False
+
+
+# --------------------------------------------------------------------------- diagnóstico
+CLI_ONESHOT = """
+import argparse, sys
+p = argparse.ArgumentParser(add_help=False)
+p.add_argument("-s", "--skills", action="append", default=[])
+p.add_argument("-z", "--oneshot", default="")
+a, _ = p.parse_known_args()
+if a.skills and "inexistente" in a.skills[0]:
+    print("error: unknown skill " + a.skills[0], file=sys.stderr); sys.exit(2)
+if "LISTO" in a.oneshot:
+    print("LISTO"); sys.exit(0)
+print("respuesta")
+"""
+
+
+def _config_completa(tmp_path: Path, skill_pdf: str = "analisis-estudio") -> Path:
+    origen = tmp_path / "papers"
+    origen.mkdir()
+    (origen / "algo.pdf").write_bytes(_pdf(PAPER, "T", "Ugalde C, Farina D"))
+    script = tmp_path / "hermes_falso.py"
+    script.write_text(CLI_ONESHOT, encoding="utf-8")
+    ruta = tmp_path / "cfg.yaml"
+    ruta.write_text(
+        f"carpetas: ['{origen.as_posix()}']\n"
+        f"destino_md: '{(tmp_path / 'brain').as_posix()}'\n"
+        f"db: '{(tmp_path / 'cola.sqlite3').as_posix()}'\n"
+        "hermes:\n"
+        f"  comando: ['{Path(sys.executable).as_posix()}', '{script.as_posix()}',"
+        " '-s', '{skill}', '-z', '{prompt}']\n"
+        "  timeout_s: 60\n"
+        "  reintentos: 0\n"
+        f"  skill_pdf: '{skill_pdf}'\n"
+        "  skill_docx: 'resumen-clinico-md'\n", encoding="utf-8")
+    return ruta
+
+
+def test_comprobar_sin_configuracion_dice_como_arreglarlo(tmp_path: Path):
+    from hermes_brain import comprobar as comp
+
+    d = comp.diagnosticar(str(tmp_path / "no_existe.yaml"), rapido=True)
+    fallas = {c.nombre for c in d.fallas}
+    assert "Configuración" in fallas
+    assert "config.example.yaml" in comp.formatear(d)
+
+
+def test_comprobar_entorno_completo_no_encuentra_fallas(tmp_path: Path):
+    pytest.importorskip("pypdf")
+    from hermes_brain import comprobar as comp
+
+    d = comp.diagnosticar(str(_config_completa(tmp_path)), rapido=False)
+    assert not d.fallas, [(c.nombre, c.detalle) for c in d.fallas]
+    nombres = " ".join(c.nombre for c in d.items)
+    for esperado in ("Dependencias", "Destino brain md", "Conversor", "Hermes responde",
+                     "Skill PDF", "n8n"):
+        assert esperado in nombres
+
+
+def test_comprobar_detecta_una_skill_que_no_existe(tmp_path: Path):
+    pytest.importorskip("pypdf")
+    from hermes_brain import comprobar as comp
+
+    d = comp.diagnosticar(str(_config_completa(tmp_path, skill_pdf="inexistente-xyz")))
+    assert any("Skill PDF" in c.nombre for c in d.fallas), [c.nombre for c in d.items]
+
+
+def test_comprobar_detecta_dependencias_faltantes(tmp_path: Path, monkeypatch):
+    from hermes_brain import comprobar as comp
+
+    monkeypatch.setattr(comp.importlib.util, "find_spec",
+                        lambda nombre: None if nombre == "pypdf" else object())
+    d = comp.Diagnostico()
+    comp._dependencias(d, None)
+    assert d.fallas and "pip install pypdf" in d.fallas[0].arreglo
+
+
+def test_sustituir_descarta_la_bandera_de_un_marcador_vacio():
+    """`-s ""` hace fallar al CLI: sin skill, la bandera no se pasa."""
+    plantilla = ["hermes", "-s", "{skill}", "-z", "{prompt}"]
+    assert hm._sustituir(plantilla, {"skill": "", "prompt": "hola"}) == ["hermes", "-z", "hola"]
+    assert hm._sustituir(plantilla, {"skill": "x", "prompt": "hola"}) == \
+        ["hermes", "-s", "x", "-z", "hola"]
+
+
+def test_archivos_solo_en_la_nube_se_reconocen():
+    """OneDrive «Archivos a petición»: hashearlos forzaría descargar la biblioteca entera."""
+    class Stat:
+        st_file_attributes = inv.ATTR_RECALL_DATOS | 0x20
+
+    assert inv.solo_en_la_nube(Stat()) is True
+    assert inv.solo_en_la_nube(os.stat(__file__)) is False
+
+
+def test_ruta_del_conversor_no_depende_del_directorio_de_trabajo():
+    from hermes_brain.config import SCRIPT_DOCX_MD, Config, ConfigHermes
+
+    cfg = Config(carpetas=[RAIZ], destino_md=RAIZ, hermes=ConfigHermes(comando=["x"]))
+    assert cfg.script_docx_md.is_absolute() and cfg.script_docx_md.exists()
+    assert SCRIPT_DOCX_MD.name == "docx_a_md.py"

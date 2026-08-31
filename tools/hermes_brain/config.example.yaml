@@ -11,6 +11,10 @@ extensiones: [".pdf", ".docx", ".doc"]
 excluir: ["~$*", ".*", "_adjuntos", "Thumbs.db"]   # temporales de Word, ocultos, salidas propias
 tamano_max_mb: 200
 concurrencia: 1        # chats de Hermes en paralelo. 1 si el modelo corre local en este PC.
+# OneDrive «Archivos a petición»: los archivos que están solo en la nube se saltan y se
+# cuentan, porque hashearlos fuerza la descarga completa. Ponlo en true solo si quieres que
+# el worker los descargue al pasar.
+procesar_solo_en_la_nube: false
 
 # --- Dónde dejar los .md ----------------------------------------------------
 destino_md: "C:/Users/Usuario/OneDrive/brain md"

@@ -28,41 +28,68 @@ RE_AUTORES = re.compile(
     r"^[A-ZÁÉÍÓÚÑ][\w.'’-]+(?:\s+[A-ZÁÉÍÓÚÑ][\w.'’-]+){0,3}"
     r"(?:\s*[a-z]?\s*[,;]\s*[A-ZÁÉÍÓÚÑ][\w.'’-]+(?:\s+[A-ZÁÉÍÓÚÑ][\w.'’-]+){0,3}){1,}", re.M)
 
-EDITORIALES = ("elsevier", "springer", "wiley", "lippincott", "sage publications", "taylor & francis",
-               "oxford university press", "bmj", "jama network", "nature publishing", "frontiers media",
-               "mdpi", "karger", "thieme", "american academy of neurology", "sciencedirect",
-               "pubmed", "medline", "j o u r n a l")
-PISTAS_JOURNAL = ("journal of", "revista ", "annals of", "archives of", "the lancet", "new england journal",
-                  "neurology", "brain ", "muscle & nerve", "clinical neurophysiology", "vol.", "volume ",
-                  "issue ", "no. ", "©", "doi.org", "published by", "publicado por")
-AFILIACION = ("university", "universidad", "department", "departamento", "hospital", "clinic", "clínica",
-              "institute", "instituto", "school of medicine", "facultad", "servicio de", "unit ", "unidad de")
+EDITORIALES = (
+    'elsevier', 'springer', 'wiley', 'lippincott', 'sage publications', 'taylor & francis',
+    'oxford university press', 'bmj', 'jama network', 'nature publishing', 'frontiers media',
+    'mdpi', 'karger', 'thieme', 'american academy of neurology', 'sciencedirect', 'pubmed',
+    'medline', 'j o u r n a l',
+)
+PISTAS_JOURNAL = (
+    'journal of', 'revista ', 'annals of', 'archives of', 'the lancet', 'new england journal',
+    'neurology', 'brain ', 'muscle & nerve', 'clinical neurophysiology', 'vol.', 'volume ',
+    'issue ', 'no. ', '©', 'doi.org', 'published by', 'publicado por',
+)
+AFILIACION = (
+    'university', 'universidad', 'department', 'departamento', 'hospital', 'clinic', 'clínica',
+    'institute', 'instituto', 'school of medicine', 'facultad', 'servicio de', 'unit ',
+    'unidad de',
+)
 
 SECCIONES_PATOLOGIA = {
-    "definicion": ("definición", "definicion", "concepto", "introducción", "introduccion", "generalidades"),
-    "epidemiologia": ("epidemiología", "epidemiologia", "incidencia", "prevalencia"),
-    "etiologia": ("etiología", "etiologia", "causas", "factores de riesgo"),
-    "fisiopatologia": ("fisiopatología", "fisiopatologia", "patogenia", "patogénesis", "patogenesis"),
-    "clinica": ("clínica", "clinica", "cuadro clínico", "manifestaciones clínicas", "síntomas", "sintomas",
-                "presentación clínica", "signos y síntomas"),
-    "diagnostico": ("diagnóstico", "diagnostico", "criterios diagnósticos", "estudio diagnóstico",
-                    "exámenes complementarios", "examenes complementarios", "laboratorio", "imagenología"),
-    "diferencial": ("diagnóstico diferencial", "diagnostico diferencial", "diferenciales"),
-    "tratamiento": ("tratamiento", "manejo", "terapia", "terapéutica", "terapeutica", "manejo inicial"),
-    "pronostico": ("pronóstico", "pronostico", "evolución y pronóstico", "complicaciones", "seguimiento"),
-    "clasificacion_clinica": ("clasificación", "clasificacion", "tipos", "formas clínicas", "estadificación"),
+    'definicion': (
+        'definición', 'definicion', 'concepto', 'introducción', 'introduccion', 'generalidades',
+    ),
+    'epidemiologia': ('epidemiología', 'epidemiologia', 'incidencia', 'prevalencia',),
+    'etiologia': ('etiología', 'etiologia', 'causas', 'factores de riesgo',),
+    'fisiopatologia': (
+        'fisiopatología', 'fisiopatologia', 'patogenia', 'patogénesis', 'patogenesis',
+    ),
+    'clinica': (
+        'clínica', 'clinica', 'cuadro clínico', 'manifestaciones clínicas', 'síntomas',
+        'sintomas', 'presentación clínica', 'signos y síntomas',
+    ),
+    'diagnostico': (
+        'diagnóstico', 'diagnostico', 'criterios diagnósticos', 'estudio diagnóstico',
+        'exámenes complementarios', 'examenes complementarios', 'laboratorio', 'imagenología',
+    ),
+    'diferencial': ('diagnóstico diferencial', 'diagnostico diferencial', 'diferenciales',),
+    'tratamiento': (
+        'tratamiento', 'manejo', 'terapia', 'terapéutica', 'terapeutica', 'manejo inicial',
+    ),
+    'pronostico': (
+        'pronóstico', 'pronostico', 'evolución y pronóstico', 'complicaciones', 'seguimiento',
+    ),
+    'clasificacion_clinica': (
+        'clasificación', 'clasificacion', 'tipos', 'formas clínicas', 'estadificación',
+    ),
 }
-MARCADORES_FICHA = ("motivo de consulta", "anamnesis próxima", "anamnesis proxima", "anamnesis remota",
-                    "examen físico", "examen fisico", "evolución clínica", "hospitalizado en",
-                    "ficha clínica", "ficha clinica", "n° ficha", "rut:", "r.u.t", "paciente de ",
-                    "ingresa el ", "epicrisis", "identificación del paciente")
-VOCABULARIO_CLINICO = ("paciente", "síntomas", "sintomas", "signos", "diagnóstico", "diagnostico",
-                       "tratamiento", "dosis", "mg/día", "mg/kg", "sensibilidad", "especificidad",
-                       "pronóstico", "biopsia", "terapia", "clínico", "clinico", "patología", "patologia",
-                       "enfermedad", "síndrome", "sindrome", "corticoides", "inmunosupresor")
-ANTI_CLINICO = ("factura", "boleta", "cotización", "cotizacion", "orden de compra", "curriculum vitae",
-                "curriculum", "acta de reunión", "acta de reunion", "contrato de", "carta de renuncia",
-                "programa del curso", "lista de asistencia", "presupuesto", "declaración de impuestos")
+MARCADORES_FICHA = (
+    'motivo de consulta', 'anamnesis próxima', 'anamnesis proxima', 'anamnesis remota',
+    'examen físico', 'examen fisico', 'evolución clínica', 'hospitalizado en', 'ficha clínica',
+    'ficha clinica', 'n° ficha', 'rut:', 'r.u.t', 'paciente de ', 'ingresa el ', 'epicrisis',
+    'identificación del paciente',
+)
+VOCABULARIO_CLINICO = (
+    'paciente', 'síntomas', 'sintomas', 'signos', 'diagnóstico', 'diagnostico', 'tratamiento',
+    'dosis', 'mg/día', 'mg/kg', 'sensibilidad', 'especificidad', 'pronóstico', 'biopsia',
+    'terapia', 'clínico', 'clinico', 'patología', 'patologia', 'enfermedad', 'síndrome',
+    'sindrome', 'corticoides', 'inmunosupresor',
+)
+ANTI_CLINICO = (
+    'factura', 'boleta', 'cotización', 'cotizacion', 'orden de compra', 'curriculum vitae',
+    'curriculum', 'acta de reunión', 'acta de reunion', 'contrato de', 'carta de renuncia',
+    'programa del curso', 'lista de asistencia', 'presupuesto', 'declaración de impuestos',
+)
 
 MAX_TEXTO = 40_000
 
@@ -234,8 +261,10 @@ def clasificar_pdf(ruta: Path, umbral_si: float = 4.0, umbral_no: float = 2.0,
     return Clasificacion(decision, round(score, 2), ev, motivo, titulo)
 
 
-AUTORES_GENERICOS = ("anonymous", "unknown", "user", "usuario", "admin", "administrador",
-                     "windows user", "pc", "owner", "propietario", "acrobat", "word", "none")
+AUTORES_GENERICOS = (
+    'anonymous', 'unknown', 'user', 'usuario', 'admin', 'administrador', 'windows user', 'pc',
+    'owner', 'propietario', 'acrobat', 'word', 'none',
+)
 
 
 def _autor_creible(bruto: str) -> bool:

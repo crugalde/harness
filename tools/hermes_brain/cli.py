@@ -14,6 +14,7 @@ import sys
 from datetime import datetime
 from pathlib import Path
 
+from . import comprobar as comp
 from . import detectar as det
 from . import informe as inf
 from .clasificador import clasificar
@@ -51,6 +52,11 @@ def cmd_escanear(args) -> int:
     print(f"\nLote `{lote}`: {res.nuevos} nuevos, {res.repetidos} ya conocidos, "
           f"{res.demasiado_grandes} demasiado grandes, {res.ilegibles} ilegibles "
           f"({res.vistos} vistos).")
+    if res.solo_en_la_nube:
+        print(f"  {res.solo_en_la_nube} archivo(s) están solo en la nube (OneDrive «Archivos a "
+              "petición») y se saltaron: procesarlos obliga a descargarlos.\n"
+              "  Descárgalos con clic derecho → «Conservar siempre en este dispositivo», o pon "
+              "`procesar_solo_en_la_nube: true` para que el worker fuerce la descarga.")
     ClienteN8n(cfg.n8n, cola).inventario(lote, res.como_dict(), len(carpetas or cfg.carpetas))
     cola.cerrar()
     return 0
@@ -198,6 +204,13 @@ def cmd_clasificar(args) -> int:
     return 0
 
 
+def cmd_comprobar(args) -> int:
+    """Audita el entorno completo antes de la primera corrida real."""
+    diagnostico = comp.diagnosticar(args.config, rapido=args.rapido)
+    print(comp.formatear(diagnostico))
+    return 1 if diagnostico.fallas else 0
+
+
 def cmd_detectar(args) -> int:
     """Encuentra el CLI de Hermes en este PC. No necesita configuración previa."""
     base = args.nombre or "hermes"
@@ -281,6 +294,10 @@ def construir_parser() -> argparse.ArgumentParser:
     cl.add_argument("archivo")
     cl.set_defaults(func=cmd_clasificar)
 
+    cp = sub.add_parser("comprobar", help="qué falta para que el pipeline funcione")
+    cp.add_argument("--rapido", action="store_true", help="no lanzar chats de Hermes de prueba")
+    cp.set_defaults(func=cmd_comprobar)
+
     dt = sub.add_parser("detectar", help="busca el CLI de Hermes en este PC (sin configuración)")
     dt.add_argument("--nombre", default="hermes", help="nombre a buscar (defecto: hermes)")
     dt.add_argument("--puertos", action="store_true", help="sondea también APIs HTTP locales")
@@ -299,7 +316,7 @@ def construir_parser() -> argparse.ArgumentParser:
 def main(argv: list[str] | None = None) -> int:
     args = construir_parser().parse_args(argv)
     for opcional in ("lote", "max", "salida", "stdout", "no_procesar", "todos_si", "todos_no",
-                     "carpeta", "nombre", "puertos", "sin_ejecutar", "profundidad"):
+                     "carpeta", "nombre", "puertos", "sin_ejecutar", "profundidad", "rapido"):
         if not hasattr(args, opcional):
             setattr(args, opcional, None)
     try:

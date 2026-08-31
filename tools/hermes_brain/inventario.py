@@ -18,6 +18,19 @@ from .config import Config
 
 TROZO = 1024 * 1024
 
+# Atributos de Windows que marcan un archivo que OneDrive tiene solo en la nube. Leerlo
+# (y hashearlo es leerlo entero) fuerza la descarga: sobre una biblioteca de miles de PDFs
+# eso son horas y decenas de GB, así que por defecto se cuentan y se saltan.
+ATTR_OFFLINE = 0x00001000            # FILE_ATTRIBUTE_OFFLINE
+ATTR_RECALL_OPEN = 0x00040000        # FILE_ATTRIBUTE_RECALL_ON_OPEN
+ATTR_RECALL_DATOS = 0x00400000       # FILE_ATTRIBUTE_RECALL_ON_DATA_ACCESS
+ATTR_NUBE = ATTR_OFFLINE | ATTR_RECALL_OPEN | ATTR_RECALL_DATOS
+
+
+def solo_en_la_nube(st: os.stat_result) -> bool:
+    """True si Windows marca el archivo como no descargado (OneDrive «Archivos a petición»)."""
+    return bool(getattr(st, "st_file_attributes", 0) & ATTR_NUBE)
+
 
 @dataclass
 class ResultadoInventario:
@@ -27,6 +40,7 @@ class ResultadoInventario:
     excluidos: int = 0
     demasiado_grandes: int = 0
     ilegibles: int = 0
+    solo_en_la_nube: int = 0
 
     def como_dict(self) -> dict[str, int]:
         return self.__dict__.copy()
@@ -108,6 +122,9 @@ def escanear(cfg: Config, cola: Cola, lote: str, carpetas: list[Path] | None = N
                 continue
             if st.st_size > tope:
                 res.demasiado_grandes += 1
+                continue
+            if not cfg.procesar_solo_en_la_nube and solo_en_la_nube(st):
+                res.solo_en_la_nube += 1
                 continue
             try:
                 sha = sha256_archivo(ruta)
