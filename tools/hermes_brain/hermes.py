@@ -130,7 +130,7 @@ def _parsear(salida: str, salida_json: Path, destino: Path, desde: float) -> dic
 
 
 def ejecutar_chat(cfg_hermes, *, archivo: Path, skill: str, prompt: str, destino: Path,
-                  adjuntos: Path, nombre_slug: str) -> ResultadoHermes:
+                  adjuntos: Path, nombre_slug: str, exige_md: bool = True) -> ResultadoHermes:
     """Abre un chat de Hermes para un archivo, espera a que termine y lo cierra.
 
     Reintenta según `hermes.reintentos`. Nunca deja procesos huérfanos: al vencer el timeout
@@ -165,12 +165,12 @@ def ejecutar_chat(cfg_hermes, *, archivo: Path, skill: str, prompt: str, destino
                     _ejecutar(cierre, 120, cfg_hermes.cwd, cfg_hermes.env)
                 except ErrorHermes:
                     pass  # el chat se cierra igual al terminar el proceso principal
-            if codigo == 0 and datos["md"]:
+            if codigo == 0 and (datos["md"] or not exige_md):
                 return ResultadoHermes(True, md=datos["md"], notion_url=datos["notion_url"],
                                        sesion=datos["sesion"], duracion_s=time.time() - inicio,
                                        salida=salida[-4000:], extra=datos["extra"])
             ultimo_error = (f"código {codigo}" if codigo != 0 else "Hermes terminó sin producir .md")
-            if codigo == 0 and not datos["md"]:
+            if codigo == 0:
                 # No es un fallo transitorio: reintentar produciría lo mismo.
                 return ResultadoHermes(False, error=ultimo_error, salida=salida[-4000:],
                                        duracion_s=time.time() - inicio, sesion=datos["sesion"])
@@ -180,24 +180,61 @@ def ejecutar_chat(cfg_hermes, *, archivo: Path, skill: str, prompt: str, destino
 
 
 def prompt_pdf(cfg, archivo: Path, titulo: str, nombre_slug: str) -> str:
-    """Prompt por defecto para un PDF de revista científica."""
+    """Prompt para un PDF de revista científica.
+
+    Pensado para un CLI de un solo disparo que imprime solo la respuesta final: la ruta del
+    documento va dentro del texto (no hay bandera de adjunto) y el resultado se recupera de
+    la última línea de stdout (no hay bandera de salida JSON).
+    """
     if cfg.hermes.prompt_pdf:
         return cfg.hermes.prompt_pdf.format(archivo=archivo, titulo=titulo, slug=nombre_slug,
                                             destino=cfg.destino_md, skill=cfg.hermes.skill_pdf)
     return (
-        f"Usa la skill `{cfg.hermes.skill_pdf}` sobre el archivo adjunto.\n"
+        f"Analiza este artículo con la skill `{cfg.hermes.skill_pdf}`.\n\n"
         f"Archivo: {archivo}\n"
         f"Título detectado: {titulo or '(no detectado)'}\n\n"
         "Entrega los dos productos que define la skill:\n"
-        f"1. La publicación en Notion.\n"
+        "1. La publicación en Notion.\n"
         f"2. El .md guardado en «{cfg.destino_md}» con nombre `{nombre_slug}.md`.\n\n"
-        "Al terminar imprime una única línea JSON: "
-        '{"md": "<ruta del .md>", "notion_url": "<url>"}'
+        "La ÚLTIMA línea de tu respuesta debe ser exactamente una línea JSON, sin texto "
+        "después de ella:\n"
+        '{"md": "<ruta absoluta del .md>", "notion_url": "<url o cadena vacía>"}'
+    )
+
+
+def prompt_revision_docx(cfg, md: Path, origen: Path, figuras: int, enmascarados: int) -> str:
+    """Prompt de la pasada de revisión sobre un `.md` que el worker ya generó.
+
+    La conversión es determinista y ya ocurrió; lo que se le pide a Hermes es exactamente lo
+    que un script no puede hacer: decidir qué párrafo en negrita era un título, qué muestra
+    una figura, y con qué nota de la bóveda enlazar.
+    """
+    if cfg.hermes.prompt_docx:
+        return cfg.hermes.prompt_docx.format(archivo=md, origen=origen, titulo=md.stem,
+                                             slug=md.stem, destino=cfg.destino_md,
+                                             skill=cfg.hermes.skill_docx)
+    return (
+        f"El resumen clínico ya fue convertido a Markdown por el conversor determinista de la "
+        f"skill `{cfg.hermes.skill_docx}`. Tu trabajo es la revisión que describe la skill, "
+        "no la conversión.\n\n"
+        f"Archivo .md: {md}\n"
+        f"Figuras extraídas: {figuras} · datos enmascarados: {enmascarados}\n\n"
+        "Corrige en ese mismo archivo, sin inventar contenido clínico que no esté en él:\n"
+        "1. Párrafos en negrita que en realidad son títulos → conviértelos en ## o ###.\n"
+        "2. Figuras con pie genérico → describe qué muestra la figura.\n"
+        "3. Tablas descuadradas por celdas combinadas de Word.\n"
+        "4. Front-matter: añade a `tags` la patología y su dominio.\n"
+        "5. Si la bóveda ya tiene una nota del mismo tema, enlázala con [[nota]].\n\n"
+        'La ÚLTIMA línea de tu respuesta debe ser exactamente: {"md": "' + str(md) + '"}'
     )
 
 
 def prompt_docx(cfg, archivo: Path, titulo: str, nombre_slug: str) -> str:
-    """Prompt por defecto para un Word de resumen clínico."""
+    """Prompt del modo alternativo: es Hermes quien ejecuta el conversor.
+
+    Solo se usa con `convertir_docx_en_worker: false`, y exige que el CLI de Hermes pueda
+    ejecutar comandos. El modo por defecto convierte en el worker y no depende de eso.
+    """
     if cfg.hermes.prompt_docx:
         return cfg.hermes.prompt_docx.format(archivo=archivo, titulo=titulo, slug=nombre_slug,
                                              destino=cfg.destino_md, skill=cfg.hermes.skill_docx)
@@ -214,5 +251,5 @@ def prompt_docx(cfg, archivo: Path, titulo: str, nombre_slug: str) -> str:
         f'--adjuntos "{cfg.adjuntos}"{arg_slug} --json\n\n'
         "Después revisa el .md generado según la skill (títulos, tablas, pies de figura, "
         "front-matter) y corrige lo que haga falta.\n"
-        'Al terminar imprime una única línea JSON: {"md": "<ruta del .md>"}'
+        'La ÚLTIMA línea de tu respuesta debe ser exactamente: {"md": "<ruta del .md>"}'
     )

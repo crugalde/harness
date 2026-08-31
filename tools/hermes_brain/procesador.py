@@ -4,6 +4,9 @@ y con parada limpia por Ctrl+C o por orden del flujo n8n.
 """
 from __future__ import annotations
 
+import json
+import subprocess
+import sys
 import time
 from collections.abc import Callable
 from concurrent.futures import ThreadPoolExecutor, as_completed
@@ -17,6 +20,43 @@ from .cola import Archivo, Cola
 from .config import Config
 
 SKILL_POR_CLASE = {"cientifico": "pdf", "clinico": "docx"}
+TIMEOUT_CONVERSOR_S = 600
+
+
+@dataclass
+class ResultadoConversion:
+    """Salida del conversor determinista .docx → .md de la skill."""
+
+    ok: bool
+    md: str = ""
+    figuras: int = 0
+    enmascarados: int = 0
+    error: str = ""
+
+
+def convertir_docx(cfg: Config, archivo: Path, nombre_slug: str) -> ResultadoConversion:
+    """Corre el conversor de la skill. Es determinista: no necesita a Hermes para nada."""
+    cmd = [cfg.python or sys.executable, str(cfg.script_docx_md), str(archivo),
+           "--salida", str(cfg.destino_md), "--adjuntos", cfg.adjuntos, "--json"]
+    if nombre_slug:
+        cmd += ["--slug", nombre_slug]
+    if not cfg.deidentificar:
+        cmd.append("--sin-deidentificar")
+    try:
+        proc = subprocess.run(cmd, capture_output=True, text=True, encoding="utf-8",
+                              errors="replace", timeout=TIMEOUT_CONVERSOR_S, check=False)
+    except (OSError, subprocess.TimeoutExpired) as exc:
+        return ResultadoConversion(False, error=f"conversor: {type(exc).__name__}: {exc}"[:300])
+    if proc.returncode != 0:
+        return ResultadoConversion(False, error=((proc.stderr or proc.stdout) or "").strip()[-300:])
+    lineas = [l for l in (proc.stdout or "").splitlines() if l.strip()]
+    try:
+        datos = json.loads(lineas[-1])
+    except (json.JSONDecodeError, IndexError):
+        return ResultadoConversion(False, error="el conversor no devolvió JSON")
+    return ResultadoConversion(True, md=str(datos.get("md", "")),
+                               figuras=int(datos.get("figuras", 0)),
+                               enmascarados=int(datos.get("enmascarados", 0)))
 
 
 @dataclass
@@ -92,12 +132,16 @@ def procesar_archivo(cfg: Config, cola: Cola, archivo: Archivo) -> dict:
     ruta_archivo = Path(evidencia["convertido_desde_doc"]) \
         if evidencia.get("convertido_desde_doc") else archivo.ruta
 
+    cfg.destino_md.mkdir(parents=True, exist_ok=True)
+    if decision == "clinico" and cfg.hermes.convertir_docx_en_worker:
+        return _procesar_clinico(cfg, cola, archivo, ruta_archivo, nombre_slug, score, motivo,
+                                 inicio)
+
     if decision == "cientifico":
         skill, prompt = cfg.hermes.skill_pdf, h.prompt_pdf(cfg, ruta_archivo, titulo, nombre_slug)
     else:
         skill, prompt = cfg.hermes.skill_docx, h.prompt_docx(cfg, ruta_archivo, titulo, nombre_slug)
 
-    cfg.destino_md.mkdir(parents=True, exist_ok=True)
     res = h.ejecutar_chat(cfg.hermes, archivo=ruta_archivo, skill=skill, prompt=prompt,
                           destino=cfg.destino_md, adjuntos=cfg.dir_adjuntos, nombre_slug=nombre_slug)
     if res.ok:
@@ -109,6 +153,38 @@ def procesar_archivo(cfg: Config, cola: Cola, archivo: Archivo) -> dict:
     cola.actualizar(archivo.id, estado="error", error=res.error[:500], duracion_s=res.duracion_s)
     return registro_anonimo(archivo, decision, "error", score, res.duracion_s, error=res.error,
                             motivo=motivo, incluir_nombre=cfg.n8n.enviar_nombres)
+
+
+def _procesar_clinico(cfg: Config, cola: Cola, archivo: Archivo, ruta: Path, nombre_slug: str,
+                      score: float, motivo: str, inicio: float) -> dict:
+    """Word clínico: convierte el worker, revisa Hermes.
+
+    El orden importa. Si Hermes falla —no responde, no sabe editar archivos, no tiene shell—
+    el `.md` con sus figuras ya está escrito en la bóveda y el archivo cuenta como hecho, con
+    la nota de que quedó sin revisar. Al revés, un fallo del agente costaría la conversión.
+    """
+    conv = convertir_docx(cfg, ruta, nombre_slug)
+    if not conv.ok:
+        cola.actualizar(archivo.id, estado="error", error=conv.error[:500])
+        return registro_anonimo(archivo, "clinico", "error", score, time.time() - inicio,
+                                error=conv.error, motivo=motivo,
+                                incluir_nombre=cfg.n8n.enviar_nombres)
+
+    nota = ""
+    if cfg.hermes.revisar_docx_con_hermes and cfg.hermes.comando:
+        md = Path(conv.md)
+        res = h.ejecutar_chat(
+            cfg.hermes, archivo=md, skill=cfg.hermes.skill_docx,
+            prompt=h.prompt_revision_docx(cfg, md, ruta, conv.figuras, conv.enmascarados),
+            destino=cfg.destino_md, adjuntos=cfg.dir_adjuntos,
+            nombre_slug=nombre_slug or md.stem, exige_md=False)
+        if not res.ok:
+            nota = f"convertido; la revisión de Hermes falló: {res.error}"[:300]
+
+    cola.actualizar(archivo.id, estado="hecho", salida_md=conv.md,
+                    duracion_s=time.time() - inicio, error=nota)
+    return registro_anonimo(archivo, "clinico", "hecho", score, time.time() - inicio, md=True,
+                            motivo=motivo, error=nota, incluir_nombre=cfg.n8n.enviar_nombres)
 
 
 def procesar_lote(cfg: Config, cola: Cola, lote: str | None = None, limite: int | None = None,

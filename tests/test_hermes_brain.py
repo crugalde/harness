@@ -664,3 +664,80 @@ def test_detectar_funciona_sin_pyyaml_ni_requests():
                             timeout=60, check=False)
     assert salida.returncode == 0, salida.stderr
     assert "DETECTAR" in salida.stdout
+
+
+# ------------------------------------------------- Word: convierte el worker, revisa Hermes
+def _cfg_clinico(tmp_path: Path, origen: Path, comando: list[str] | None = None,
+                 revisar: bool = True) -> Config:
+    return Config(
+        carpetas=[origen], destino_md=tmp_path / "brain", db=tmp_path / "cola.sqlite3",
+        script_docx_md=RAIZ / "skills" / "resumen_clinico_md" / "scripts" / "docx_a_md.py",
+        hermes=ConfigHermes(comando=comando or [], reintentos=0, timeout_s=90,
+                            revisar_docx_con_hermes=revisar))
+
+
+def test_word_clinico_no_necesita_a_hermes(tmp_path: Path, docx_clinico: Path):
+    """La conversión es determinista: sin CLI de Hermes configurado, el .md igual se escribe."""
+    from hermes_brain.procesador import procesar_archivo
+
+    origen = tmp_path / "docs"
+    origen.mkdir()
+    (origen / "resumen.docx").write_bytes(docx_clinico.read_bytes())
+    cfg = _cfg_clinico(tmp_path, origen, comando=[], revisar=False)
+
+    with Cola(cfg.db) as cola:
+        inv.escanear(cfg, cola, "L")
+        registro = procesar_archivo(cfg, cola, cola.pendientes()[0])
+        assert registro["estado"] == "hecho" and registro["md"] is True
+
+    md = list((tmp_path / "brain").glob("*.md"))
+    assert len(md) == 1
+    texto = md[0].read_text(encoding="utf-8")
+    assert "## Epidemiología" in texto and "12.345.678-9" not in texto
+    assert (tmp_path / "brain" / "_adjuntos" / md[0].stem / "fig-01.png").exists()
+
+
+def test_revision_fallida_no_pierde_el_md(tmp_path: Path, docx_clinico: Path):
+    """Si Hermes se cae en la revisión, el archivo sigue contando como hecho, con nota."""
+    from hermes_brain.procesador import procesar_archivo
+
+    origen = tmp_path / "docs"
+    origen.mkdir()
+    (origen / "resumen.docx").write_bytes(docx_clinico.read_bytes())
+    script = _cli_falso(tmp_path, CLI_CAIDO)
+    cfg = _cfg_clinico(tmp_path, origen, comando=[sys.executable, str(script)])
+
+    with Cola(cfg.db) as cola:
+        inv.escanear(cfg, cola, "L")
+        archivo = cola.pendientes()[0]
+        registro = procesar_archivo(cfg, cola, archivo)
+        guardado = cola.obtener(archivo.id)
+
+    assert registro["estado"] == "hecho", registro
+    assert "revisión de Hermes falló" in guardado.error
+    assert Path(guardado.salida_md).exists()
+    assert len(list((tmp_path / "brain").glob("*.md"))) == 1   # no se convirtió dos veces
+
+
+def test_prompts_para_cli_de_un_solo_disparo(tmp_path: Path):
+    """Sin bandera de adjunto ni de salida JSON: la ruta va en el texto y el resultado en stdout."""
+    cfg = Config(carpetas=[tmp_path], destino_md=tmp_path / "brain",
+                 hermes=ConfigHermes(comando=["hermes"]))
+    pdf = hm.prompt_pdf(cfg, tmp_path / "paper.pdf", "Ultrasound in CIDP", "ultrasound-cidp")
+    assert str(tmp_path / "paper.pdf") in pdf          # el adjunto viaja dentro del prompt
+    assert pdf.rstrip().endswith('"notion_url": "<url o cadena vacía>"}')
+
+    md = tmp_path / "brain" / "miastenia.md"
+    revision = hm.prompt_revision_docx(cfg, md, tmp_path / "x.docx", 3, 2)
+    assert "ya fue convertido" in revision and "no la conversión" in revision
+    assert revision.rstrip().endswith(f'{{"md": "{md}"}}')
+
+
+def test_chat_sin_md_puede_ser_exito_cuando_no_se_exige(tmp_path: Path):
+    """La pasada de revisión no produce un .md nuevo: no puede fallar por no devolver ruta."""
+    script = _cli_falso(tmp_path, CLI_SIN_MD)
+    cfg = ConfigHermes(comando=[sys.executable, str(script)], reintentos=0, timeout_s=60)
+    comun = dict(archivo=tmp_path / "x.md", skill="s", prompt="p", destino=tmp_path / "brain",
+                 adjuntos=tmp_path, nombre_slug="x")
+    assert hm.ejecutar_chat(cfg, exige_md=False, **comun).ok is True
+    assert hm.ejecutar_chat(cfg, exige_md=True, **comun).ok is False

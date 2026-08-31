@@ -28,6 +28,10 @@ class ConfigHermes:
     skill_docx: str = "resumen-clinico-md"
     prompt_pdf: str = ""
     prompt_docx: str = ""
+    # La conversión .docx → .md es determinista y no necesita un agente. Hacerla en el worker
+    # evita depender de que el CLI de Hermes pueda ejecutar comandos.
+    convertir_docx_en_worker: bool = True
+    revisar_docx_con_hermes: bool = True
 
 
 @dataclass
@@ -132,6 +136,8 @@ def cargar(ruta: Path | str | None = None) -> Config:
         skill_docx=bruto_hermes.get("skill_docx", "resumen-clinico-md"),
         prompt_pdf=bruto_hermes.get("prompt_pdf", ""),
         prompt_docx=bruto_hermes.get("prompt_docx", ""),
+        convertir_docx_en_worker=bool(bruto_hermes.get("convertir_docx_en_worker", True)),
+        revisar_docx_con_hermes=bool(bruto_hermes.get("revisar_docx_con_hermes", True)),
     )
     if not hermes.comando:
         raise ErrorConfig(

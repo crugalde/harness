@@ -33,7 +33,7 @@ Todos aceptan `--config <ruta>` y `--lote <nombre>`. Sin `--lote` se usa el últ
 | `clasificador.py` | PDF de revista científica / Word de resumen clínico, con evidencia |
 | `hermes.py` | adaptador del CLI: un proceso = un chat; timeout, reintentos, parseo |
 | `cola.py` | cola SQLite: estados, deduplicado, reanudación, envíos diferidos |
-| `procesador.py` | motor del lote: clasifica, deriva, contabiliza, obedece órdenes |
+| `procesador.py` | motor del lote: clasifica, deriva, convierte el Word, contabiliza, obedece órdenes |
 | `cliente_n8n.py` | webhooks del VPS; construye los registros **sin PHI** |
 | `informe.py` | informe Markdown local (este sí lleva rutas: no sale del PC) |
 

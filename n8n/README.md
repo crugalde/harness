@@ -31,7 +31,7 @@ se cuelga, y un mando para pausar o detener un lote largo desde el teléfono.
 |---|---|---|
 | **PDF de revista científica** | título + journal + autor + abstract (o 3 de 4 con DOI) | chat con la skill `analisis-estudio` → publicación en Notion + `.md` en `brain md` |
 | **PDF que no es paper** | menos de 2 de esos 4 elementos | se omite y se registra |
-| **Word de resumen clínico** | secciones de patología (definición, clínica, diagnóstico, tratamiento…) + vocabulario clínico | chat con la skill `resumen_clinico_md` → `.md` con figuras en `brain md` |
+| **Word de resumen clínico** | secciones de patología (definición, clínica, diagnóstico, tratamiento…) + vocabulario clínico | el worker convierte a `.md` con figuras; Hermes revisa el resultado |
 | **Word que no es clínico** | marcadores administrativos, sin estructura clínica | se omite y se registra |
 | **Dudoso** (cualquiera de los dos) | puntaje en la zona gris | **cola de revisión**: no detiene el lote; se resuelve al final |
 
@@ -88,9 +88,15 @@ por si Hermes resulta ser un servicio y no un CLI.
 
 ```yaml
 hermes:
-  comando: ["hermes", "chat", "--new", "--skill", "{skill}", "--attach", "{archivo}",
-            "--prompt-file", "{prompt_file}", "--output-json", "{salida_json}"]
+  comando: ["C:/Users/Usuario/AppData/Local/hermes/hermes-agent/venv/Scripts/hermes.exe",
+            "-s", "{skill}", "-z", "{prompt}"]
 ```
+
+`-z` (oneshot) es exactamente «un proceso = un chat»: abre la sesión, responde y termina.
+Dos ausencias de ese CLI condicionan el resto y el worker ya cuenta con ellas: **no hay
+bandera de adjunto**, así que la ruta del documento viaja dentro del texto del prompt; y
+**no hay bandera de salida JSON**, así que el resultado se lee de la última línea de stdout
+(el prompt la pide explícitamente).
 
 Verifícalo con un archivo antes de lanzar un lote de miles:
 
@@ -98,9 +104,8 @@ Verifícalo con un archivo antes de lanzar un lote de miles:
 python hermes_brain.py probar-hermes "C:\ruta\a\un_paper.pdf"
 ```
 
-Si tu CLI no sabe escribir `{salida_json}`, no pasa nada: el worker también acepta una línea
-JSON en stdout (`{"md": "...", "notion_url": "..."}`) y, en último término, detecta el `.md`
-recién aparecido en `brain md`.
+Si Hermes no imprime la línea JSON, el worker todavía se recupera: busca una ruta `.md`
+en la salida y, en último término, detecta el `.md` recién aparecido en `brain md`.
 
 ### 3. Correr un lote
 
@@ -108,6 +113,21 @@ recién aparecido en `brain md`.
 python hermes_brain.py correr --carpeta "C:\Users\Usuario\OneDrive\Papers"
 python hermes_brain.py revisar          # al terminar: resuelve los dudosos en bloque
 ```
+
+## Por qué el Word no pasa por Hermes para convertirse
+
+La conversión `.docx → .md` es determinista: preservar el orden de bloques, extraer las
+figuras y enmascarar identificadores no necesita un modelo, necesita leer el XML de Word.
+Por eso la hace el worker y Hermes entra después, a hacer lo que un script no puede: decidir
+qué párrafo en negrita era un título, describir qué muestra una figura, enlazar con la nota
+que ya existe en la bóveda.
+
+El orden importa por cómo falla. Si Hermes no responde —o su CLI no sabe editar archivos— el
+`.md` con sus figuras **ya está escrito** y el archivo cuenta como hecho, con la nota de que
+quedó sin revisar. Al revés, un fallo del agente costaría también la conversión.
+
+Con `convertir_docx_en_worker: false` se vuelve al reparto anterior (Hermes ejecuta el
+conversor), que exige que su CLI pueda correr comandos.
 
 ## Endpoints del flujo
 
@@ -174,5 +194,6 @@ mando, informe y vigilancia. Úsalo tras editar cualquier nodo Code antes de rei
 | Todos los PDF salen `dudoso` | son escaneos sin capa de texto: necesitan OCR antes del pipeline |
 | Muchos Word clínicos salen `no_clinico` | usan negrita en vez de estilos de título: baja `docx_umbral_si` a 3.0 |
 | Hermes termina sin `.md` | la skill no escribió en `destino_md`; revisa la salida con `probar-hermes` |
+| El `.md` clínico sale sin revisar | Hermes falló en la pasada de revisión; el `.md` igual está escrito y la nota queda en `estado`. Con `revisar_docx_con_hermes: false` se omite esa pasada |
 | No sé cómo se invoca Hermes | `python hermes_brain.py detectar` (con Hermes abierto, para que aparezca su línea de comandos) |
 | Los envíos quedan pendientes | el VPS no respondió: se reintentan solos en la siguiente corrida (`estado` los muestra) |

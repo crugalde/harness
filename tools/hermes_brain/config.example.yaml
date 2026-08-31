@@ -23,32 +23,36 @@ python: ""                             # intérprete para el script de conversi�
 script_docx_md: "C:/Users/Usuario/harness/skills/resumen_clinico_md/scripts/docx_a_md.py"
 
 # --- Hermes agent (CLI local) ----------------------------------------------
-# Un proceso = un chat: se abre para el archivo, se completa y se cierra.
+# Un proceso = un chat: el modo oneshot (-z) abre una sesión, responde y termina.
 # Marcadores: {archivo} {skill} {prompt} {prompt_file} {destino} {adjuntos} {slug} {salida_json}
 hermes:
-  # ¿No sabes la sintaxis? `python hermes_brain.py detectar` la busca y te propone el bloque.
-  comando:                             # <-- AJUSTAR a la sintaxis real de tu CLI
-    - "hermes"
-    - "chat"
-    - "--new"
-    - "--skill"
-    - "{skill}"
-    - "--attach"
-    - "{archivo}"
-    - "--prompt-file"
-    - "{prompt_file}"
-    - "--output-json"
-    - "{salida_json}"
-  comando_cierre: []                   # opcional, p. ej. ["hermes", "chat", "close", "{sesion}"]
+  # Calibrado contra el --help real de hermes.exe. Ojo con lo que ese CLI *no* tiene:
+  #   · no hay bandera de adjunto  → la ruta del archivo viaja dentro del texto del prompt
+  #   · no hay bandera de salida JSON → el resultado se lee de la última línea de stdout
+  # El worker ya construye los prompts contando con ambas cosas.
+  comando:
+    - "C:/Users/Usuario/AppData/Local/hermes/hermes-agent/venv/Scripts/hermes.exe"
+    - "-s"
+    - "{skill}"          # -s / --skills : precarga la skill para esta sesión
+    - "-z"
+    - "{prompt}"         # -z / --oneshot : un solo prompt, imprime solo la respuesta final
+  comando_cierre: []                   # el proceso termina solo: no hace falta cerrar nada
   timeout_s: 900                       # tope por archivo; al vencerse mata el árbol de procesos
   reintentos: 2
   espera_reintento_s: 20
   cwd: null
   env: {}
-  skill_pdf: "analisis-estudio"        # skill ya existente para papers
-  skill_docx: "resumen-clinico-md"     # skill nueva para Word clínico
-  # Prompts propios (opcionales). Si los dejas vacíos se usan los del worker, que ya piden
-  # la línea JSON final con la ruta del .md.
+  skill_pdf: "analisis-estudio"        # <-- CONFIRMAR el nombre exacto de la skill
+  skill_docx: "resumen-clinico-md"     # <-- CONFIRMAR (o déjala fuera, ver abajo)
+
+  # Word clínico: la conversión .docx → .md es determinista y no necesita un agente.
+  # Con `true` (por defecto) la hace el worker y Hermes solo revisa el .md resultante; si
+  # Hermes falla, el .md con sus figuras ya está escrito. Con `false`, es Hermes quien
+  # ejecuta el conversor, lo que exige que su CLI pueda correr comandos.
+  convertir_docx_en_worker: true
+  revisar_docx_con_hermes: true        # false = conversión pura, sin abrir chat para Word
+
+  # Prompts propios (opcionales). Vacíos = los del worker, que ya piden la línea JSON final.
   prompt_pdf: ""
   prompt_docx: ""
 
