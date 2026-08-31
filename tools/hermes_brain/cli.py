@@ -217,6 +217,10 @@ def cmd_estado(args) -> int:
     clases = cola.resumen_clasificacion(lote)
     if clases:
         print("  clasificación:", ", ".join(f"{k}={v}" for k, v in clases.items()))
+    sin_revisar = sum(1 for a in cola.por_estado("hecho", lote) if a.error)
+    if sin_revisar:
+        print(f"  {sin_revisar} con el .md escrito pero sin revisar por Hermes "
+              "(ver `informe --stdout`)")
     pend = len(cola.envios_pendientes(limite=1000))
     if pend:
         print(f"  envíos a n8n pendientes: {pend}")

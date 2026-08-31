@@ -75,12 +75,24 @@ def generar(cola: Cola, lote: str | None = None, destino: Path | None = None) ->
 
     if hechos:
         con_notion = sum(1 for a in hechos if a.notion_url)
+        sin_revisar = [a for a in hechos if a.error]
         lineas += [
             f"## Procesados ({len(hechos)})", "",
             f"- `.md` generados: {sum(1 for a in hechos if a.salida_md)}",
             f"- publicados en Notion: {con_notion}",
             "",
         ]
+        if sin_revisar:
+            # El .md existe y es usable; lo que faltó es la pasada de revisión de Hermes.
+            lineas += [
+                f"### Con el .md escrito pero sin revisar ({len(sin_revisar)})", "",
+                "La conversión salió bien; falló la revisión posterior. Los `.md` están en la "
+                "bóveda y se pueden repasar a mano.", "",
+                "| archivo | qué pasó |", "| --- | --- |",
+            ]
+            lineas += [f"| `{Path(a.salida_md).name or a.ruta.name}` | {a.error[:150]} |"
+                       for a in sin_revisar]
+            lineas.append("")
     texto = "\n".join(lineas)
     if destino:
         destino = Path(destino)

@@ -906,3 +906,18 @@ def test_escanear_avisa_si_la_carpeta_no_existe(tmp_path: Path, capsys):
                     "hermes:\n  comando: ['hermes']\n", encoding="utf-8")
     codigo = cli.main(["--config", str(ruta), "escanear", "--carpeta", str(tmp_path / "fantasma")])
     assert codigo == 2 and "No existe" in capsys.readouterr().err
+
+
+def test_el_informe_lista_los_md_sin_revisar(tmp_path: Path):
+    """Un .md convertido cuya revisión falló es usable, pero tiene que verse en alguna parte."""
+    from hermes_brain import informe
+
+    with Cola(tmp_path / "cola.sqlite3") as cola:
+        cola.registrar("L", tmp_path / "resumen.docx", ".docx", 10, 1.0, "sha1")
+        cola.actualizar(cola.pendientes()[0].id, estado="hecho",
+                        salida_md=str(tmp_path / "miastenia.md"),
+                        error="convertido; la revisión de Hermes falló: código 3")
+        texto = informe.generar(cola, "L")
+
+    assert "sin revisar (1)" in texto
+    assert "miastenia.md" in texto and "código 3" in texto
