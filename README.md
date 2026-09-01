@@ -11,6 +11,10 @@ AGENTS.md                     # orquestador (política raíz: R1–R13, gates, s
 agents/<id>/AGENTS.md         # med · research · biz · signals · coach · docs · home (heredan de la raíz)
 agents/<id>/learning/         # journal + propuestas + changelog por subagente (separados)
 tools/loop.py                 # runtime: contexto jerárquico + router + guardas + ciclo de tools
+tools/model_policy.py         # política de modelos: clase de tarea -> tier + techo de costo
+tools/backends.py             # ejecución multi-modelo (Claude API + motor local OpenAI-compat)
+tools/skill_selector.py       # selección autónoma de skill desde el pool
+tools/paper_review.py         # análisis científico multi-paper (PDF/DOCX -> revision.md/.json)
 tools/self_improve.py         # ciclo de autoaprendizaje (capturar→destilar→proponer→aplicar)
 tools/tracing.py              # observabilidad: JSONL por día (tools, tokens, costo, latencia)
 tools/registry.py             # ensambla el ToolRegistry (auto-descubre skills + MCP)
@@ -19,8 +23,8 @@ tools/read_emg.py             # de-identificación de estudios EMG (med)
 tools/decompose.py            # pipeline HD-sEMG (signals)
 tools/ha_setup.py             # wizard de conexión/diagnóstico de Home Assistant (home)
 tools/schedule_distill.py     # disparador periódico del autoaprendizaje (cron)
-skills/<nombre>/SKILL.md+tool.py   # pubmed_search · build_docx · build_pptx · home_assistant
-evals/run_evals.py            # red de seguridad offline (routing, guardas, secciones protegidas)
+skills/<nombre>/SKILL.md+tool.py   # pubmed_search · paper_review · build_docx · build_pptx · home_assistant
+evals/run_evals.py            # red de seguridad offline (routing, guardas, tier, skills, §protegidas)
 tests/test_harness.py         # pytest del núcleo
 shared/                       # rules/, notebooklm/, learning/, traces/, templates/
 projects/<fecha_tema>/_estado.md   # continuidad entre sesiones (R5)
@@ -61,6 +65,84 @@ python tools/compose.py --spec spec.json --out deck.pptx --demo   # sin API (mar
 # Disparador periódico del autoaprendizaje (genera propuestas para todos los agentes)
 python tools/schedule_distill.py
 ```
+
+## Política de modelos (qué motor para qué tarea)
+
+El harness no corre con un modelo fijo: clasifica la tarea y elige el tier, lo **declara antes
+de ejecutar** y lo acota con un techo de costo. Detalle en `AGENTS.md` §11.
+
+| Clase | Tier | Motor | Cuándo |
+|---|---|---|---|
+| `format` / `extract` / `route` | T0-local | modelo local pequeño | convertir, exportar, parsear, clasificar |
+| `synthesis` | T2-cloud | **Claude Sonnet 5** | resumir, redactar, fichar un artículo |
+| `deep_analysis` | T3-cloud | **Claude Opus 5** | comparar con la literatura, establecer aportes, crítica metodológica |
+| `vision` | TV-local | VLM local | imágenes y escaneos |
+
+Sin motor local disponible, las clases mecánicas caen a **Haiku 4.5** (no al tier de trabajo).
+Con `--phi` la política se restringe a motores locales y **aborta** si no hay ninguno (R8).
+
+```bash
+# Ver qué elegiría para una tarea, sin ejecutarla
+python tools/model_policy.py "analiza estos papers y compáralos con la literatura"
+python tools/model_policy.py "convierte este markdown a docx"
+
+# Forzar la clase (y con ella el tier)
+python tools/loop.py "arma el informe" --class format
+python tools/loop.py "interpreta este EMG" --phi        # solo motores locales
+```
+
+### Variables de entorno
+
+| Variable | Default | Para qué |
+|---|---|---|
+| `HARNESS_MODEL` | `claude-sonnet-5` | modelo del tier de trabajo (T2) |
+| `HARNESS_LOCAL_BASE_URL` | `http://127.0.0.1:1234/v1` | endpoint OpenAI-compat (LM Studio / Ollama / vLLM) |
+| `HARNESS_LOCAL_FAST_MODEL` | `qwen2.5-7b-instruct` | motor local para tareas mecánicas |
+| `HARNESS_LOCAL_MODEL` | `nemotron-3.5-lightning` | motor local de razonamiento (usado con `--phi`) |
+| `HARNESS_LOCAL_VISION_MODEL` | `qwen3vl` | VLM local |
+| `HARNESS_LOCAL_DISABLED` | `0` | `1` = ignora los tiers locales |
+| `HARNESS_COST_CEILING` | `0.50` | techo USD por turno; por encima pide confirmación |
+| `HARNESS_SESSION_COST_CEILING` | `5.00` | techo USD acumulado por corrida |
+| `HARNESS_SKILL_PATHS` | — | directorios extra de skills, separados por `:` |
+
+## Selección autónoma de skills
+
+En cada turno se rankea **todo** el pool contra la tarea y se cargan las instrucciones
+completas de las ganadoras (tope 4), dejando constancia:
+
+```
+[skills] pool de 7 · seleccionadas automáticamente: paper_review (0.97), pubmed_search (0.14)
+```
+
+Si nada supera el umbral, se declara y se resuelve con criterio propio: **una skill imaginada
+es peor que ninguna**. El pool se re-escanea en cada llamada, así que una skill instalada
+después queda disponible sin tocar código.
+
+```bash
+python tools/skill_selector.py                       # lista el pool
+python tools/skill_selector.py "apaga las luces"     # muestra el ranking
+```
+
+## Análisis científico multi-paper
+
+`skills/paper_review/` + `tools/paper_review.py`: lee una carpeta de PDF/DOCX, de-identifica,
+ficha cada artículo con **Sonnet 5**, lo contrasta contra PubMed para establecer su aporte, y
+hace la lectura transversal con **Opus 5**.
+
+```bash
+# Inspección sin gastar un token: extracción + de-identificación
+python tools/paper_review.py --dir ~/papers --dry-run
+
+# Corrida completa
+python tools/paper_review.py --dir ~/papers \
+    --tema "HD-sEMG en ELA" --out projects/2026-09-01_hdsemg
+```
+
+Salidas: `revision.md` (tabla comparativa + síntesis + ficha por artículo, pegable en Notion)
+y `revision.json` (estructurado por paper, encadenable a `build_docx`). Los PMIDs se filtran
+contra lo que devolvió la tool en esa corrida: uno que el modelo escriba y PubMed no haya
+devuelto se descarta antes del informe (R2).
+
 
 ## Home Assistant (subagente `home`)
 

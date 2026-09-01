@@ -8,8 +8,8 @@
 
 ```yaml
 # --- meta (NO editar a mano salvo 'version'; gestionado por el ciclo de autoaprendizaje) ---
-version: 1.2.0
-updated: 2026-06-14
+version: 1.3.0
+updated: 2026-09-01
 self_modification: gated          # gated | off  (nunca 'auto' para sangrado completo)
 protected_sections: [1, 3, 4, 7]  # §1 Identidad, §3 Reglas, §4 Gates, §7 Seguridad: inmutables al ciclo
 changelog: shared/learning/CHANGELOG.md
@@ -230,6 +230,10 @@ ejecutes: cítalo, nombra la fuente y pregunta.
 │   └── templates/            # plantillas de informe, _estado.md, gates
 ├── tools/
 │   ├── loop.py               # runtime: contexto + router + guardas + ciclo de tools
+│   ├── model_policy.py       # política de modelos: clase de tarea -> tier + techo de costo
+│   ├── backends.py           # ejecución multi-modelo (Claude API + motor local OpenAI-compat)
+│   ├── skill_selector.py     # selección autónoma de skill desde el pool (§11)
+│   ├── paper_review.py       # análisis científico multi-paper (PDF/DOCX -> revision.md/json)
 │   ├── self_improve.py       # ciclo capturar→destilar→proponer→aplicar (por agente)
 │   ├── tracing.py            # observabilidad: JSONL por día (tools, tokens, costo)
 │   ├── registry.py           # ensambla el ToolRegistry (skills + MCP)
@@ -241,6 +245,7 @@ ejecutes: cítalo, nombra la fuente y pregunta.
 ├── skills/
 │   ├── README.md             # convención de skills
 │   ├── pubmed_search/        # SKILL.md + tool.py
+│   ├── paper_review/         # SKILL.md + tool.py (análisis multi-paper)
 │   ├── build_docx/           # SKILL.md + tool.py
 │   └── build_pptx/           # SKILL.md + tool.py
 ├── evals/                    # run_evals.py + cases.json (red de seguridad)
@@ -303,5 +308,77 @@ la deriva silenciosa de las barreras de seguridad (R13).
 - Toda propuesta cita evidencia del journal; sin evidencia, no hay propuesta.
 - Revisión humana periódica del `CHANGELOG.md`: si la suma de cambios pequeños está corriendo
   el comportamiento lejos de la intención original, se revierte.
+
+---
+
+## 11. Política de modelos y selección de skills
+
+Dos decisiones se toman **antes** de ejecutar y se **declaran en una línea cada una**. Si no
+las declaraste, no ejecutaste. Ninguna requiere preguntar: son autónomas por diseño, y lo que
+las contiene es el techo de costo, no la fricción.
+
+### 11.1 Qué modelo — clasifica la tarea, no el dominio
+
+El motor no se elige por "qué tan importante parece" sino por **qué tipo de trabajo es**.
+`tools/model_policy.py` clasifica el mensaje con un léxico determinista (offline: decidir el
+modelo no gasta un token) y aplica esta tabla:
+
+| Clase | Qué es | Tier | Motor | Por qué |
+|---|---|---|---|---|
+| `format` | convertir, exportar, maquetar, materializar un .docx/.pptx | T0-local | modelo local pequeño | es transformación mecánica: gana el más rápido y cuesta 0 |
+| `extract` | sacar texto/metadatos de un PDF o Word, parsear, indexar | T0-local | modelo local pequeño | idem; el juicio viene después |
+| `route` | clasificar, etiquetar, enrutar, desempatar subagente | T0-local | modelo local pequeño | decisión de una palabra |
+| `synthesis` | resumir, redactar, interpretar un caso, fichar **un** artículo | T2-cloud | **Claude Sonnet 5** | mejor relación capacidad/velocidad; es la llamada que se repite N veces |
+| `deep_analysis` | comparar contra la literatura, establecer aportes, crítica metodológica, lectura transversal de varios papers | T3-cloud | **Claude Opus 5** | es donde se gana o se pierde el análisis, y se paga **una** vez |
+| `vision` | imágenes, escaneos, figuras | TV-local | VLM local | la imagen no sale de la máquina |
+
+**Recomendación explícita para el caso "analizar un PDF/Word, compararlo con la literatura y
+resumir a nivel de neurólogo académico":** no es un solo modelo, son dos. **Sonnet 5** ficha
+cada artículo (N llamadas, donde la velocidad y el costo se multiplican) y **Opus 5** hace la
+lectura transversal (1 llamada, donde la capacidad decide la calidad del juicio). Pagar Opus
+por artículo multiplica el costo sin mejorar la ficha; pagar Sonnet la síntesis final abarata
+lo único que no conviene abaratar. Eso es exactamente lo que hace `skills/paper_review/`.
+
+**Degradación ordenada:** sin motor local (`HARNESS_LOCAL_DISABLED=1`, o endpoint caído), las
+clases mecánicas caen a **Haiku 4.5**, no al tier de trabajo. Si el motor local falla en
+caliente, `backends.py` degrada y lo dice; no se cuelga ni se calla.
+
+**Techo de costo (autonomía acotada).** El salto al tier caro es automático **mientras el
+costo estimado del turno no supere `HARNESS_COST_CEILING`** (default USD 0.50) ni el
+acumulado supere `HARNESS_SESSION_COST_CEILING` (default USD 5.00). Por encima, el runtime
+pide confirmación humana por turno (Gate de acción, §4). El costo real de cada turno queda en
+la traza (`tools/tracing.py`).
+
+**PHI (R8) manda sobre todo lo anterior.** Con `--phi`, la política se estrecha a motores
+locales. Si no hay motor local, **aborta**: no existe la degradación "mando el paciente al
+cloud porque no había alternativa".
+
+Declaración obligatoria, una línea, antes de ejecutar:
+
+> `[T3-cloud] deep_analysis → claude-opus-5 (anthropic, lento) porque análisis científico transversal: capacidad máxima, se paga una sola vez; costo est. $0.1346`
+
+### 11.2 Qué skill — se busca en el pool, no se recuerda
+
+No trabajes de memoria ni adivines qué skill aplica. `tools/skill_selector.py` escanea
+`skills/*/SKILL.md` **en cada turno** (más lo que apunte `HARNESS_SKILL_PATHS`), rankea el
+pool completo contra la tarea, y carga las **instrucciones completas** de las ganadoras en el
+contexto — no el índice entero. Una skill instalada después queda disponible sin tocar código
+ni reiniciar nada.
+
+- Tope: **4 skills por plan**. Si necesitas más, la tarea se divide.
+- Umbral: si nada supera `MIN_SCORE`, **no hay skill adecuada**. Se declara y se resuelve con
+  criterio propio, explicándolo. Una skill imaginada es peor que ninguna.
+- Las instrucciones de la skill cargada **reemplazan** el enfoque por defecto para esa tarea.
+
+Declaración obligatoria, una línea:
+
+> `[skills] pool de 7 · seleccionadas automáticamente: paper_review (0.97), pubmed_search (0.14)`
+
+### 11.3 Red de seguridad
+
+`evals/run_evals.py` cubre ahora clasificación de tarea, tier elegido y skill seleccionada,
+además del routing y las guardas. Cero fallos es requisito antes de cualquier `apply` del
+ciclo de autoaprendizaje (§10): si un cambio mueve el tier de una clase o rompe la selección
+de una skill, el eval lo caza antes de que llegue a una tarea real.
 
 ---

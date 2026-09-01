@@ -1,15 +1,26 @@
 #!/usr/bin/env python3
 """loop.py — Runtime del harness (capa de ejecución).
 
-Ciclo agnóstico al backend: ensambla contexto (jerarquía AGENTS.md + skills + _estado.md),
-enruta al subagente y corre perceive -> plan -> act(tool) -> observe, con guardas y gates.
+Ciclo agnóstico al backend: ensambla contexto (jerarquía AGENTS.md + skills seleccionadas +
+_estado.md), enruta al subagente y corre perceive -> plan -> act(tool) -> observe, con
+guardas y gates.
 
-- Backend: interfaz pluggable (AnthropicBackend por defecto; reemplazable por OpenClaw, etc.).
+Tres decisiones se toman y se DECLARAN antes de ejecutar nada:
+  1. subagente   — `route()` (léxico, con desempate por modelo barato).
+  2. skills      — `skill_selector` busca en el pool y carga las instrucciones completas
+                   de las que ganan. Ninguna skill se usa "de memoria".
+  3. modelo      — `model_policy` clasifica la tarea y elige el tier: local rápido para
+                   transformación de formato, Sonnet 5 para síntesis, Opus 5 para análisis
+                   científico. Autónomo mientras el costo estimado no supere el techo.
+
+- Backend: interfaz pluggable (`RoutedBackend` por defecto; reemplazable por OpenClaw, etc.).
 - ToolRegistry: registras aquí tus herramientas / servidores MCP.
 - Guards: bloquea comandos destructivos y exige confirmación humana en acciones con efecto.
 
 Uso:  python tools/loop.py "investiga X" --agent research [--project 2026-06-11_tema]
-Req:  pip install anthropic ; env ANTHROPIC_API_KEY [, HARNESS_MODEL]
+      python tools/loop.py "convierte esto a docx" --class format   # forzar tier
+      python tools/loop.py "interpreta este EMG" --phi              # solo motores locales
+Req:  pip install anthropic ; env ANTHROPIC_API_KEY [, HARNESS_MODEL, HARNESS_LOCAL_BASE_URL]
 """
 from __future__ import annotations
 import argparse, json, os, re, subprocess, sys
@@ -27,7 +38,10 @@ try:
 except Exception:
     pass
 
-MODEL = os.environ.get("HARNESS_MODEL", "claude-sonnet-4-6")
+import model_policy as mp        # noqa: E402
+import skill_selector            # noqa: E402
+
+MODEL = os.environ.get("HARNESS_MODEL", "claude-sonnet-5")   # tier de trabajo (T2)
 MAX_ITERS = 8
 AGENTS = ["med", "research", "biz", "signals", "coach", "docs", "home"]
 DESTRUCTIVE = re.compile(r"(rm\s+-rf|mkfs|dd\s+if=|:\(\)\s*\{|shutdown|reboot|>\s*/dev/sd)")
@@ -39,19 +53,12 @@ class Backend(Protocol):
     def complete(self, system: str, messages: list[dict], tools: list[dict]) -> dict: ...
 
 
-class AnthropicBackend:
-    """Backend por defecto. Sustituible por cualquier otro que respete la interfaz Backend."""
-    def __init__(self, model: str = MODEL):
-        from anthropic import Anthropic
-        self.client, self.model = Anthropic(), model
-
-    def complete(self, system, messages, tools):
-        r = self.client.messages.create(model=self.model, max_tokens=2000,
-                                        system=system, messages=messages, tools=tools or [])
-        text = "".join(b.text for b in r.content if b.type == "text")
-        calls = [{"id": b.id, "name": b.name, "input": b.input}
-                 for b in r.content if b.type == "tool_use"]
-        return {"text": text, "tool_calls": calls, "stop_reason": r.stop_reason}
+def _complete(backend, system, messages, tools, task_class=None) -> dict:
+    """Llama al backend pasándole la clase de tarea si la soporta (backends externos no)."""
+    try:
+        return backend.complete(system, messages, tools, task_class=task_class)
+    except TypeError:
+        return backend.complete(system, messages, tools)
 
 
 class ToolRegistry:
@@ -71,30 +78,42 @@ class ToolRegistry:
 
 
 def load_skills() -> str:
-    if not SKILLS_DIR.exists():
+    """Índice plano del pool (nombre: descripción). Es el catálogo, no la selección."""
+    pool = skill_selector.index()
+    if not pool:
         return "(sin skills)"
-    out = []
-    for sk in sorted(SKILLS_DIR.glob("*/SKILL.md")):
-        head = sk.read_text(encoding="utf-8")
-        name = re.search(r"name:\s*(.+)", head)
-        desc = re.search(r"description:\s*(.+)", head)
-        out.append(f"- {(name.group(1).strip() if name else sk.parent.name)}: "
-                   f"{(desc.group(1).strip() if desc else '')}")
-    return "\n".join(out) or "(sin skills)"
+    return "\n".join(f"- {s.name}: {s.description}" for s in pool)
 
 
-def load_context(agent: str | None, project: str | None) -> str:
+def load_context(agent: str | None, project: str | None, task: str | None = None,
+                 select_skills: bool = True) -> tuple[str, str]:
+    """Ensambla el system prompt. Devuelve (contexto, línea de declaración de skills).
+
+    Con `task`, en vez de volcar el índice entero se cargan las **instrucciones completas**
+    de las skills que ganan la búsqueda en el pool, y se deja constancia de cuáles fueron.
+    """
     parts = [(ROOT / "AGENTS.md").read_text(encoding="utf-8")]
     if agent:
         sub = ROOT / "agents" / agent / "AGENTS.md"
         if sub.exists():
             parts.append(f"\n\n# --- Subagente activo: {agent} ---\n" + sub.read_text(encoding="utf-8"))
-    parts.append("\n\n# --- Skills disponibles ---\n" + load_skills())
+
+    declaration = ""
+    if task and select_skills:
+        declaration, block = skill_selector.context_block(task)
+        parts.append("\n\n" + block)
+    else:
+        parts.append("\n\n# --- Skills disponibles ---\n" + load_skills())
+
+    parts.append("\n\n# --- Política de modelos activa ---\n" + mp.table_markdown() +
+                 "\n\nEl tier se declara antes de ejecutar. No cambies de modelo por tu "
+                 "cuenta: la política lo resuelve el runtime.\n")
+
     if project:
         est = ROOT / "projects" / project / "_estado.md"
         if est.exists():
             parts.append("\n\n# --- Estado del proyecto ---\n" + est.read_text(encoding="utf-8"))
-    return "\n".join(parts)
+    return "\n".join(parts), declaration
 
 
 def route(user_msg: str, backend: Backend) -> str:
@@ -114,8 +133,10 @@ def route(user_msg: str, backend: Backend) -> str:
         return best                                   # ganador claro por palabras clave
     if backend is None:                               # empate o cero, sin backend
         return "research"
-    r = backend.complete(f"Clasifica el mensaje en uno de: {', '.join(AGENTS)}. Responde solo el id.",
-                         [{"role": "user", "content": user_msg}], [])
+    # Desempate con modelo: es clasificación, va al tier más barato disponible.
+    r = _complete(backend,
+                  f"Clasifica el mensaje en uno de: {', '.join(AGENTS)}. Responde solo el id.",
+                  [{"role": "user", "content": user_msg}], [], task_class="route")
     pick = r["text"].strip().lower()
     return pick if pick in AGENTS else "research"
 
@@ -136,21 +157,28 @@ def _assistant_blocks(resp):
     return blocks
 
 
-def run(user_msg, agent=None, project=None, registry=None, backend=None, max_iters=MAX_ITERS):
-    backend = backend or AnthropicBackend()
-    registry = registry or ToolRegistry()
-    if agent is None:
-        agent = route(user_msg, backend)
-        print(f"[router] -> {agent}")
+def run(user_msg, agent=None, project=None, registry=None, backend=None, max_iters=MAX_ITERS,
+        task_class=None, phi=False, select_skills=True):
+    """Un turno completo: declara subagente, skills y tier; luego ejecuta el ciclo de tools."""
     try:
         from tracing import Trace
         tr = Trace(agent, project)
     except Exception:
         tr = None
-    system = load_context(agent, project)
+
+    backend = backend or _make_backend(phi=phi, trace=tr)
+    registry = registry or ToolRegistry()
+    if agent is None:
+        agent = route(user_msg, backend)
+        print(f"[router] -> {agent}")
+
+    system, skill_line = load_context(agent, project, task=user_msg, select_skills=select_skills)
+    if skill_line:
+        print(skill_line)
+
     messages = [{"role": "user", "content": user_msg}]
     for _ in range(max_iters):
-        resp = backend.complete(system, messages, registry.schemas())
+        resp = _complete(backend, system, messages, registry.schemas(), task_class=task_class)
         if resp["text"]:
             print(resp["text"])
             if tr: tr.turn("assistant", resp["text"])
@@ -173,8 +201,17 @@ def run(user_msg, agent=None, project=None, registry=None, backend=None, max_ite
         messages.append({"role": "user", "content": results})
     else:
         print(f"[loop] alcanzó el máximo de {max_iters} iteraciones.")
+    if isinstance(backend, object) and hasattr(backend, "guard"):
+        print(f"[costo] corrida ~${backend.guard.spent:.4f} USD")
     if tr: tr.close()
     return messages
+
+
+def _make_backend(phi: bool = False, trace=None):
+    """Backend por defecto: enruta el modelo por clase de tarea y registra el uso."""
+    import backends
+    on_usage = (lambda model, i, o: trace.usage(model, i, o)) if trace else None
+    return backends.make_backend(phi=phi, on_usage=on_usage)
 
 
 def _demo_registry() -> ToolRegistry:
@@ -199,6 +236,12 @@ def main():
     ap.add_argument("mensaje")
     ap.add_argument("--agent", choices=AGENTS, help="Forzar subagente (si se omite, enruta solo).")
     ap.add_argument("--project", help="Proyecto para cargar/guardar _estado.md.")
+    ap.add_argument("--class", dest="task_class", choices=mp.CLASSES,
+                    help="Forzar la clase de tarea (y con ella el tier de modelo).")
+    ap.add_argument("--phi", action="store_true",
+                    help="Hay datos de paciente: restringe la ejecución a motores locales (R8).")
+    ap.add_argument("--no-skills", action="store_true",
+                    help="No seleccionar skills; inyecta solo el índice del pool.")
     args = ap.parse_args()
     try:
         from registry import build_registry
@@ -206,7 +249,8 @@ def main():
     except Exception as e:
         print(f"[loop] registry por defecto (demo): {e}")
         reg = _demo_registry()
-    run(args.mensaje, agent=args.agent, project=args.project, registry=reg)
+    run(args.mensaje, agent=args.agent, project=args.project, registry=reg,
+        task_class=args.task_class, phi=args.phi, select_skills=not args.no_skills)
 
 
 if __name__ == "__main__":
