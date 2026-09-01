@@ -234,6 +234,7 @@ ejecutes: cítalo, nombra la fuente y pregunta.
 │   ├── backends.py           # ejecución multi-modelo (Claude API + motor local OpenAI-compat)
 │   ├── skill_selector.py     # selección autónoma de skill desde el pool (§11)
 │   ├── paper_review.py       # análisis científico multi-paper (PDF/DOCX -> revision.md/json)
+│   ├── pdf_a_markdown.py     # PDF -> Markdown + imágenes (columnas, tablas, figuras)
 │   ├── self_improve.py       # ciclo capturar→destilar→proponer→aplicar (por agente)
 │   ├── tracing.py            # observabilidad: JSONL por día (tools, tokens, costo)
 │   ├── registry.py           # ensambla el ToolRegistry (skills + MCP)
@@ -246,6 +247,7 @@ ejecutes: cítalo, nombra la fuente y pregunta.
 │   ├── README.md             # convención de skills
 │   ├── pubmed_search/        # SKILL.md + tool.py
 │   ├── paper_review/         # SKILL.md + tool.py (análisis multi-paper)
+│   ├── pdf_markdown/         # SKILL.md + tool.py (PDF -> Markdown + imágenes)
 │   ├── build_docx/           # SKILL.md + tool.py
 │   └── build_pptx/           # SKILL.md + tool.py
 ├── profiles/

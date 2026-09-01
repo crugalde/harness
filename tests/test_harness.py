@@ -1,7 +1,10 @@
 """Tests del harness. Correr con: pytest -q  (desde la raíz del paquete)."""
+import importlib
 import importlib.util
 import sys
 from pathlib import Path
+
+import pytest
 
 ROOT = Path(__file__).resolve().parent.parent
 
@@ -27,6 +30,7 @@ MP = _load("model_policy")
 SS = _load("skill_selector")
 BE = _load("backends")
 PR = _load("paper_review")
+PM = _load("pdf_a_markdown")
 
 
 def test_router_scoring():
@@ -204,3 +208,76 @@ def test_pipeline_papers_end_to_end(tmp_path):
     for fuga in ("9.876.543-2", "autor@ejemplo.cl", "44210", "Nombre Apellido"):
         assert fuga not in informe, f"PHI filtrada al informe: {fuga}"
     assert (out / "revision.json").exists()
+
+
+# --- Conversor PDF -> Markdown ---------------------------------------------
+# La lógica pura se prueba siempre; lo que necesita pdfplumber/pillow se salta cuando no
+# están, porque el CI corre la suite en un entorno sin dependencias opcionales.
+
+def test_fusion_de_cajas_respeta_el_medianil():
+    """El margen de fusión debe ser menor que el medianil entre columnas (~9 pt).
+
+    Con un margen mayor, la caja de una figura de la columna izquierda se fusiona con lo
+    que haya en la derecha y el recorte se estira a toda la página, metiendo texto del
+    cuerpo dentro de la imagen.
+    """
+    figura = (31, 58, 298, 389)          # figura en la columna izquierda
+    filete = (307, 105, 505, 105)        # filete en la derecha, a 9 pt del medianil
+    assert len(PM._fusionar([figura, filete])) == 2
+    # Dos cajas realmente contiguas sí se fusionan (figura + su pie).
+    pie = (31, 389, 298, 452)
+    assert len(PM._fusionar([figura, pie])) == 1
+
+
+def test_tabla_descarta_lo_que_no_es_tabla():
+    """Una rejilla de una sola columna es un diagrama, no una tabla."""
+    diagrama = [["4881 Patients underwent randomization"], ["2432 Were assigned"]]
+    assert PM.tabla_markdown(diagrama) == ""
+    real = PM.tabla_markdown([["Característica", "A", "B"], ["Edad", "65.0", "65.0"]])
+    assert real.startswith("| Característica | A | B |")
+    assert "|---|---|---|" in real
+
+
+def test_nivel_de_encabezado():
+    """Un fragmento corto con cuerpo grande es un logotipo, no un título."""
+    assert PM._nivel("of", 20.0, 10.0) is None
+    assert PM._nivel("Clopidogrel and Aspirin in Acute Ischemic Stroke", 20.0, 10.0) == "##"
+    assert PM._nivel("Texto normal del cuerpo del artículo", 10.0, 10.0) is None
+
+
+def _opcional(nombre):
+    """Importa una dependencia opcional o salta el test.
+
+    `pytest.importorskip` no basta: una dependencia instalada pero rota (p. ej. pdfminer
+    contra un `cryptography` incompatible) lanza un panic de pyo3, que hereda de
+    BaseException y no de ImportError, y el test explota en vez de saltarse.
+    """
+    try:
+        return importlib.import_module(nombre)
+    except BaseException as e:                      # noqa: BLE001 — incluye PanicException
+        pytest.skip(f"{nombre} no utilizable aquí: {type(e).__name__}")
+
+
+def test_conversion_pdf_completa(tmp_path):
+    """De punta a punta sobre un PDF con un raster incrustado."""
+    _opcional("pdfplumber")
+    Image = _opcional("PIL.Image")
+    ImageDraw = _opcional("PIL.ImageDraw")
+
+    pagina = Image.new("RGB", (1200, 1600), "white")
+    d = ImageDraw.Draw(pagina)
+    d.text((80, 80), "Informe de prueba con imagen incrustada", fill="black")
+    foto = Image.new("RGB", (400, 300), (200, 60, 60))
+    ImageDraw.Draw(foto).ellipse((50, 50, 350, 250), fill=(40, 90, 200))
+    pagina.paste(foto, (80, 200))
+    pdf = tmp_path / "prueba.pdf"
+    pagina.save(pdf, "PDF", resolution=150)
+
+    out = tmp_path / "salida"
+    r = PM.convertir(pdf, out, figuras=False)
+
+    md = (out / "prueba.md").read_text(encoding="utf-8")
+    assert r["rasters"] >= 1, r
+    assert "![Imagen de la página 1](imagenes/" in md
+    referida = md.split("(imagenes/")[1].split(")")[0]
+    assert (out / "imagenes" / referida).is_file(), "la imagen referida debe existir"

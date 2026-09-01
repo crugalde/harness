@@ -15,6 +15,7 @@ tools/model_policy.py         # política de modelos: clase de tarea -> tier + t
 tools/backends.py             # ejecución multi-modelo (Claude API + motor local OpenAI-compat)
 tools/skill_selector.py       # selección autónoma de skill desde el pool
 tools/paper_review.py         # análisis científico multi-paper (PDF/DOCX -> revision.md/.json)
+tools/pdf_a_markdown.py       # PDF -> Markdown + imágenes (columnas, tablas, figuras)
 tools/self_improve.py         # ciclo de autoaprendizaje (capturar→destilar→proponer→aplicar)
 tools/tracing.py              # observabilidad: JSONL por día (tools, tokens, costo, latencia)
 tools/registry.py             # ensambla el ToolRegistry (auto-descubre skills + MCP)
@@ -23,7 +24,7 @@ tools/read_emg.py             # de-identificación de estudios EMG (med)
 tools/decompose.py            # pipeline HD-sEMG (signals)
 tools/ha_setup.py             # wizard de conexión/diagnóstico de Home Assistant (home)
 tools/schedule_distill.py     # disparador periódico del autoaprendizaje (cron)
-skills/<nombre>/SKILL.md+tool.py   # pubmed_search · paper_review · build_docx · build_pptx · home_assistant
+skills/<nombre>/SKILL.md+tool.py   # pubmed_search · paper_review · pdf_markdown · build_docx · build_pptx · home_assistant
 profiles/<nombre>/SOUL.md     # personas de runtime (perfiles de Hermes local)
 evals/run_evals.py            # red de seguridad offline (routing, guardas, tier, skills, §protegidas)
 .github/workflows/ci.yml      # CI: evals + pytest en py3.10/3.12 (estilo aparte, informativo)
@@ -144,6 +145,32 @@ Salidas: `revision.md` (tabla comparativa + síntesis + ficha por artículo, peg
 y `revision.json` (estructurado por paper, encadenable a `build_docx`). Los PMIDs se filtran
 contra lo que devolvió la tool en esa corrida: uno que el modelo escriba y PubMed no haya
 devuelto se descarta antes del informe (R2).
+
+
+## Conversión de PDF a Markdown
+
+`skills/pdf_markdown/` + `tools/pdf_a_markdown.py`. Un `extract_text()` a secas sobre un paper
+sale inservible: los documentos a dos columnas se leen entrelazados y las figuras no aparecen.
+
+```bash
+python tools/pdf_a_markdown.py paper.pdf --out revision/            # auto
+python tools/pdf_a_markdown.py paper.pdf --out revision/ --dpi 300  # figuras más finas
+python tools/pdf_a_markdown.py paper.pdf --out revision/ --columnas 2
+```
+
+Qué resuelve, y por qué no es trivial:
+
+- **Columnas.** Detecta el medianil por cobertura de palabras y separa las columnas *dentro*
+  del agrupamiento en líneas. Agrupar primero y separar después fusiona una palabra de la
+  izquierda con otra de la derecha a la misma altura, y de ahí sale el texto revuelto.
+- **Tablas.** Van a tablas Markdown; una rejilla de una sola columna se descarta porque es un
+  diagrama, no una tabla.
+- **Imágenes: dos mecanismos distintos.** Los rasters incrustados se *extraen* con `pypdf`;
+  las figuras vectoriales —las de cualquier paper de revista— se *rasterizan* con `pypdfium2`.
+  Confundirlos es la causa de que una conversión "termine bien" y sin ninguna figura: un paper
+  del NEJM tiene cero rasters incrustados.
+
+Salida: `<nombre>.md` + `imagenes/`, con cada figura referenciada en la página donde está.
 
 
 ## Home Assistant (subagente `home`)
