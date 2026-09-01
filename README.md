@@ -26,6 +26,7 @@ tools/schedule_distill.py     # disparador periódico del autoaprendizaje (cron)
 skills/<nombre>/SKILL.md+tool.py   # pubmed_search · paper_review · build_docx · build_pptx · home_assistant
 profiles/<nombre>/SOUL.md     # personas de runtime (perfiles de Hermes local)
 evals/run_evals.py            # red de seguridad offline (routing, guardas, tier, skills, §protegidas)
+.github/workflows/ci.yml      # CI: evals + pytest en py3.10/3.12 (estilo aparte, informativo)
 tests/test_harness.py         # pytest del núcleo
 shared/                       # rules/, notebooklm/, learning/, traces/, templates/
 projects/<fecha_tema>/_estado.md   # continuidad entre sesiones (R5)
@@ -197,4 +198,7 @@ se aplique; confírmalo releyendo el estado.
 - El autoaprendizaje propone, pero **no aplica** sin Gate humano + git. Las secciones protegidas
   (identidad, reglas, gates, seguridad) son inmutables al ciclo (R13).
 - Regla operativa: `python evals/run_evals.py` debe dar 0 fallos antes de cada `apply`. Si un
-  cambio del ciclo baja el score, se revierte (`git revert`).
+  cambio del ciclo baja el score, se revierte (`git revert`). **El CI lo exige**: cada push y
+  cada PR corre evals + `pytest` en Python 3.10 y 3.12 (`.github/workflows/ci.yml`), sin
+  instalar las dependencias opcionales — así se detecta cualquier import que rompa el arranque
+  offline. El chequeo de estilo corre aparte y hoy es informativo (deuda previa).

@@ -383,4 +383,13 @@ además del routing y las guardas. Cero fallos es requisito antes de cualquier `
 ciclo de autoaprendizaje (§10): si un cambio mueve el tier de una clase o rompe la selección
 de una skill, el eval lo caza antes de que llegue a una tarea real.
 
+Ese requisito dejó de vivir solo en esta página: **`.github/workflows/ci.yml` lo hace
+exigible** en cada push y cada PR (Python 3.10 y 3.12), corriendo evals + `pytest`. El job
+instala **solo** las herramientas de test, no `requirements.txt`: correr la suite en un
+entorno pelado es lo que detecta que alguien subió a nivel de módulo un import de
+`anthropic`, `pypdf`, `python-docx` o `biopython` y rompió el arranque offline del harness.
+El chequeo de estilo (`ruff` completo + `black`) corre aparte y **no bloquea**, porque el
+repo arrastra deuda previa a este workflow; cuando se salde, se le quita el
+`continue-on-error` y pasa a ser obligatorio.
+
 ---

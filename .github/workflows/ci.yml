@@ -1,0 +1,91 @@
+# CI del harness — la red de seguridad de §10 (autoaprendizaje) hecha exigible.
+#
+# `AGENTS.md` §10 dice que `evals/run_evals.py` debe dar 0 fallos antes de cada `apply`
+# del ciclo de autoaprendizaje. Mientras eso viva solo en la documentación, un `apply`
+# puede entrar sin pasarlo. Este workflow lo convierte en un gate.
+#
+# Deliberadamente **no** instala `requirements.txt`: el harness está diseñado para correr
+# sin las dependencias opcionales (los imports de `anthropic`, `pypdf`, `python-docx` y
+# `biopython` son perezosos). Correr la suite en un entorno pelado es lo que detecta que
+# alguien subió uno de esos imports a nivel de módulo y rompió el arranque offline.
+name: CI
+
+on:
+  push:
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+# Un push nuevo cancela la corrida anterior de la misma rama.
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  test:
+    name: evals + tests (py${{ matrix.python }})
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        # 3.10 es el piso declarado en AGENTS.md §5; 3.12 es el techo que se usa hoy.
+        python: ["3.10", "3.12"]
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python }}
+
+      - name: Instalar herramientas de test (sin dependencias opcionales, a propósito)
+        run: python -m pip install --upgrade pip "pytest>=8,<9" "ruff>=0.6,<1.0"
+
+      - name: Errores reales (sintaxis y nombres indefinidos)
+        # Subconjunto estable: E9 sintaxis/IO, F63 comparaciones inválidas, F7 sentencias
+        # mal ubicadas, F82 nombres indefinidos. Son bugs, no estilo — por eso bloquean.
+        run: ruff check --select E9,F63,F7,F82 --output-format=github .
+
+      - name: Todo compila
+        run: python -m compileall -q tools skills evals tests loop.py compose.py
+
+      - name: Evals (routing, guardas, secciones protegidas, tier de modelo, skills)
+        run: python evals/run_evals.py
+
+      - name: Tests
+        run: python -m pytest tests/ -q
+
+
+  style:
+    name: estilo (informativo)
+    runs-on: ubuntu-latest
+    # NO bloquea: hoy el repo arrastra ~35 hallazgos de ruff y ~32 archivos sin formato
+    # black, todos previos a este workflow. Ponerlo como gate dejaría el CI rojo por
+    # deuda vieja y entrenaría a ignorar el rojo. Cuando esa deuda se salde, borra
+    # `continue-on-error` y pasa a ser obligatorio (AGENTS.md §6 ya lo exige a mano).
+    continue-on-error: true
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: python -m pip install --upgrade pip "ruff>=0.6,<1.0" "black>=24,<26"
+
+      - name: Reporte de deuda de estilo
+        run: |
+          {
+            echo "## Deuda de estilo (informativo, no bloquea)"
+            echo
+            echo '### ruff check'
+            echo '```'
+            ruff check . 2>&1 | tail -20 || true
+            echo '```'
+            echo
+            echo '### black --check (line-length 100)'
+            echo '```'
+            black --check --line-length 100 . 2>&1 | tail -10 || true
+            echo '```'
+          } >> "$GITHUB_STEP_SUMMARY"

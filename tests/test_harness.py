@@ -176,3 +176,31 @@ def test_deidentificacion():
 
 def test_json_tolerante():
     assert PR._json_from('ruido {"a": 1, "b": {"c": 2}} más ruido') == {"a": 1, "b": {"c": 2}}
+
+
+def test_pipeline_papers_end_to_end(tmp_path):
+    """discover -> extract -> de-identificar -> render -> revision.json/.md, sin modelo.
+
+    Los tests de arriba cubren las piezas por separado; este cubre que el pipeline
+    completo corra y, sobre todo, que **no se filtre PHI al informe**, que es la
+    propiedad que no puede romperse en silencio (R8).
+    """
+    papers = tmp_path / "papers"; papers.mkdir()
+    (papers / "estudio.md").write_text(
+        "HD-sEMG decomposition in ALS: cross-sectional study. J Neurophysiol 2024.\n"
+        "Paciente: Nombre Apellido, RUT 9.876.543-2, ficha N 44210.\n"
+        "Contacto: autor@ejemplo.cl, +56 9 1111 2222.\n"
+        "Se registraron 24 pacientes y 20 controles.\n", encoding="utf-8")
+
+    out = tmp_path / "rev"
+    payload = PR.run(papers, out, "humo", dry_run=True)
+
+    paper = payload["papers"][0]
+    assert paper["redacciones_phi"] >= 4, paper
+    assert not paper["errores"], paper["errores"]
+    assert payload["modelos"]["ficha"] and payload["modelos"]["sintesis"]
+
+    informe = (out / "revision.md").read_text(encoding="utf-8")
+    for fuga in ("9.876.543-2", "autor@ejemplo.cl", "44210", "Nombre Apellido"):
+        assert fuga not in informe, f"PHI filtrada al informe: {fuga}"
+    assert (out / "revision.json").exists()
