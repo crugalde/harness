@@ -11,7 +11,10 @@
 name: CI
 
 on:
+  # `push` solo en main: en una rama con PR abierto, el evento `pull_request` ya cubre
+  # cada push, y tener los dos corría la suite dos veces por commit.
   push:
+    branches: [main]
   pull_request:
     branches: [main]
   workflow_dispatch:
