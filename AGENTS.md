@@ -248,6 +248,8 @@ ejecutes: cítalo, nombra la fuente y pregunta.
 │   ├── paper_review/         # SKILL.md + tool.py (análisis multi-paper)
 │   ├── build_docx/           # SKILL.md + tool.py
 │   └── build_pptx/           # SKILL.md + tool.py
+├── profiles/
+│   └── cientifico/SOUL.md    # persona del perfil Hermes local (contraparte de §11)
 ├── evals/                    # run_evals.py + cases.json (red de seguridad)
 ├── tests/                    # test_harness.py (pytest)
 ├── projects/

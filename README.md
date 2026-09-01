@@ -24,6 +24,7 @@ tools/decompose.py            # pipeline HD-sEMG (signals)
 tools/ha_setup.py             # wizard de conexión/diagnóstico de Home Assistant (home)
 tools/schedule_distill.py     # disparador periódico del autoaprendizaje (cron)
 skills/<nombre>/SKILL.md+tool.py   # pubmed_search · paper_review · build_docx · build_pptx · home_assistant
+profiles/<nombre>/SOUL.md     # personas de runtime (perfiles de Hermes local)
 evals/run_evals.py            # red de seguridad offline (routing, guardas, tier, skills, §protegidas)
 tests/test_harness.py         # pytest del núcleo
 shared/                       # rules/, notebooklm/, learning/, traces/, templates/
