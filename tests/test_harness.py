@@ -1,6 +1,7 @@
 """Tests del harness. Correr con: pytest -q  (desde la raíz del paquete)."""
 import importlib
 import importlib.util
+import json
 import sys
 from pathlib import Path
 
@@ -31,6 +32,7 @@ SS = _load("skill_selector")
 BE = _load("backends")
 PR = _load("paper_review")
 PM = _load("pdf_a_markdown")
+SY = _load("sync_skills")
 
 
 def test_router_scoring():
@@ -281,3 +283,49 @@ def test_conversion_pdf_completa(tmp_path):
     assert "![Imagen de la página 1](imagenes/" in md
     referida = md.split("(imagenes/")[1].split(")")[0]
     assert (out / "imagenes" / referida).is_file(), "la imagen referida debe existir"
+
+
+# --- Publicación de skills hacia Hermes -------------------------------------
+
+def test_skills_del_repo_son_publicables():
+    """Sin `name` o `description` el hub indexa mal la skill, y falla en silencio."""
+    ok, problemas = SY.validar()
+    assert not problemas, problemas
+    nombres = {s.name for s in ok}
+    assert {"paper_review", "pdf_markdown", "pubmed_search"} <= nombres
+
+
+def test_sync_no_toca_lo_que_no_es_suyo(tmp_path):
+    """El destino es la carpeta de skills de Hermes: ahí vive trabajo ajeno al repo.
+
+    `--limpiar` solo puede retirar lo que figure en el manifiesto que el propio script
+    escribió. Cualquier otra carpeta se queda, aunque no venga del repo.
+    """
+    destino = tmp_path / "hermes_skills"
+    ajena = destino / "skill_de_hermes"
+    ajena.mkdir(parents=True)
+    (ajena / "SKILL.md").write_text("no me borres", encoding="utf-8")
+
+    SY.sincronizar(destino)
+    assert (destino / "paper_review" / "SKILL.md").is_file()
+    assert (ajena / "SKILL.md").read_text(encoding="utf-8") == "no me borres"
+
+    # Una entrada del manifiesto que ya no existe en el repo sí se retira.
+    manifiesto = destino / SY.MANIFIESTO
+    datos = json.loads(manifiesto.read_text(encoding="utf-8"))
+    datos["skills"].append("skill_fantasma")
+    manifiesto.write_text(json.dumps(datos), encoding="utf-8")
+    (destino / "skill_fantasma").mkdir()
+    (destino / "otra_ajena").mkdir()
+
+    r = SY.sincronizar(destino, limpiar=True)
+    assert "skill_fantasma" in r["retiradas"]
+    assert not (destino / "skill_fantasma").exists()
+    assert (destino / "otra_ajena").is_dir(), "no estaba en el manifiesto: no se toca"
+    assert ajena.is_dir()
+
+
+def test_sync_dry_run_no_escribe(tmp_path):
+    destino = tmp_path / "vacio"
+    r = SY.sincronizar(destino, dry_run=True)
+    assert r["sincronizadas"] and not destino.exists()

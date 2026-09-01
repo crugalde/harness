@@ -16,6 +16,7 @@ tools/backends.py             # ejecución multi-modelo (Claude API + motor loca
 tools/skill_selector.py       # selección autónoma de skill desde el pool
 tools/paper_review.py         # análisis científico multi-paper (PDF/DOCX -> revision.md/.json)
 tools/pdf_a_markdown.py       # PDF -> Markdown + imágenes (columnas, tablas, figuras)
+tools/sync_skills.py          # publica skills/ donde el hub de Hermes las escanea
 tools/self_improve.py         # ciclo de autoaprendizaje (capturar→destilar→proponer→aplicar)
 tools/tracing.py              # observabilidad: JSONL por día (tools, tokens, costo, latencia)
 tools/registry.py             # ensambla el ToolRegistry (auto-descubre skills + MCP)
@@ -171,6 +172,40 @@ Qué resuelve, y por qué no es trivial:
   del NEJM tiene cero rasters incrustados.
 
 Salida: `<nombre>.md` + `imagenes/`, con cada figura referenciada en la página donde está.
+
+
+## Que Hermes lea las skills del repo
+
+El `skills-hub` de Hermes descubre skills **escaneando carpetas del disco**. Hay dos rutas, y
+la primera es mejor siempre que el hub la admita.
+
+**1 · Apuntar el hub a `skills/` del repo (preferida).** Cero copias y cero deriva: un
+`git pull` basta para que el hub vea una skill nueva. Busca la ruta de skills en la config de
+Hermes y añade la del repo:
+
+```powershell
+# Windows: rutas C:/Users/... — nunca /c/Users/..., que crea un árbol fantasma
+C:/Users/Usuario/ruta/al/harness/skills
+```
+
+**2 · Sincronizar (cuando el hub solo acepta un directorio fijo).**
+
+```bash
+python tools/sync_skills.py --validar                    # revisar antes de publicar
+python tools/sync_skills.py --destino "<carpeta del hub>" --dry-run
+python tools/sync_skills.py --destino "<carpeta del hub>"
+python tools/sync_skills.py --destino "<carpeta del hub>" --link     # enlaces si se puede
+python tools/sync_skills.py --destino "<carpeta del hub>" --limpiar  # retirar las que ya no están
+```
+
+El destino es la carpeta de skills de Hermes, donde vive trabajo que no es de este repo, así
+que la sincronización es conservadora: escribe un manifiesto `.harness-sync.json` y
+`--limpiar` **solo retira lo que figure en él**. Una carpeta que este script no creó no se
+toca nunca (hay un test que lo fija).
+
+`--validar` revisa el front-matter: una skill sin `name` o sin `description` la indexa mal el
+hub —o la ignora— y el fallo es silencioso. Después de sincronizar hay que reiniciar Hermes o
+reindexar el hub.
 
 
 ## Home Assistant (subagente `home`)

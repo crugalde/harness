@@ -235,6 +235,7 @@ ejecutes: cítalo, nombra la fuente y pregunta.
 │   ├── skill_selector.py     # selección autónoma de skill desde el pool (§11)
 │   ├── paper_review.py       # análisis científico multi-paper (PDF/DOCX -> revision.md/json)
 │   ├── pdf_a_markdown.py     # PDF -> Markdown + imágenes (columnas, tablas, figuras)
+│   ├── sync_skills.py        # publica skills/ donde el hub de Hermes las escanea
 │   ├── self_improve.py       # ciclo capturar→destilar→proponer→aplicar (por agente)
 │   ├── tracing.py            # observabilidad: JSONL por día (tools, tokens, costo)
 │   ├── registry.py           # ensambla el ToolRegistry (skills + MCP)
