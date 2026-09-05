@@ -1,9 +1,18 @@
 # Núcleo del harness (loop + autoaprendizaje)
 anthropic>=0.40
 
+# El motor local (LM Studio / Ollama / vLLM) se habla por HTTP con la stdlib:
+# tools/backends.py no añade dependencias para eso.
+
 # Opcionales por skill/subagente (descomenta lo que uses)
-# biopython>=1.83        # skill pubmed_search (Entrez)
-# python-docx>=1.1        # skill build_docx (subagente docs)
+# biopython>=1.83        # skill pubmed_search (Entrez) + contraste de paper_review
+# pypdf>=4.0             # skills paper_review y pdf_markdown (lectura de PDFs)
+# pdfplumber>=0.11       # skill pdf_markdown (texto, columnas y tablas)
+# fonttools>=4.50        # solo silencia el aviso de pypdf sobre fuentes CFF Type1;
+#                        # medido sobre POINT_trial.pdf: la extracción sale idéntica
+# pypdfium2>=4.0         # skill pdf_markdown (rasteriza figuras vectoriales)
+# mcp>=2.1               # tools/mcp_server.py (puente MCP: Hermes ejecuta las tools)
+# python-docx>=1.1        # skill build_docx (subagente docs) + paper_review (lectura de .docx)
 # python-pptx>=0.6        # skill build_pptx (subagente docs)
 # numpy>=1.26            # subagente signals
 # scipy>=1.12            # subagente signals

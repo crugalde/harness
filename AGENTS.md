@@ -8,8 +8,8 @@
 
 ```yaml
 # --- meta (NO editar a mano salvo 'version'; gestionado por el ciclo de autoaprendizaje) ---
-version: 1.2.0
-updated: 2026-06-14
+version: 1.4.0
+updated: 2026-09-01
 self_modification: gated          # gated | off  (nunca 'auto' para sangrado completo)
 protected_sections: [1, 3, 4, 7]  # §1 Identidad, §3 Reglas, §4 Gates, §7 Seguridad: inmutables al ciclo
 changelog: shared/learning/CHANGELOG.md
@@ -230,6 +230,14 @@ ejecutes: cítalo, nombra la fuente y pregunta.
 │   └── templates/            # plantillas de informe, _estado.md, gates
 ├── tools/
 │   ├── loop.py               # runtime: contexto + router + guardas + ciclo de tools
+│   ├── model_policy.py       # política de modelos: clase de tarea -> tier + techo de costo
+│   ├── backends.py           # ejecución multi-modelo (Claude API + motor local OpenAI-compat)
+│   ├── skill_selector.py     # selección autónoma de skill desde el pool (§11)
+│   ├── paper_review.py       # análisis científico multi-paper (PDF/DOCX -> revision.md/json)
+│   ├── pdf_a_markdown.py     # PDF -> Markdown + imágenes (columnas, tablas, figuras)
+│   ├── publicar.py           # revisión -> bóveda Obsidian y/o database de Notion
+│   ├── sync_skills.py        # publica skills/ donde el hub de Hermes las escanea
+│   ├── mcp_server.py         # puente MCP: Hermes ejecuta las tools y entra a las carpetas (§12)
 │   ├── self_improve.py       # ciclo capturar→destilar→proponer→aplicar (por agente)
 │   ├── tracing.py            # observabilidad: JSONL por día (tools, tokens, costo)
 │   ├── registry.py           # ensambla el ToolRegistry (skills + MCP)
@@ -241,8 +249,13 @@ ejecutes: cítalo, nombra la fuente y pregunta.
 ├── skills/
 │   ├── README.md             # convención de skills
 │   ├── pubmed_search/        # SKILL.md + tool.py
+│   ├── paper_review/         # SKILL.md + tool.py (análisis multi-paper)
+│   ├── pdf_markdown/         # SKILL.md + tool.py (PDF -> Markdown + imágenes)
+│   ├── publicar/             # SKILL.md + tool.py (Obsidian + Notion)
 │   ├── build_docx/           # SKILL.md + tool.py
 │   └── build_pptx/           # SKILL.md + tool.py
+├── profiles/
+│   └── cientifico/SOUL.md    # persona del perfil Hermes local (contraparte de §11)
 ├── evals/                    # run_evals.py + cases.json (red de seguridad)
 ├── tests/                    # test_harness.py (pytest)
 ├── projects/
@@ -303,5 +316,140 @@ la deriva silenciosa de las barreras de seguridad (R13).
 - Toda propuesta cita evidencia del journal; sin evidencia, no hay propuesta.
 - Revisión humana periódica del `CHANGELOG.md`: si la suma de cambios pequeños está corriendo
   el comportamiento lejos de la intención original, se revierte.
+
+---
+
+## 11. Política de modelos y selección de skills
+
+Dos decisiones se toman **antes** de ejecutar y se **declaran en una línea cada una**. Si no
+las declaraste, no ejecutaste. Ninguna requiere preguntar: son autónomas por diseño, y lo que
+las contiene es el techo de costo, no la fricción.
+
+### 11.1 Qué modelo — clasifica la tarea, no el dominio
+
+El motor no se elige por "qué tan importante parece" sino por **qué tipo de trabajo es**.
+`tools/model_policy.py` clasifica el mensaje con un léxico determinista (offline: decidir el
+modelo no gasta un token) y aplica esta tabla:
+
+| Clase | Qué es | Tier | Motor | Por qué |
+|---|---|---|---|---|
+| `format` | convertir, exportar, maquetar, materializar un .docx/.pptx | T0-local | modelo local pequeño | es transformación mecánica: gana el más rápido y cuesta 0 |
+| `extract` | sacar texto/metadatos de un PDF o Word, parsear, indexar | T0-local | modelo local pequeño | idem; el juicio viene después |
+| `route` | clasificar, etiquetar, enrutar, desempatar subagente | T0-local | modelo local pequeño | decisión de una palabra |
+| `synthesis` | resumir, redactar, interpretar un caso, fichar **un** artículo | T2-cloud | **Claude Sonnet 5** | mejor relación capacidad/velocidad; es la llamada que se repite N veces |
+| `deep_analysis` | comparar contra la literatura, establecer aportes, crítica metodológica, lectura transversal de varios papers | T3-cloud | **Claude Opus 5** | es donde se gana o se pierde el análisis, y se paga **una** vez |
+| `vision` | imágenes, escaneos, figuras | TV-local | VLM local | la imagen no sale de la máquina |
+
+**Recomendación explícita para el caso "analizar un PDF/Word, compararlo con la literatura y
+resumir a nivel de neurólogo académico":** no es un solo modelo, son dos. **Sonnet 5** ficha
+cada artículo (N llamadas, donde la velocidad y el costo se multiplican) y **Opus 5** hace la
+lectura transversal (1 llamada, donde la capacidad decide la calidad del juicio). Pagar Opus
+por artículo multiplica el costo sin mejorar la ficha; pagar Sonnet la síntesis final abarata
+lo único que no conviene abaratar. Eso es exactamente lo que hace `skills/paper_review/`.
+
+**Degradación ordenada:** sin motor local (`HARNESS_LOCAL_DISABLED=1`, o endpoint caído), las
+clases mecánicas caen a **Haiku 4.5**, no al tier de trabajo. Si el motor local falla en
+caliente, `backends.py` degrada y lo dice; no se cuelga ni se calla.
+
+**Techo de costo (autonomía acotada).** El salto al tier caro es automático **mientras el
+costo estimado del turno no supere `HARNESS_COST_CEILING`** (default USD 0.50) ni el
+acumulado supere `HARNESS_SESSION_COST_CEILING` (default USD 5.00). Por encima, el runtime
+pide confirmación humana por turno (Gate de acción, §4). El costo real de cada turno queda en
+la traza (`tools/tracing.py`).
+
+**PHI (R8) manda sobre todo lo anterior.** Con `--phi`, la política se estrecha a motores
+locales. Si no hay motor local, **aborta**: no existe la degradación "mando el paciente al
+cloud porque no había alternativa".
+
+Declaración obligatoria, una línea, antes de ejecutar:
+
+> `[T3-cloud] deep_analysis → claude-opus-5 (anthropic, lento) porque análisis científico transversal: capacidad máxima, se paga una sola vez; costo est. $0.1346`
+
+### 11.2 Qué skill — se busca en el pool, no se recuerda
+
+No trabajes de memoria ni adivines qué skill aplica. `tools/skill_selector.py` escanea
+`skills/*/SKILL.md` **en cada turno** (más lo que apunte `HARNESS_SKILL_PATHS`), rankea el
+pool completo contra la tarea, y carga las **instrucciones completas** de las ganadoras en el
+contexto — no el índice entero. Una skill instalada después queda disponible sin tocar código
+ni reiniciar nada.
+
+- Tope: **4 skills por plan**. Si necesitas más, la tarea se divide.
+- Umbral: si nada supera `MIN_SCORE`, **no hay skill adecuada**. Se declara y se resuelve con
+  criterio propio, explicándolo. Una skill imaginada es peor que ninguna.
+- Las instrucciones de la skill cargada **reemplazan** el enfoque por defecto para esa tarea.
+
+Declaración obligatoria, una línea:
+
+> `[skills] pool de 7 · seleccionadas automáticamente: paper_review (0.97), pubmed_search (0.14)`
+
+### 11.3 Red de seguridad
+
+`evals/run_evals.py` cubre ahora clasificación de tarea, tier elegido y skill seleccionada,
+además del routing y las guardas. Cero fallos es requisito antes de cualquier `apply` del
+ciclo de autoaprendizaje (§10): si un cambio mueve el tier de una clase o rompe la selección
+de una skill, el eval lo caza antes de que llegue a una tarea real.
+
+Ese requisito dejó de vivir solo en esta página: **`.github/workflows/ci.yml` lo hace
+exigible** en cada push y cada PR (Python 3.10 y 3.12), corriendo evals + `pytest`. El job
+instala **solo** las herramientas de test, no `requirements.txt`: correr la suite en un
+entorno pelado es lo que detecta que alguien subió a nivel de módulo un import de
+`anthropic`, `pypdf`, `python-docx` o `biopython` y rompió el arranque offline del harness.
+El chequeo de estilo (`ruff` completo + `black`) corre aparte y **no bloquea**, porque el
+repo arrastra deuda previa a este workflow; cuando se salde, se le quita el
+`continue-on-error` y pasa a ser obligatorio.
+
+---
+
+## 12. El puente MCP: que Hermes **ejecute**, no solo lea
+
+§11.2 y `sync_skills.py` resuelven que Hermes **vea** las skills. Ver no es poder: un
+`SKILL.md` es una instrucción, y el código que la cumple vive en el `ToolRegistry` del
+harness, que solo conoce `tools/loop.py`. Sin puente, Hermes lee "usa `pdf_a_markdown`" y no
+tiene con qué.
+
+`tools/mcp_server.py` es ese puente: un servidor MCP por stdio que publica ocho tools —
+`harness_estado`, `harness_listar_carpeta`, `harness_buscar_archivos`, `harness_leer_archivo`,
+`harness_pdf_a_markdown`, `harness_analizar_papers`, `harness_publicar_obsidian`,
+`harness_publicar_notion`— y con ellas las dos cosas que se pidieron: el flujo completo
+paper → markdown → Obsidian/Notion, y acceso a las carpetas locales.
+
+### 12.1 Contención de rutas (la parte que importa)
+
+Un servidor con acceso a archivos es, si no se acota, **el disco entero** en manos del
+modelo. Aquí toda ruta que entra por una tool se `resolve()` —lo que colapsa `..` y sigue los
+enlaces simbólicos— y **después** se comprueba que caiga dentro de alguna raíz de
+`HARNESS_FILE_ROOTS`. Ese orden es el que atrapa los tres escapes: `..` en la ruta, una ruta
+absoluta de fuera, y un symlink dentro de la raíz que apunte afuera. Los tres tienen test.
+
+Sin `HARNESS_FILE_ROOTS` definido no hay raíces y las tools de archivos **se niegan a
+operar**. Fallar cerrado es lo correcto cuando la alternativa es exponer `C:/`.
+
+### 12.2 Las anotaciones son el contrato con el Gate (§4)
+
+Cada tool declara `readOnlyHint` / `openWorldHint`, y eso es lo que permite al cliente pedir
+confirmación solo donde hace falta: listar y leer son de solo lectura; `pdf_a_markdown` y
+`publicar_obsidian` escriben en disco; `analizar_papers` y `publicar_notion` son
+`openWorld` —salen a la red y cuestan dinero o dejan una página en el workspace—, o sea
+exactamente las que R9 exige confirmar por turno.
+
+### 12.3 stdout es el protocolo, no la consola
+
+En transporte stdio los mensajes JSON-RPC viajan por **stdout**. `paper_review.run()`
+informa su progreso con `print()` —medido: **514 bytes** en una corrida de un solo paper— y
+esas líneas se intercalarían con los mensajes, que es como el cliente se cae con un error de
+parseo en vez de recibir el resultado. El decorador `sin_ensuciar_el_protocolo` redirige
+stdout a stderr durante cada tool: el canal queda limpio y el progreso no se pierde, porque
+stderr es donde un servidor stdio deja sus logs. Hay test.
+
+Esto no se ve en los tests unitarios ni leyendo el código: apareció al correr la cadena
+completa con las dependencias reales instaladas.
+
+### 12.4 El error tiene que ser legible
+
+El SDK envuelve cualquier excepción de una tool en un `UnexpectedToolError` genérico y
+descarta el texto: el modelo recibe "falló" sin saber que la ruta estaba fuera de las
+carpetas permitidas ni cuáles son. El decorador `blindado` devuelve ese texto como
+resultado, con la lista de raíces permitidas, para que el modelo corrija en vez de reintentar
+a ciegas (R10).
 
 ---

@@ -1,24 +1,197 @@
 {
   "routing": [
-    {"msg": "necesito una revisión en pubmed sobre miastenia gravis", "expect": "research"},
-    {"msg": "interpreta este EMG de aguja del paciente", "expect": "med"},
-    {"msg": "descompón esta señal HD-sEMG con CKC", "expect": "signals"},
-    {"msg": "arma la propuesta de costo para el directorio clínico", "expect": "biz"},
-    {"msg": "plan de nutrición y recuperación tras el evento", "expect": "coach"},
-    {"msg": "redacta el informe final en un documento", "expect": "docs"}
+    {
+      "msg": "necesito una revisión en pubmed sobre miastenia gravis",
+      "expect": "research"
+    },
+    {
+      "msg": "interpreta este EMG de aguja del paciente",
+      "expect": "med"
+    },
+    {
+      "msg": "descompón esta señal HD-sEMG con CKC",
+      "expect": "signals"
+    },
+    {
+      "msg": "arma la propuesta de costo para el directorio clínico",
+      "expect": "biz"
+    },
+    {
+      "msg": "plan de nutrición y recuperación tras el evento",
+      "expect": "coach"
+    },
+    {
+      "msg": "redacta el informe final en un documento",
+      "expect": "docs"
+    },
+    {
+      "msg": "apaga las luces del living con home assistant",
+      "expect": "home"
+    }
   ],
   "guards": [
-    {"tool": "read_shell", "args": {"cmd": "rm -rf /"}, "expect": "BLOQUEADO"},
-    {"tool": "send_email", "args": {"to": "x@y.cl"}, "expect": "GATE"},
-    {"tool": "read_shell", "args": {"cmd": "ls -la"}, "expect": "OK"}
+    {
+      "tool": "read_shell",
+      "args": {
+        "cmd": "rm -rf /"
+      },
+      "expect": "BLOQUEADO"
+    },
+    {
+      "tool": "send_email",
+      "args": {
+        "to": "x@y.cl"
+      },
+      "expect": "GATE"
+    },
+    {
+      "tool": "read_shell",
+      "args": {
+        "cmd": "ls -la"
+      },
+      "expect": "OK"
+    }
   ],
   "protected": {
-    "": [1, 3, 4, 7],
-    "med": [1, 3, 7],
-    "research": [1, 3, 7],
-    "biz": [1, 3, 7],
-    "signals": [1, 3, 7],
-    "coach": [1, 3, 7],
-    "docs": [1, 3, 7]
-  }
+    "": [
+      1,
+      3,
+      4,
+      7
+    ],
+    "med": [
+      1,
+      3,
+      7
+    ],
+    "research": [
+      1,
+      3,
+      7
+    ],
+    "biz": [
+      1,
+      3,
+      7
+    ],
+    "signals": [
+      1,
+      3,
+      7
+    ],
+    "coach": [
+      1,
+      3,
+      7
+    ],
+    "docs": [
+      1,
+      3,
+      7
+    ]
+  },
+  "task_class": [
+    {
+      "msg": "convierte este markdown a un docx",
+      "expect": "format"
+    },
+    {
+      "msg": "exporta la tabla a csv",
+      "expect": "format"
+    },
+    {
+      "msg": "extrae los metadatos y el texto del pdf",
+      "expect": "extract"
+    },
+    {
+      "msg": "clasifica estos archivos por subtema",
+      "expect": "route"
+    },
+    {
+      "msg": "resume el caso y dame el diferencial",
+      "expect": "synthesis"
+    },
+    {
+      "msg": "analiza estos papers y compáralos con la literatura para ver qué aportan",
+      "expect": "deep_analysis"
+    },
+    {
+      "msg": "haz una crítica metodológica del ensayo",
+      "expect": "deep_analysis"
+    },
+    {
+      "msg": "describe esta imagen del escaneo",
+      "expect": "vision"
+    }
+  ],
+  "model_tier": [
+    {
+      "class": "format",
+      "local": true,
+      "expect_model": "qwen2.5-7b-instruct",
+      "expect_provider": "local"
+    },
+    {
+      "class": "format",
+      "local": false,
+      "expect_model": "claude-haiku-4-5",
+      "expect_provider": "anthropic"
+    },
+    {
+      "class": "extract",
+      "local": false,
+      "expect_model": "claude-haiku-4-5",
+      "expect_provider": "anthropic"
+    },
+    {
+      "class": "synthesis",
+      "local": false,
+      "expect_model": "claude-sonnet-5",
+      "expect_provider": "anthropic"
+    },
+    {
+      "class": "deep_analysis",
+      "local": false,
+      "expect_model": "claude-opus-5",
+      "expect_provider": "anthropic"
+    }
+  ],
+  "skills": [
+    {
+      "task": "analiza estos papers y establece el aporte frente a la literatura",
+      "expect": "paper_review"
+    },
+    {
+      "task": "pásame este pdf a markdown y sácale las figuras",
+      "expect": "pdf_markdown"
+    },
+    {
+      "task": "publica esta revisión en notion y en la bóveda de obsidian",
+      "expect": "publicar"
+    },
+    {
+      "task": "conviérteme el informe a un documento Word",
+      "expect": "build_docx"
+    },
+    {
+      "task": "arma un deck de slides para la reunión",
+      "expect": "build_pptx"
+    },
+    {
+      "task": "apaga las luces del living",
+      "expect": "home_assistant"
+    },
+    {
+      "task": "busca papers en pubmed sobre miastenia",
+      "expect": "pubmed_search"
+    },
+    {
+      "task": "hazme un resumen del tema miastenia gravis para el examen",
+      "expect": "medicalinfosummary"
+    },
+    {
+      "task": "qwerty zxcvbn plugh xyzzy",
+      "expect": null
+    }
+  ]
 }

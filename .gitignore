@@ -13,3 +13,6 @@ __pycache__/
 
 # Office temp/lock files
 ~$*
+
+# Trazas de ejecución (las genera tools/tracing.py y los tests; no se versionan)
+shared/traces/*.jsonl

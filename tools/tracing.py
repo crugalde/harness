@@ -6,14 +6,24 @@ tokens, costo estimado y latencia. Es el insumo tanto de los evals como del jour
 autoaprendizaje (§10), que de otro modo aprende a ciegas.
 """
 from __future__ import annotations
-import json, time
+import json, sys, time
 from datetime import date, datetime, timezone
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent.parent
 LOG_DIR = ROOT / "shared" / "traces"
-# Costo aprox. USD por 1M de tokens (input, output). Ajusta por modelo.
-PRICES = {"claude-sonnet-4-6": (3.0, 15.0), "claude-opus-4-8": (15.0, 75.0)}
+
+# La tabla de precios vive en model_policy (fuente única: la usa también el techo de costo).
+sys.path.insert(0, str(Path(__file__).resolve().parent))
+try:
+    from model_policy import PRICES, cost_usd
+except ImportError:  # tracing debe funcionar aunque falte la política
+    PRICES = {"claude-sonnet-5": (2.0, 10.0), "claude-opus-5": (5.0, 25.0),
+              "claude-haiku-4-5": (1.0, 5.0), "claude-sonnet-4-6": (3.0, 15.0)}
+
+    def cost_usd(model, inp, out):
+        pi, po = PRICES.get(model, (0.0, 0.0))
+        return round(inp / 1e6 * pi + out / 1e6 * po, 6)
 
 
 class Trace:
@@ -29,9 +39,13 @@ class Trace:
         self.rec["tools"].append({"name": name, "ok": ok})
 
     def usage(self, model: str, inp: int, out: int):
-        pi, po = PRICES.get(model, (0.0, 0.0))
-        self.rec["usage"] = {"model": model, "input": inp, "output": out,
-                             "cost_usd": round(inp / 1e6 * pi + out / 1e6 * po, 6)}
+        """Acumula el uso del turno. Un turno puede tocar varios modelos (router de tiers)."""
+        u = self.rec["usage"]
+        u["model"] = model if not u.get("model") else (
+            u["model"] if model in u["model"].split("+") else f"{u['model']}+{model}")
+        u["input"] = u.get("input", 0) + inp
+        u["output"] = u.get("output", 0) + out
+        u["cost_usd"] = round(u.get("cost_usd", 0.0) + cost_usd(model, inp, out), 6)
 
     def close(self) -> Path:
         self.rec["latency_s"] = round(time.time() - self.t0, 2)
