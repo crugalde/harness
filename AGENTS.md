@@ -235,6 +235,7 @@ ejecutes: cítalo, nombra la fuente y pregunta.
 │   ├── skill_selector.py     # selección autónoma de skill desde el pool (§11)
 │   ├── paper_review.py       # análisis científico multi-paper (PDF/DOCX -> revision.md/json)
 │   ├── pdf_a_markdown.py     # PDF -> Markdown + imágenes (columnas, tablas, figuras)
+│   ├── publicar.py           # revisión -> bóveda Obsidian y/o database de Notion
 │   ├── sync_skills.py        # publica skills/ donde el hub de Hermes las escanea
 │   ├── self_improve.py       # ciclo capturar→destilar→proponer→aplicar (por agente)
 │   ├── tracing.py            # observabilidad: JSONL por día (tools, tokens, costo)
@@ -249,6 +250,7 @@ ejecutes: cítalo, nombra la fuente y pregunta.
 │   ├── pubmed_search/        # SKILL.md + tool.py
 │   ├── paper_review/         # SKILL.md + tool.py (análisis multi-paper)
 │   ├── pdf_markdown/         # SKILL.md + tool.py (PDF -> Markdown + imágenes)
+│   ├── publicar/             # SKILL.md + tool.py (Obsidian + Notion)
 │   ├── build_docx/           # SKILL.md + tool.py
 │   └── build_pptx/           # SKILL.md + tool.py
 ├── profiles/

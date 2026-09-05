@@ -16,6 +16,7 @@ tools/backends.py             # ejecución multi-modelo (Claude API + motor loca
 tools/skill_selector.py       # selección autónoma de skill desde el pool
 tools/paper_review.py         # análisis científico multi-paper (PDF/DOCX -> revision.md/.json)
 tools/pdf_a_markdown.py       # PDF -> Markdown + imágenes (columnas, tablas, figuras)
+tools/publicar.py             # revisión -> bóveda Obsidian y/o database de Notion
 tools/sync_skills.py          # publica skills/ donde el hub de Hermes las escanea
 tools/self_improve.py         # ciclo de autoaprendizaje (capturar→destilar→proponer→aplicar)
 tools/tracing.py              # observabilidad: JSONL por día (tools, tokens, costo, latencia)
@@ -25,7 +26,7 @@ tools/read_emg.py             # de-identificación de estudios EMG (med)
 tools/decompose.py            # pipeline HD-sEMG (signals)
 tools/ha_setup.py             # wizard de conexión/diagnóstico de Home Assistant (home)
 tools/schedule_distill.py     # disparador periódico del autoaprendizaje (cron)
-skills/<nombre>/SKILL.md+tool.py   # pubmed_search · paper_review · pdf_markdown · build_docx · build_pptx · home_assistant
+skills/<nombre>/SKILL.md+tool.py   # pubmed_search · paper_review · pdf_markdown · publicar · build_docx · build_pptx · home_assistant
 profiles/<nombre>/SOUL.md     # personas de runtime (perfiles de Hermes local)
 evals/run_evals.py            # red de seguridad offline (routing, guardas, tier, skills, §protegidas)
 .github/workflows/ci.yml      # CI: evals + pytest en py3.10/3.12 (estilo aparte, informativo)
@@ -172,6 +173,39 @@ Qué resuelve, y por qué no es trivial:
   del NEJM tiene cero rasters incrustados.
 
 Salida: `<nombre>.md` + `imagenes/`, con cada figura referenciada en la página donde está.
+
+
+## Publicar: Obsidian y Notion
+
+`skills/publicar/` + `tools/publicar.py` cierra el flujo **paper → markdown → publicación**.
+Los dos destinos no se parecen y se tratan distinto.
+
+```bash
+python tools/publicar.py obsidian revision/ --vault "C:/Users/Usuario/Obsidian/neuro"
+python tools/publicar.py notion   revision/ --database <id>
+python tools/publicar.py ambos    revision/ --dry-run
+```
+
+**Obsidian** es una carpeta: publicar es escribir un `.md` con front-matter YAML (tema,
+fecha, PMIDs verificados, modelos usados, costo), copiar los adjuntos a
+`<subcarpeta>/adjuntos/` y **reescribir los enlaces** a esa ruta. Sin reescribirlos la nota
+se ve bien en el origen y con las figuras rotas dentro de la bóveda, que es donde alguien la
+va a leer. Los nombres de adjunto van sin espacios: `![](ruta con espacios.png)` no es
+Markdown válido. Solo se escribe dentro de la subcarpeta destino; el resto de la bóveda no
+se toca, y republicar no duplica la entrada del índice.
+
+**Notion** es una API: publicar es crear una página en una database con **propiedades**, que
+es lo que permite filtrar y ordenar después. Se consulta el esquema y solo se rellena lo que
+existe con el tipo que tiene —una propiedad inventada hace que la API rechace la página
+entera— y **nunca se inventan opciones de `select`**, porque enviar un valor nuevo crea la
+opción y ensuciaría de forma permanente una lista curada a mano.
+
+| Variable | Para qué |
+|---|---|
+| `OBSIDIAN_VAULT` | ruta de la bóveda |
+| `OBSIDIAN_SUBCARPETA` | subcarpeta destino (`Revisiones` por defecto) |
+| `NOTION_TOKEN` | token de la integración de Notion |
+| `NOTION_DATABASE_ID` | id de la database destino |
 
 
 ## Que Hermes lea las skills del repo

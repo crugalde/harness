@@ -166,6 +166,10 @@
       "expect": "pdf_markdown"
     },
     {
+      "task": "publica esta revisión en notion y en la bóveda de obsidian",
+      "expect": "publicar"
+    },
+    {
       "task": "conviérteme el informe a un documento Word",
       "expect": "build_docx"
     },

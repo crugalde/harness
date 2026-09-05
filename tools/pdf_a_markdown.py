@@ -418,6 +418,83 @@ def _nivel(texto: str, tam: float, base: float) -> str | None:
     return None
 
 
+def _leer_paginas(pdf, columnas: str, con_figuras: bool
+                  ) -> tuple[list[dict], dict[int, list[tuple]], float, dict]:
+    """Pasada de lectura: por página, sus tablas, sus líneas en orden y sus figuras.
+
+    Separada de la escritura porque hay dos consumidores con necesidades distintas:
+    `convertir()` quiere archivos en disco con las imágenes referenciadas, y
+    `texto_markdown()` solo quiere el texto bien ordenado, en memoria.
+    """
+    paginas: list[dict] = []
+    regiones: dict[int, list[tuple]] = {}
+    base = tam_cuerpo(pdf)
+    meta = dict(pdf.metadata or {})
+
+    for n, page in enumerate(pdf.pages, 1):
+        tablas_md, bboxes = [], []
+        for t in page.find_tables():
+            texto_tabla = tabla_markdown(t.extract())
+            if texto_tabla:                           # solo tablas reales
+                tablas_md.append(texto_tabla)
+                bboxes.append(t.bbox)
+
+        if columnas == "auto":
+            corte = punto_de_corte(page, base)
+        elif columnas == "1":
+            corte = None
+        else:
+            corte = (page.bbox[0] + page.bbox[2]) / 2
+
+        lineas = [ln for ln in lineas_de_pagina(page, base, corte)
+                  if not _en_tabla(ln, bboxes)]
+        paginas.append({"n": n, "tablas": tablas_md, "corte": corte,
+                        "lineas": ordenar_por_columnas(lineas, corte)})
+
+        if con_figuras:
+            cajas = regiones_de_figura(page, bboxes)
+            if cajas:
+                regiones[n] = cajas
+    return paginas, regiones, base, meta
+
+
+def _render(paginas: list[dict], base: float, meta: dict, titulo_fallback: str,
+            por_pagina: dict[int, list[str]] | None = None) -> tuple[str, int]:
+    """Arma el Markdown desde las páginas ya leídas. Devuelve (markdown, nº de tablas)."""
+    md: list[str] = [f"# {(meta.get('Title') or titulo_fallback).strip()}\n"]
+    if meta.get("Subject"):
+        md.append(f"*{meta['Subject'].strip()}*\n")
+    n_tablas = 0
+    for pg in paginas:
+        md.append(f"\n<!-- página {pg['n']} -->\n")
+        for t in pg["tablas"]:
+            md.append(t + "\n")
+            n_tablas += 1
+        crudas = []
+        for ln in pg["lineas"]:
+            nivel = _nivel(ln["texto"], ln["tam"], base)
+            crudas.append(f"\n{nivel} {ln['texto']}\n" if nivel else ln["texto"])
+        md += unir_parrafos(crudas)
+        for nombre in (por_pagina or {}).get(pg["n"], []):
+            etiqueta = "Figura" if "figura" in nombre else "Imagen"
+            md.append(f"\n![{etiqueta} de la página {pg['n']}](imagenes/{nombre})\n")
+    return "\n".join(md) + "\n", n_tablas
+
+
+def texto_markdown(pdf_path: Path, columnas: str = "auto") -> str:
+    """Markdown del PDF **en memoria**: no escribe archivos ni rasteriza figuras.
+
+    Es lo que consume `tools/paper_review.py`. Un fichado de artículo necesita el texto
+    en orden de lectura y con las tablas legibles; no necesita PNGs en disco, y
+    rasterizar figuras costaría segundos por página para nada. Al no tocar las figuras,
+    tampoco arrastra la dependencia de `pypdfium2`.
+    """
+    with _pdfplumber().open(str(Path(pdf_path))) as pdf:
+        paginas, _, base, meta = _leer_paginas(pdf, columnas, con_figuras=False)
+    md, _ = _render(paginas, base, meta, Path(pdf_path).stem)
+    return md
+
+
 def convertir(pdf_path: Path, out_dir: Path, columnas: str = "auto",
               figuras: bool = True, dpi: int = 200) -> dict:
     """PDF -> Markdown + imágenes. Devuelve un resumen de lo producido.
@@ -429,38 +506,9 @@ def convertir(pdf_path: Path, out_dir: Path, columnas: str = "auto",
     out_dir.mkdir(parents=True, exist_ok=True)
     img_dir = out_dir / "imagenes"
 
-    paginas: list[dict] = []
-    regiones: dict[int, list[tuple]] = {}
-
     with _pdfplumber().open(str(pdf_path)) as pdf:
-        base = tam_cuerpo(pdf)
-        meta = dict(pdf.metadata or {})
+        paginas, regiones, base, meta = _leer_paginas(pdf, columnas, con_figuras=figuras)
         n_paginas = len(pdf.pages)
-
-        for n, page in enumerate(pdf.pages, 1):
-            tablas_md, bboxes = [], []
-            for t in page.find_tables():
-                texto_tabla = tabla_markdown(t.extract())
-                if texto_tabla:                       # solo tablas reales
-                    tablas_md.append(texto_tabla)
-                    bboxes.append(t.bbox)
-
-            if columnas == "auto":
-                corte = punto_de_corte(page, base)
-            elif columnas == "1":
-                corte = None
-            else:
-                corte = (page.bbox[0] + page.bbox[2]) / 2
-
-            lineas = [ln for ln in lineas_de_pagina(page, base, corte)
-                      if not _en_tabla(ln, bboxes)]
-            paginas.append({"n": n, "tablas": tablas_md, "corte": corte,
-                            "lineas": ordenar_por_columnas(lineas, corte)})
-
-            if figuras:
-                cajas = regiones_de_figura(page, bboxes)
-                if cajas:
-                    regiones[n] = cajas
 
     # --- imágenes: primero los rasters incrustados, después las figuras vectoriales ---
     imagenes = extraer_rasters(pdf_path, img_dir)
@@ -475,31 +523,13 @@ def convertir(pdf_path: Path, out_dir: Path, columnas: str = "auto",
     for pag, nombre in imagenes:
         por_pagina.setdefault(pag, []).append(nombre)
 
-    # --- escritura ---
-    md: list[str] = [f"# {(meta.get('Title') or pdf_path.stem).strip()}\n"]
-    if meta.get("Subject"):
-        md.append(f"*{meta['Subject'].strip()}*\n")
-    n_tablas = 0
-    for pg in paginas:
-        md.append(f"\n<!-- página {pg['n']} -->\n")
-        for t in pg["tablas"]:
-            md.append(t + "\n")
-            n_tablas += 1
-        crudas = []
-        for ln in pg["lineas"]:
-            nivel = _nivel(ln["texto"], ln["tam"], base)
-            crudas.append(f"\n{nivel} {ln['texto']}\n" if nivel else ln["texto"])
-        md += unir_parrafos(crudas)
-        for nombre in por_pagina.get(pg["n"], []):
-            etiqueta = "Figura" if "figura" in nombre else "Imagen"
-            md.append(f"\n![{etiqueta} de la página {pg['n']}](imagenes/{nombre})\n")
-
+    texto, n_tablas = _render(paginas, base, meta, pdf_path.stem, por_pagina)
     destino_md = out_dir / f"{pdf_path.stem}.md"
-    destino_md.write_text("\n".join(md) + "\n", encoding="utf-8")
+    destino_md.write_text(texto, encoding="utf-8")
     return {"md": destino_md, "rasters": n_rasters, "figuras": n_figuras,
             "tablas": n_tablas, "paginas": n_paginas,
             "dos_columnas": sum(1 for p in paginas if p["corte"] is not None),
-            "caracteres": len(destino_md.read_text(encoding="utf-8"))}
+            "caracteres": len(texto)}
 
 
 def main() -> int:

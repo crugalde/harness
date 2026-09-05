@@ -2,6 +2,7 @@
 import importlib
 import importlib.util
 import json
+import re
 import sys
 from pathlib import Path
 
@@ -33,6 +34,7 @@ BE = _load("backends")
 PR = _load("paper_review")
 PM = _load("pdf_a_markdown")
 SY = _load("sync_skills")
+PB = _load("publicar")
 
 
 def test_router_scoring():
@@ -329,3 +331,118 @@ def test_sync_dry_run_no_escribe(tmp_path):
     destino = tmp_path / "vacio"
     r = SY.sincronizar(destino, dry_run=True)
     assert r["sincronizadas"] and not destino.exists()
+
+
+# --- Publicación: Obsidian y Notion -----------------------------------------
+
+def test_obsidian_publica_sin_tocar_lo_ajeno(tmp_path):
+    """La bóveda es del usuario: solo se escribe dentro de la subcarpeta destino."""
+    vault = tmp_path / "neuro"
+    ajena = vault / "Diario" / "mi_nota.md"
+    ajena.parent.mkdir(parents=True)
+    ajena.write_text("no me toques", encoding="utf-8")
+
+    origen = tmp_path / "rev"
+    (origen / "imagenes").mkdir(parents=True)
+    (origen / "imagenes" / "p01_figura00.png").write_bytes(b"\x89PNG fake")
+    md = "# Título\n\nCuerpo.\n\n![Figura](imagenes/p01_figura00.png)\n"
+    datos = {"tema": "Miastenia y timectomía", "fecha": "2026-09-05",
+             "papers": [{"ficha": {"pmids_citados": ["12345678"]}}]}
+
+    r = PB.publicar_obsidian(md, datos, origen, vault=vault, tema=datos["tema"])
+
+    nota = r["nota"].read_text(encoding="utf-8")
+    assert nota.startswith("---\n"), "falta el front-matter"
+    assert "pmids: [12345678]" in nota
+    assert ajena.read_text(encoding="utf-8") == "no me toques"
+
+    # El enlace reescrito tiene que resolver a un archivo real, no solo verse bien.
+    rutas = re.findall(r"!\[[^\]]*\]\(([^)]+)\)", nota)
+    assert rutas, "se perdió el enlace a la figura"
+    for ruta in rutas:
+        assert " " not in ruta, "un espacio en la ruta rompe el Markdown"
+        assert (r["nota"].parent / ruta).is_file(), f"enlace roto: {ruta}"
+
+
+def test_obsidian_no_duplica_el_indice(tmp_path):
+    vault = tmp_path / "neuro"; vault.mkdir()
+    origen = tmp_path / "rev"; origen.mkdir()
+    datos = {"tema": "Tema", "fecha": "2026-09-05"}
+    for _ in range(3):
+        PB.publicar_obsidian("# T\n\ncuerpo\n", datos, origen, vault=vault, tema="Tema")
+    indice = (vault / "Revisiones" / "Revisiones.md").read_text(encoding="utf-8")
+    assert indice.count("[[2026-09-05 Tema]]") == 1
+
+
+def test_markdown_a_bloques():
+    bloques = PB.markdown_a_bloques(
+        "# Uno\n## Dos\n- viñeta\n> cita\n| a | b |\n|---|---|\n\ntexto\n")
+    tipos = [b["type"] for b in bloques]
+    assert tipos[:4] == ["heading_1", "heading_2", "bulleted_list_item", "quote"]
+    assert "code" in tipos, "la tabla debe ir como bloque de código"
+    assert "paragraph" in tipos
+    # Un párrafo larguísimo se parte: la API rechaza más de 2000 caracteres por bloque.
+    largos = PB.markdown_a_bloques("palabra " * 900)
+    assert len(largos) > 1
+    for b in largos:
+        texto = b["paragraph"]["rich_text"][0]["text"]["content"]
+        assert len(texto) <= PB.MAX_TEXTO_POR_BLOQUE
+
+
+def test_propiedades_se_adaptan_al_esquema():
+    """Réplica del esquema real de la database "Revisión de Literatura" del usuario.
+
+    Enviar una propiedad que la database no tiene hace que la API rechace la página
+    entera, y mandar un valor nuevo a un select **crea la opción**: publicar con
+    etiquetas improvisadas ensuciaría de forma permanente una lista curada a mano.
+    """
+    esquema = {"properties": {
+        "Título": {"type": "title"},
+        "Autores": {"type": "rich_text"},
+        "PMID": {"type": "rich_text"},
+        "Puntos a destacar": {"type": "rich_text"},
+        "Notas personales": {"type": "rich_text"},
+        "Fecha publicación": {"type": "date"},
+        "DOI/Link": {"type": "url"},
+        "Tipo de publicación": {"type": "select", "select": {"options": [
+            {"name": "Revisión"}, {"name": "Original"}, {"name": "Otro"}]}},
+        "Temas": {"type": "multi_select", "multi_select": {"options": [
+            {"name": "Neurología"}, {"name": "Revisión Sistemática"},
+            {"name": "Caso Clínico"}]}},
+        "Fecha agregado": {"type": "created_time"},
+    }}
+    datos = {"fecha": "2026-09-05", "costo_usd_estimado": 0.5,
+             "modelos": {"ficha": "claude-sonnet-5", "sintesis": "claude-opus-5"},
+             "papers": [{"ficha": {"pmids_citados": ["29766750"]}}, {}]}
+    props = PB.propiedades_notion(esquema, datos, "DAPT en ACV menor",
+                                  resumen="Reduce ictus recurrente a costa de hemorragia.")
+
+    assert props["Título"]["title"][0]["text"]["content"] == "DAPT en ACV menor"
+    assert props["Fecha publicación"]["date"]["start"] == "2026-09-05"
+    assert props["PMID"]["rich_text"][0]["text"]["content"] == "29766750"
+    assert "Reduce ictus" in props["Puntos a destacar"]["rich_text"][0]["text"]["content"]
+    assert "claude-opus-5" in props["Notas personales"]["rich_text"][0]["text"]["content"]
+    assert props["Tipo de publicación"]["select"]["name"] == "Revisión"
+
+    # Solo opciones que ya existen: "Neuromuscular" no está en esta database.
+    temas = {t["name"] for t in props["Temas"]["multi_select"]}
+    assert temas <= {"Neurología", "Revisión Sistemática", "Caso Clínico"}
+    assert "Neuromuscular" not in temas
+
+    # Nada de lo que la database no tiene, ni las propiedades de solo lectura.
+    assert "Fecha agregado" not in props
+    assert set(props) <= set(esquema["properties"])
+
+
+def test_propiedades_sin_titulo_no_revientan():
+    """Una database sin propiedad de título no puede recibir páginas: se devuelve vacío."""
+    assert PB.propiedades_notion({"properties": {"X": {"type": "rich_text"}}},
+                                 {}, "Tema") == {}
+
+
+def test_aporte_neto_alimenta_el_resumen():
+    md = ("## Qué muestra el conjunto\nbla bla\n\n"
+          "## Aporte neto\n- Reduce el ictus recurrente\n- A costa de hemorragia\n\n"
+          "## Vacíos y qué haría falta\notra cosa\n")
+    assert PB._aporte_neto(md) == "- Reduce el ictus recurrente - A costa de hemorragia"
+    assert PB._aporte_neto("## Otra cosa\nnada") == ""
