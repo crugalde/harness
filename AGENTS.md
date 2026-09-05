@@ -8,7 +8,7 @@
 
 ```yaml
 # --- meta (NO editar a mano salvo 'version'; gestionado por el ciclo de autoaprendizaje) ---
-version: 1.3.0
+version: 1.4.0
 updated: 2026-09-01
 self_modification: gated          # gated | off  (nunca 'auto' para sangrado completo)
 protected_sections: [1, 3, 4, 7]  # §1 Identidad, §3 Reglas, §4 Gates, §7 Seguridad: inmutables al ciclo
@@ -237,6 +237,7 @@ ejecutes: cítalo, nombra la fuente y pregunta.
 │   ├── pdf_a_markdown.py     # PDF -> Markdown + imágenes (columnas, tablas, figuras)
 │   ├── publicar.py           # revisión -> bóveda Obsidian y/o database de Notion
 │   ├── sync_skills.py        # publica skills/ donde el hub de Hermes las escanea
+│   ├── mcp_server.py         # puente MCP: Hermes ejecuta las tools y entra a las carpetas (§12)
 │   ├── self_improve.py       # ciclo capturar→destilar→proponer→aplicar (por agente)
 │   ├── tracing.py            # observabilidad: JSONL por día (tools, tokens, costo)
 │   ├── registry.py           # ensambla el ToolRegistry (skills + MCP)
@@ -396,5 +397,47 @@ entorno pelado es lo que detecta que alguien subió a nivel de módulo un import
 El chequeo de estilo (`ruff` completo + `black`) corre aparte y **no bloquea**, porque el
 repo arrastra deuda previa a este workflow; cuando se salde, se le quita el
 `continue-on-error` y pasa a ser obligatorio.
+
+---
+
+## 12. El puente MCP: que Hermes **ejecute**, no solo lea
+
+§11.2 y `sync_skills.py` resuelven que Hermes **vea** las skills. Ver no es poder: un
+`SKILL.md` es una instrucción, y el código que la cumple vive en el `ToolRegistry` del
+harness, que solo conoce `tools/loop.py`. Sin puente, Hermes lee "usa `pdf_a_markdown`" y no
+tiene con qué.
+
+`tools/mcp_server.py` es ese puente: un servidor MCP por stdio que publica ocho tools —
+`harness_estado`, `harness_listar_carpeta`, `harness_buscar_archivos`, `harness_leer_archivo`,
+`harness_pdf_a_markdown`, `harness_analizar_papers`, `harness_publicar_obsidian`,
+`harness_publicar_notion`— y con ellas las dos cosas que se pidieron: el flujo completo
+paper → markdown → Obsidian/Notion, y acceso a las carpetas locales.
+
+### 12.1 Contención de rutas (la parte que importa)
+
+Un servidor con acceso a archivos es, si no se acota, **el disco entero** en manos del
+modelo. Aquí toda ruta que entra por una tool se `resolve()` —lo que colapsa `..` y sigue los
+enlaces simbólicos— y **después** se comprueba que caiga dentro de alguna raíz de
+`HARNESS_FILE_ROOTS`. Ese orden es el que atrapa los tres escapes: `..` en la ruta, una ruta
+absoluta de fuera, y un symlink dentro de la raíz que apunte afuera. Los tres tienen test.
+
+Sin `HARNESS_FILE_ROOTS` definido no hay raíces y las tools de archivos **se niegan a
+operar**. Fallar cerrado es lo correcto cuando la alternativa es exponer `C:/`.
+
+### 12.2 Las anotaciones son el contrato con el Gate (§4)
+
+Cada tool declara `readOnlyHint` / `openWorldHint`, y eso es lo que permite al cliente pedir
+confirmación solo donde hace falta: listar y leer son de solo lectura; `pdf_a_markdown` y
+`publicar_obsidian` escriben en disco; `analizar_papers` y `publicar_notion` son
+`openWorld` —salen a la red y cuestan dinero o dejan una página en el workspace—, o sea
+exactamente las que R9 exige confirmar por turno.
+
+### 12.3 El error tiene que ser legible
+
+El SDK envuelve cualquier excepción de una tool en un `UnexpectedToolError` genérico y
+descarta el texto: el modelo recibe "falló" sin saber que la ruta estaba fuera de las
+carpetas permitidas ni cuáles son. El decorador `blindado` devuelve ese texto como
+resultado, con la lista de raíces permitidas, para que el modelo corrija en vez de reintentar
+a ciegas (R10).
 
 ---

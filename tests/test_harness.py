@@ -35,6 +35,7 @@ PR = _load("paper_review")
 PM = _load("pdf_a_markdown")
 SY = _load("sync_skills")
 PB = _load("publicar")
+MS = _load("mcp_server")
 
 
 def test_router_scoring():
@@ -446,3 +447,122 @@ def test_aporte_neto_alimenta_el_resumen():
           "## Vacíos y qué haría falta\notra cosa\n")
     assert PB._aporte_neto(md) == "- Reduce el ictus recurrente - A costa de hemorragia"
     assert PB._aporte_neto("## Otra cosa\nnada") == ""
+
+
+# --- Puente MCP: contención de rutas -----------------------------------------
+
+def _raices(monkeypatch, *rutas):
+    import os
+    monkeypatch.setenv("HARNESS_FILE_ROOTS", os.pathsep.join(str(r) for r in rutas))
+
+
+def test_sin_raices_no_se_toca_nada(monkeypatch):
+    """Sin HARNESS_FILE_ROOTS el servidor falla cerrado: la alternativa es exponer C:/."""
+    monkeypatch.delenv("HARNESS_FILE_ROOTS", raising=False)
+    assert MS.raices() == []
+    with pytest.raises(PermissionError):
+        MS._resolver(str(ROOT))
+
+
+def test_traversal_no_escapa_de_la_raiz(tmp_path, monkeypatch):
+    permitida = tmp_path / "permitida"
+    (permitida / "sub").mkdir(parents=True)
+    (tmp_path / "secreta").mkdir()
+    (tmp_path / "secreta" / "clave.txt").write_text("no", encoding="utf-8")
+    _raices(monkeypatch, permitida)
+
+    # Dentro: pasa, y devuelve la ruta ya resuelta.
+    assert MS._resolver(str(permitida / "sub")) == (permitida / "sub").resolve()
+
+    # `..` que sale de la raíz: se colapsa al resolver y la comparación lo rechaza.
+    with pytest.raises(PermissionError):
+        MS._resolver(str(permitida / "sub" / ".." / ".." / "secreta" / "clave.txt"))
+
+
+def test_ruta_absoluta_fuera_de_la_raiz(tmp_path, monkeypatch):
+    permitida = tmp_path / "permitida"
+    permitida.mkdir()
+    fuera = tmp_path / "fuera"
+    fuera.mkdir()
+    _raices(monkeypatch, permitida)
+    with pytest.raises(PermissionError):
+        MS._resolver(str(fuera))
+    # Un hermano cuyo nombre empieza igual no debe colarse por prefijo de cadena.
+    hermano = tmp_path / "permitida_bis"
+    hermano.mkdir()
+    with pytest.raises(PermissionError):
+        MS._resolver(str(hermano))
+
+
+def test_symlink_que_apunta_afuera(tmp_path, monkeypatch):
+    permitida = tmp_path / "permitida"
+    permitida.mkdir()
+    fuera = tmp_path / "fuera"
+    fuera.mkdir()
+    (fuera / "clave.txt").write_text("no", encoding="utf-8")
+    puente = permitida / "atajo"
+    try:
+        puente.symlink_to(fuera, target_is_directory=True)
+    except (OSError, NotImplementedError):
+        pytest.skip("este sistema no permite crear enlaces simbólicos")
+    _raices(monkeypatch, permitida)
+    # El enlace *está* dentro de la raíz, pero su destino no: resolver antes de comparar
+    # es justamente lo que lo detecta.
+    with pytest.raises(PermissionError):
+        MS._resolver(str(puente / "clave.txt"))
+
+
+def test_leer_archivo_respeta_el_tipo_y_el_tope(tmp_path, monkeypatch):
+    _raices(monkeypatch, tmp_path)
+    (tmp_path / "nota.md").write_text("hola", encoding="utf-8")
+    (tmp_path / "paper.pdf").write_bytes(b"%PDF-1.7")
+    assert MS.leer_archivo(str(tmp_path / "nota.md")) == "hola"
+    assert "no es texto" in MS.leer_archivo(str(tmp_path / "paper.pdf"))
+    grande = tmp_path / "grande.txt"
+    grande.write_text("x" * (MS.MAX_LECTURA + 500), encoding="utf-8")
+    salida = MS.leer_archivo(str(grande))
+    assert "recortado: 500 caracteres" in salida
+    assert len(salida.split("\n\n[...")[0]) == MS.MAX_LECTURA
+
+
+def test_listado_y_busqueda_solo_dentro(tmp_path, monkeypatch):
+    permitida = tmp_path / "papers"
+    (permitida / "2024").mkdir(parents=True)
+    (permitida / "2024" / "miastenia.pdf").write_bytes(b"%PDF")
+    (permitida / "otro.md").write_text("x", encoding="utf-8")
+    _raices(monkeypatch, permitida)
+    listado = MS.listar_carpeta(str(permitida))
+    assert "2024" in listado and "otro.md" in listado
+    hallazgos = MS.buscar_archivos("*.pdf")
+    assert "miastenia.pdf" in hallazgos
+    with pytest.raises(PermissionError):
+        MS.buscar_archivos("*.pdf", subcarpeta=str(tmp_path))
+
+
+def test_estado_no_filtra_credenciales(monkeypatch):
+    monkeypatch.setenv("NOTION_TOKEN", "secret_no-debe-aparecer")
+    monkeypatch.delenv("HARNESS_FILE_ROOTS", raising=False)
+    salida = MS.estado()
+    assert "secret_no-debe-aparecer" not in salida
+    assert json.loads(salida)["notion_token"] == "presente"
+
+
+def test_el_puente_importa_sin_el_sdk():
+    """El módulo carga sin `mcp` instalado: el import va dentro de construir_servidor()
+    para que CI y estos tests corran en un entorno pelado."""
+    src = (ROOT / "tools" / "mcp_server.py").read_text(encoding="utf-8")
+    fuera = src.split("def construir_servidor")[0]
+    assert "import mcp" not in fuera and "from mcp" not in fuera
+
+
+def test_el_error_llega_legible_a_la_tool(tmp_path, monkeypatch):
+    """El SDK descarta el texto de la excepción; `blindado` lo devuelve como resultado
+    para que el modelo sepa *por qué* falló y no solo *que* falló."""
+    _raices(monkeypatch, tmp_path / "permitida")
+    (tmp_path / "permitida").mkdir()
+    salida = MS.blindado(MS.listar_carpeta)(str(tmp_path / "fuera"))
+    assert salida.startswith("ERROR de permisos:")
+    assert "Permitidas:" in salida
+    # Y no se traga los aciertos.
+    assert MS.blindado(MS.listar_carpeta)(str(tmp_path / "permitida")).startswith(
+        str((tmp_path / "permitida").resolve()))

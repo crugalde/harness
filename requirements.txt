@@ -9,6 +9,7 @@ anthropic>=0.40
 # pypdf>=4.0             # skills paper_review y pdf_markdown (lectura de PDFs)
 # pdfplumber>=0.11       # skill pdf_markdown (texto, columnas y tablas)
 # pypdfium2>=4.0         # skill pdf_markdown (rasteriza figuras vectoriales)
+# mcp>=2.1               # tools/mcp_server.py (puente MCP: Hermes ejecuta las tools)
 # python-docx>=1.1        # skill build_docx (subagente docs) + paper_review (lectura de .docx)
 # python-pptx>=0.6        # skill build_pptx (subagente docs)
 # numpy>=1.26            # subagente signals

@@ -18,6 +18,7 @@ tools/paper_review.py         # análisis científico multi-paper (PDF/DOCX -> r
 tools/pdf_a_markdown.py       # PDF -> Markdown + imágenes (columnas, tablas, figuras)
 tools/publicar.py             # revisión -> bóveda Obsidian y/o database de Notion
 tools/sync_skills.py          # publica skills/ donde el hub de Hermes las escanea
+tools/mcp_server.py           # puente MCP (stdio): Hermes ejecuta las tools y entra a las carpetas
 tools/self_improve.py         # ciclo de autoaprendizaje (capturar→destilar→proponer→aplicar)
 tools/tracing.py              # observabilidad: JSONL por día (tools, tokens, costo, latencia)
 tools/registry.py             # ensambla el ToolRegistry (auto-descubre skills + MCP)
@@ -240,6 +241,82 @@ toca nunca (hay un test que lo fija).
 `--validar` revisa el front-matter: una skill sin `name` o sin `description` la indexa mal el
 hub —o la ignora— y el fallo es silencioso. Después de sincronizar hay que reiniciar Hermes o
 reindexar el hub.
+
+
+## Que Hermes **ejecute** las tools (puente MCP)
+
+Que el hub vea las skills no basta: un `SKILL.md` es una instrucción, y el código vive en el
+`ToolRegistry` del harness. `tools/mcp_server.py` publica ocho tools por MCP (stdio) para que
+Hermes las invoque y, de paso, entre a las carpetas locales autorizadas.
+
+| Tool | Qué hace | Naturaleza |
+|---|---|---|
+| `harness_estado` | qué carpetas ve y qué credenciales tiene | solo lectura |
+| `harness_listar_carpeta` | lista una carpeta (glob opcional) | solo lectura |
+| `harness_buscar_archivos` | busca por nombre, recursivo | solo lectura |
+| `harness_leer_archivo` | lee texto (`.md`, `.txt`, `.json`, `.csv`, …) | solo lectura |
+| `harness_pdf_a_markdown` | PDF → Markdown + figuras | escribe en disco |
+| `harness_analizar_papers` | carpeta de papers → `revision.md` + `revision.json` | red + costo |
+| `harness_publicar_obsidian` | revisión → nota en la bóveda | escribe en disco |
+| `harness_publicar_notion` | revisión → página en la database | red + escribe fuera |
+
+### Acotar el acceso: `HARNESS_FILE_ROOTS`
+
+Toda ruta que entra se resuelve (colapsando `..` y siguiendo los enlaces simbólicos) y
+**después** se comprueba que caiga dentro de una raíz permitida. **Sin `HARNESS_FILE_ROOTS`
+definido, las tools de archivos se niegan a operar**: es preferible fallar a exponer `C:/`.
+Pon ahí solo las carpetas que Hermes tenga que tocar, no el perfil entero.
+
+### Arranque (Windows)
+
+```powershell
+pip install mcp                      # el SDK; el resto del harness no lo necesita
+
+# Rutas C:/Users/... — nunca /c/Users/..., que crea un árbol fantasma C:\c\Users\...
+$env:HARNESS_FILE_ROOTS = "C:/Users/Usuario/Documentos/papers;C:/Users/Usuario/Obsidian/neuro"
+$env:OBSIDIAN_VAULT     = "C:/Users/Usuario/Obsidian/neuro"
+$env:NOTION_TOKEN       = "ntn_..."
+$env:NOTION_DATABASE_ID = "..."      # la database de revisión de literatura
+
+python C:/Users/Usuario/ruta/al/harness/tools/mcp_server.py
+```
+
+El separador de `HARNESS_FILE_ROOTS` es el del sistema: `;` en Windows, `:` en macOS y Linux.
+Las credenciales pueden ir en `~/.config/harness/.env` en vez del entorno; el servidor lo
+carga al arrancar.
+
+### Registrarlo en Hermes
+
+En la configuración de servidores MCP de Hermes, como servidor **stdio**:
+
+```json
+{
+  "harness": {
+    "command": "python",
+    "args": ["C:/Users/Usuario/ruta/al/harness/tools/mcp_server.py"],
+    "env": {
+      "HARNESS_FILE_ROOTS": "C:/Users/Usuario/Documentos/papers;C:/Users/Usuario/Obsidian/neuro",
+      "OBSIDIAN_VAULT": "C:/Users/Usuario/Obsidian/neuro"
+    }
+  }
+}
+```
+
+Primera llamada útil para comprobar el cableado: **`harness_estado`**, que responde qué
+carpetas ve y qué credenciales encontró, sin revelar ninguna.
+
+### El flujo completo, de PDF a publicado
+
+```
+harness_buscar_archivos "*.pdf"                    -> qué hay
+harness_pdf_a_markdown  <pdf> <carpeta>            -> markdown + figuras
+harness_analizar_papers <carpeta> "<tema>" <salida> -> revision.md + revision.json
+harness_publicar_obsidian <salida>                 -> nota en la bóveda
+harness_publicar_notion   <salida>                 -> página en la database
+```
+
+`harness_analizar_papers` acepta `dry_run`: extrae y de-identifica **sin llamar a ningún
+modelo**, que es la forma de ver qué se redactó antes de mandar material clínico (R8).
 
 
 ## Home Assistant (subagente `home`)
