@@ -432,7 +432,19 @@ confirmación solo donde hace falta: listar y leer son de solo lectura; `pdf_a_m
 `openWorld` —salen a la red y cuestan dinero o dejan una página en el workspace—, o sea
 exactamente las que R9 exige confirmar por turno.
 
-### 12.3 El error tiene que ser legible
+### 12.3 stdout es el protocolo, no la consola
+
+En transporte stdio los mensajes JSON-RPC viajan por **stdout**. `paper_review.run()`
+informa su progreso con `print()` —medido: **514 bytes** en una corrida de un solo paper— y
+esas líneas se intercalarían con los mensajes, que es como el cliente se cae con un error de
+parseo en vez de recibir el resultado. El decorador `sin_ensuciar_el_protocolo` redirige
+stdout a stderr durante cada tool: el canal queda limpio y el progreso no se pierde, porque
+stderr es donde un servidor stdio deja sus logs. Hay test.
+
+Esto no se ve en los tests unitarios ni leyendo el código: apareció al correr la cadena
+completa con las dependencias reales instaladas.
+
+### 12.4 El error tiene que ser legible
 
 El SDK envuelve cualquier excepción de una tool en un `UnexpectedToolError` genérico y
 descarta el texto: el modelo recibe "falló" sin saber que la ruta estaba fuera de las

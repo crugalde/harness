@@ -285,6 +285,10 @@ El separador de `HARNESS_FILE_ROOTS` es el del sistema: `;` en Windows, `:` en m
 Las credenciales pueden ir en `~/.config/harness/.env` en vez del entorno; el servidor lo
 carga al arrancar.
 
+En stdio **stdout es el protocolo**: cualquier línea que una tool imprima ahí se intercala
+con los mensajes JSON-RPC y tira la conexión. Las tools redirigen su salida a stderr, así que
+el progreso de `analizar_papers` aparece en el log de Hermes, no en el canal de datos.
+
 ### Registrarlo en Hermes
 
 En la configuración de servidores MCP de Hermes, como servidor **stdio**:

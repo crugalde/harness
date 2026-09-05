@@ -566,3 +566,18 @@ def test_el_error_llega_legible_a_la_tool(tmp_path, monkeypatch):
     # Y no se traga los aciertos.
     assert MS.blindado(MS.listar_carpeta)(str(tmp_path / "permitida")).startswith(
         str((tmp_path / "permitida").resolve()))
+
+
+def test_la_tool_no_escribe_en_el_canal_del_protocolo(capsys):
+    """En stdio, stdout **es** el protocolo: una línea de progreso ahí se intercala con los
+    mensajes JSON-RPC y el cliente cae con un error de parseo. `paper_review` imprime 514
+    bytes de progreso en una corrida de un solo paper."""
+    def ruidosa(x):
+        print(f"[progreso] procesando {x}")
+        return f"listo {x}"
+
+    envuelta = MS.sin_ensuciar_el_protocolo(ruidosa)
+    assert envuelta("paper") == "listo paper"
+    capturado = capsys.readouterr()
+    assert capturado.out == ""                    # el canal del protocolo, intacto
+    assert "[progreso] procesando paper" in capturado.err   # el progreso, no perdido

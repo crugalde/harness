@@ -25,6 +25,7 @@ Req: pip install mcp
 """
 from __future__ import annotations
 
+import contextlib
 import functools
 import json
 import os
@@ -201,6 +202,22 @@ def estado() -> str:
 # ---------------------------------------------------------------------------
 # Servidor
 # ---------------------------------------------------------------------------
+def sin_ensuciar_el_protocolo(fn):
+    """Manda a stderr lo que la tool imprima en stdout.
+
+    En transporte stdio, **stdout es el protocolo**: por ahí viajan los mensajes JSON-RPC.
+    `paper_review.run()` informa su progreso con `print()` —514 bytes en una corrida de un
+    solo paper— y esas líneas se intercalarían con los mensajes, que es como el cliente se
+    cae con un error de parseo en vez de recibir el resultado. El progreso no se pierde:
+    stderr es donde un servidor stdio deja sus logs.
+    """
+    @functools.wraps(fn)
+    def envuelta(*args, **kwargs):
+        with contextlib.redirect_stdout(sys.stderr):
+            return fn(*args, **kwargs)
+    return envuelta
+
+
 def blindado(fn):
     """Convierte la excepción en un mensaje que el modelo pueda leer y corregir.
 
@@ -246,6 +263,7 @@ def construir_servidor():
 
     @mcp.tool(name="harness_estado", annotations=solo_lectura)
     @blindado
+    @sin_ensuciar_el_protocolo
     def _estado() -> str:
         """Qué carpetas puede tocar este servidor y qué credenciales tiene a mano.
 
@@ -254,6 +272,7 @@ def construir_servidor():
 
     @mcp.tool(name="harness_listar_carpeta", annotations=solo_lectura)
     @blindado
+    @sin_ensuciar_el_protocolo
     def _listar(ruta: str, patron: str = "*") -> str:
         """Lista una carpeta local. `ruta` debe caer dentro de HARNESS_FILE_ROOTS.
 
@@ -265,6 +284,7 @@ def construir_servidor():
 
     @mcp.tool(name="harness_buscar_archivos", annotations=solo_lectura)
     @blindado
+    @sin_ensuciar_el_protocolo
     def _buscar(patron: str, subcarpeta: str = "") -> str:
         """Busca archivos por nombre bajo las carpetas permitidas, recursivamente.
 
@@ -276,12 +296,14 @@ def construir_servidor():
 
     @mcp.tool(name="harness_leer_archivo", annotations=solo_lectura)
     @blindado
+    @sin_ensuciar_el_protocolo
     def _leer(ruta: str) -> str:
         """Lee un archivo de texto. Para PDF o .docx usa las tools de conversión."""
         return leer_archivo(ruta)
 
     @mcp.tool(name="harness_pdf_a_markdown", annotations=escribe)
     @blindado
+    @sin_ensuciar_el_protocolo
     def _pdf(pdf: str, salida: str, dpi: int = 200) -> str:
         """Convierte un PDF a Markdown con sus figuras, respetando el orden de lectura
         a dos columnas.
@@ -295,6 +317,7 @@ def construir_servidor():
 
     @mcp.tool(name="harness_analizar_papers", annotations=externo)
     @blindado
+    @sin_ensuciar_el_protocolo
     def _analizar(carpeta: str, tema: str, salida: str, dry_run: bool = False) -> str:
         """Analiza los papers de una carpeta: ficha cada uno, los contrasta con PubMed y
         escribe la lectura transversal en revision.md y revision.json.
@@ -307,12 +330,14 @@ def construir_servidor():
 
     @mcp.tool(name="harness_publicar_obsidian", annotations=escribe)
     @blindado
+    @sin_ensuciar_el_protocolo
     def _obsidian(origen: str, vault: str = "", tema: str = "") -> str:
         """Publica una revisión como nota en una bóveda de Obsidian."""
         return publicar_obsidian(origen, vault, tema)
 
     @mcp.tool(name="harness_publicar_notion", annotations=externo)
     @blindado
+    @sin_ensuciar_el_protocolo
     def _notion(origen: str, database: str = "", tema: str = "") -> str:
         """Crea una página en una database de Notion desde una revisión.
 
