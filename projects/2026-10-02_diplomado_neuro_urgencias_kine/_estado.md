@@ -16,3 +16,9 @@
 - Gate 2: aprobación del docente antes de dar por cerrado.
 
 **Siguiente acción:** el docente revisa los tres archivos y aprueba o pide ajustes.
+
+## Actualización 2026-10-02 (pasos 1–7 del plan de fuentes)
+- Verificadas en PubMed/Consensus: ensayos de estatus (RAMPART, ESETT, Alldredge), SO2S (oxígeno en ACV), estudios de PaCO2 (CENTER-TBI, ENIO, metaanálisis 2026), ESCMID 2016, AHA/ASA SAH 2023 y evidencia pedagógica. Detalle en `verificacion_fuentes.md`.
+- Hallazgo: existe la **guía AHA/ASA 2026 de ACV agudo** (con fe de erratas y críticas publicadas); las láminas de reperfusión y oxígeno deben contrastarse con ella.
+- Bloqueado por el proxy: diprece.minsal.cl y scielo.cl. Se necesita el PDF de la guía MINSAL del docente.
+- Pendiente del docente: ver checklist al final de `verificacion_fuentes.md`.
