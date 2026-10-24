@@ -22,3 +22,6 @@
 - Hallazgo: existe la **guía AHA/ASA 2026 de ACV agudo** (con fe de erratas y críticas publicadas); las láminas de reperfusión y oxígeno deben contrastarse con ella.
 - Bloqueado por el proxy: diprece.minsal.cl y scielo.cl. Se necesita el PDF de la guía MINSAL del docente.
 - Pendiente del docente: ver checklist al final de `verificacion_fuentes.md`.
+
+## Actualización 2026-10-24
+- Programa ordenado en el patrón de 4 columnas del Excel del docente (Bloque, Tema, Práctica online, Lo que el kinesiólogo hace): `Programa_detallado_jornada_neurologia_USS_actualizado.xlsx` (hojas "Programa" y "Datos generales"). Incluye bloque 4, receso, preparación previa y evaluación posterior.
