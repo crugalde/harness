@@ -25,3 +25,4 @@
 
 ## Actualización 2026-10-24
 - Programa ordenado en el patrón de 4 columnas del Excel del docente (Bloque, Tema, Práctica online, Lo que el kinesiólogo hace): `Programa_detallado_jornada_neurologia_USS_actualizado.xlsx` (hojas "Programa" y "Datos generales"). Incluye bloque 4, receso, preparación previa y evaluación posterior.
+- Excel actualizado: la hoja 2 pasa a ser "Cronograma detallado" (minuto a minuto, 330 min, práctica 120 min = 36%); "Datos generales" queda como hoja 3.
