@@ -32,3 +32,18 @@
 **Acción**: La skill `home_assistant` ahora verifica por re-lectura y expone `ha_lights`/
 `ha_lights_off` (exclusión de enchufes). Automatización de medianoche en
 `agents/home/automations/apagar_luces_medianoche.yaml`.
+
+## [2026-11-09] Skill `pubmed_qa` — señales de la primera prueba en vivo
+**Evidencia**: Gate 1 de la skill y prueba con 3 preguntas (`projects/2026-11-09_pubmed_qa/`).
+**Corrección explícita del usuario**: en Gate 1, "lo primordial acá es la respuesta a la pregunta
+con respaldo de las fuentes. Debes analizar y resumir lo encontrado" → en preguntas de evidencia,
+entregar respuesta argumentada (respuesta breve + síntesis + certeza), no listados de papers.
+**Errores y arreglos**:
+- El entorno cloud Default bloquea `eutils.ncbi.nlm.nih.gov` (403 del proxy) → entorno `harness`
+  con NCBI y Europe PMC permitidos.
+- PubMed asigna "Randomized Controlled Trial" a análisis post hoc, comparaciones indirectas y
+  monografías de fármacos → clasificar por título antes de confiar en el tipo de publicación.
+- El verificador detectó una cita a una fuente que salió del paquete al regenerarlo → regenerar
+  el paquete obliga a re-verificar la respuesta (el gate funcionó como se diseñó).
+**Patrón a fijar (candidato, 1 corrección explícita)**: toda respuesta basada en literatura pasa por
+`pubmed_qa verificar` antes de entregarse.

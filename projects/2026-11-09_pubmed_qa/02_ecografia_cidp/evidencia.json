@@ -1,0 +1,638 @@
+{
+  "version": 1,
+  "pregunta": "¿Qué rendimiento diagnóstico tiene la ecografía de nervio periférico en la CIDP y sirve para diferenciarla de otras neuropatías?",
+  "query": "(nerve ultrasound OR ultrasonography OR sonography) AND (chronic inflammatory demyelinating polyneuropathy OR CIDP)",
+  "metricas": {
+    "fecha": "2026-11-09T17:55:10+00:00",
+    "fuentes_consultadas": [
+      "PubMed (NCBI E-utilities)",
+      "Europe PMC"
+    ],
+    "filtros": {
+      "desde": 2000,
+      "hasta": null,
+      "preprints": false,
+      "requiere_abstract": true
+    },
+    "queries_pubmed": [
+      {
+        "estrato": "general",
+        "term": "((nerve ultrasound OR ultrasonography OR sonography) AND (chronic inflammatory demyelinating polyneuropathy OR CIDP)) AND hasabstract[text] AND (\"2000\"[dp] : \"3000\"[dp]) NOT preprint[pt]",
+        "total": 359,
+        "recuperados": 60
+      },
+      {
+        "estrato": "alta_evidencia",
+        "term": "((nerve ultrasound OR ultrasonography OR sonography) AND (chronic inflammatory demyelinating polyneuropathy OR CIDP)) AND hasabstract[text] AND (\"2000\"[dp] : \"3000\"[dp]) NOT preprint[pt] AND (systematic review[pt] OR meta-analysis[pt] OR guideline[pt] OR practice guideline[pt] OR randomized controlled trial[pt])",
+        "total": 11,
+        "recuperados": 11
+      }
+    ],
+    "avisos": [],
+    "query_origen": "usuario/agente",
+    "query_efectiva": "(nerve ultrasound OR ultrasonography OR sonography) AND (chronic inflammatory demyelinating polyneuropathy OR CIDP)",
+    "recuperados_pubmed": 66,
+    "query_europepmc": {
+      "query": "((nerve ultrasound OR ultrasonography OR sonography) AND (chronic inflammatory demyelinating polyneuropathy OR CIDP)) AND HAS_ABSTRACT:y AND PUB_YEAR:[2000 TO 3000] AND NOT SRC:PPR",
+      "total": 17254,
+      "recuperados": 30
+    },
+    "candidatos": 94,
+    "excluidos": {
+      "sin_abstract": 1,
+      "versiones_anteriores": 1,
+      "baja_relevancia": 18
+    },
+    "seleccionados": 10,
+    "por_diseno": {
+      "estudio original": 6,
+      "revisión narrativa": 1,
+      "revisión sistemática/metaanálisis": 2,
+      "guía/consenso": 1
+    },
+    "texto_completo_libre": 4
+  },
+  "registros": [
+    {
+      "id": "PMID:31959710",
+      "titulo": "Nerve ultrasound improves detection of treatment-responsive chronic inflammatory neuropathies.",
+      "abstract": "Objective: To examine the diagnostic accuracy of nerve ultrasound in a prospective cohort of consecutive patients with a clinical suspicion of chronic inflammatory neuropathies, including chronic inflammatory demyelinating polyneuropathy, Lewis-Sumner syndrome, and multifocal motor neuropathy, and to determine the added value in the detection of treatment-responsive patients. Methods: Between February 2015 and July 2018, we included 100 consecutive incident patients with a clinical suspicion of chronic inflammatory neuropathy. All patients underwent nerve ultrasound, extensive standardized nerve conduction studies (NCS), and other relevant diagnostic investigations. We evaluated treatment response using predefined criteria. A diagnosis of chronic inflammatory neuropathy was established when NCS were abnormal (fulfilling criteria of demyelination of the European Federation of Neurological Societies/Peripheral Nerve Society) or when the degree of nerve enlargement detected by sonography was compatible with chronic inflammatory neuropathy and there was response to treatment. Results: A diagnosis of chronic inflammatory neuropathy was established in 38 patients. Sensitivity and specificity of nerve ultrasound and NCS were 97.4% and 69.4% and 78.9% and 93.5%, respectively. The added value of nerve ultrasound in detection of treatment-responsive chronic inflammatory neuropathy was 21.1% compared to NCS alone. Conclusions: Nerve ultrasound and NCS are complementary techniques with superior sensitivity in the former and specificity in the latter. Addition of nerve ultrasound significantly improves the detection of chronic inflammatory neuropathies. Therefore, it deserves a prominent place in the diagnostic workup of chronic inflammatory neuropathies. Classification of evidence: This study provides Class IV evidence that nerve ultrasound is an accurate diagnostic tool to detect chronic inflammatory neuropathies.",
+      "pmid": "31959710",
+      "pmcid": "",
+      "doi": "10.1212/WNL.0000000000008978",
+      "revista": "Neurology",
+      "anio": 2020,
+      "volumen": "94",
+      "numero": "14",
+      "paginas": "e1470-e1479",
+      "autores": [
+        "Herraets IJT",
+        "Goedee HS",
+        "Telleman JA",
+        "van Eijk RPA",
+        "van Asseldonk JT",
+        "Visser LH",
+        "van den Berg LH",
+        "van der Pol WL"
+      ],
+      "tipos": [
+        "Journal Article",
+        "Research Support, Non-U.S. Gov't"
+      ],
+      "idioma": "eng",
+      "secciones": [
+        {
+          "label": "Objective",
+          "texto": "To examine the diagnostic accuracy of nerve ultrasound in a prospective cohort of consecutive patients with a clinical suspicion of chronic inflammatory neuropathies, including chronic inflammatory demyelinating polyneuropathy, Lewis-Sumner syndrome, and multifocal motor neuropathy, and to determine the added value in the detection of treatment-responsive patients."
+        },
+        {
+          "label": "Methods",
+          "texto": "Between February 2015 and July 2018, we included 100 consecutive incident patients with a clinical suspicion of chronic inflammatory neuropathy. All patients underwent nerve ultrasound, extensive standardized nerve conduction studies (NCS), and other relevant diagnostic investigations. We evaluated treatment response using predefined criteria. A diagnosis of chronic inflammatory neuropathy was established when NCS were abnormal (fulfilling criteria of demyelination of the European Federation of Neurological Societies/Peripheral Nerve Society) or when the degree of nerve enlargement detected by sonography was compatible with chronic inflammatory neuropathy and there was response to treatment."
+        },
+        {
+          "label": "Results",
+          "texto": "A diagnosis of chronic inflammatory neuropathy was established in 38 patients. Sensitivity and specificity of nerve ultrasound and NCS were 97.4% and 69.4% and 78.9% and 93.5%, respectively. The added value of nerve ultrasound in detection of treatment-responsive chronic inflammatory neuropathy was 21.1% compared to NCS alone."
+        },
+        {
+          "label": "Conclusions",
+          "texto": "Nerve ultrasound and NCS are complementary techniques with superior sensitivity in the former and specificity in the latter. Addition of nerve ultrasound significantly improves the detection of chronic inflammatory neuropathies. Therefore, it deserves a prominent place in the diagnostic workup of chronic inflammatory neuropathies."
+        },
+        {
+          "label": "Classification of evidence",
+          "texto": "This study provides Class IV evidence that nerve ultrasound is an accurate diagnostic tool to detect chronic inflammatory neuropathies."
+        }
+      ],
+      "fuentes": [
+        "pubmed"
+      ],
+      "texto_completo_libre": false,
+      "preprint": false,
+      "retractada": false,
+      "diseno": "estudio original",
+      "nivel": 0.45,
+      "relevancia": 1.0,
+      "puntaje": 0.81,
+      "n_muestra": 100,
+      "n_estudios": null,
+      "estimadores": true,
+      "conclusion": "Nerve ultrasound and NCS are complementary techniques with superior sensitivity in the former and specificity in the latter. Addition of nerve ultrasound significantly improves the detection of chronic inflammatory neuropathies. Therefore, it deserves a prominent place in the diagnostic workup of chronic inflammatory neuropathies.",
+      "resultados_clave": [
+        "Sensitivity and specificity of nerve ultrasound and NCS were 97.4% and 69.4% and 78.9% and 93.5%, respectively.",
+        "The added value of nerve ultrasound in detection of treatment-responsive chronic inflammatory neuropathy was 21.1% compared to NCS alone.",
+        "A diagnosis of chronic inflammatory neuropathy was established in 38 patients."
+      ]
+    },
+    {
+      "id": "PMID:40485489",
+      "titulo": "Nerve Ultrasound of Multifocal Motor Neuropathy and Motor and Typical Chronic Inflammatory Demyelinating Neuropathy.",
+      "abstract": "Objective: Both multifocal motor neuropathy (MMN) and chronic inflammatory demyelinating polyneuropathy (CIDP) are chronic progressive immune-mediated peripheral neuropathies without sensory loss. We aimed to explore the different features of ultrasonographic and electrophysiological changes among MMN, motor CIDP and typical CIDP patients. Methods: Nerve ultrasonographic studies were performed in 19 patients with MMN, 15 patients with motor CIDP and 117 patients with typical CIDP. Cross-sectional areas (CSAs) were measured on the bilateral median and ulnar nerves and brachial plexus. Nerve conduction studies (NCSs) were performed on the median and ulnar nerves. Results: In patients with MMN and typical CIDP, the percentage enlargement in the brachial plexus (MMN 45.7%, typical CIDP 78%) was similar to that in the arm (MMN 42.9%, typical CIDP 76.8%) and forearm (MMN 42.9%, typical CIDP 79.4%). However, in patients with motor CIDP, the percentage enlargement in the brachial plexus (74.1%) was more pronounced than in the arm (65.5%) and forearm (58.6%). The CMAPerb/CMAPaxilla in MMN was significantly higher than in motor CIDP (median nerve, 0.82 ± 0.28 for MMN and 0.60 ± 0.37 for motor CIDP, P = 0.017). The CSA decreased in the order of typical CIDP, motor predominant CIDP (MPred-CIDP), pure motor CIDP (PM-CIDP) and MMN. The motor nerve conduction velocity increased in the order of typical CIDP, MPred-CIDP, PM-CIDP and MMN. A total of 3/6 PM-CIDP and 3/3 MPred-CIDP patients responded to steroid treatment. Conclusion: Treatment response, nerve ultrasonography and NCS in MMN, PM-CIDP, MPred-CIDP and typical CIDP constitute a spectrum.",
+      "pmid": "40485489",
+      "pmcid": "",
+      "doi": "10.1017/cjn.2025.10136",
+      "revista": "Can J Neurol Sci",
+      "anio": 2025,
+      "volumen": "",
+      "numero": "",
+      "paginas": "1-9",
+      "autores": [
+        "Niu J",
+        "Ding Q",
+        "Hu N",
+        "Cui L",
+        "Liu M"
+      ],
+      "tipos": [
+        "Journal Article"
+      ],
+      "idioma": "eng",
+      "secciones": [
+        {
+          "label": "Objective",
+          "texto": "Both multifocal motor neuropathy (MMN) and chronic inflammatory demyelinating polyneuropathy (CIDP) are chronic progressive immune-mediated peripheral neuropathies without sensory loss. We aimed to explore the different features of ultrasonographic and electrophysiological changes among MMN, motor CIDP and typical CIDP patients."
+        },
+        {
+          "label": "Methods",
+          "texto": "Nerve ultrasonographic studies were performed in 19 patients with MMN, 15 patients with motor CIDP and 117 patients with typical CIDP. Cross-sectional areas (CSAs) were measured on the bilateral median and ulnar nerves and brachial plexus. Nerve conduction studies (NCSs) were performed on the median and ulnar nerves."
+        },
+        {
+          "label": "Results",
+          "texto": "In patients with MMN and typical CIDP, the percentage enlargement in the brachial plexus (MMN 45.7%, typical CIDP 78%) was similar to that in the arm (MMN 42.9%, typical CIDP 76.8%) and forearm (MMN 42.9%, typical CIDP 79.4%). However, in patients with motor CIDP, the percentage enlargement in the brachial plexus (74.1%) was more pronounced than in the arm (65.5%) and forearm (58.6%). The CMAPerb/CMAPaxilla in MMN was significantly higher than in motor CIDP (median nerve, 0.82 ± 0.28 for MMN and 0.60 ± 0.37 for motor CIDP, P = 0.017). The CSA decreased in the order of typical CIDP, motor predominant CIDP (MPred-CIDP), pure motor CIDP (PM-CIDP) and MMN. The motor nerve conduction velocity increased in the order of typical CIDP, MPred-CIDP, PM-CIDP and MMN. A total of 3/6 PM-CIDP and 3/3 MPred-CIDP patients responded to steroid treatment."
+        },
+        {
+          "label": "Conclusion",
+          "texto": "Treatment response, nerve ultrasonography and NCS in MMN, PM-CIDP, MPred-CIDP and typical CIDP constitute a spectrum."
+        }
+      ],
+      "fuentes": [
+        "pubmed"
+      ],
+      "texto_completo_libre": false,
+      "preprint": false,
+      "retractada": false,
+      "diseno": "estudio original",
+      "nivel": 0.45,
+      "relevancia": 0.8344,
+      "puntaje": 0.7274,
+      "n_muestra": 117,
+      "n_estudios": null,
+      "estimadores": true,
+      "conclusion": "Treatment response, nerve ultrasonography and NCS in MMN, PM-CIDP, MPred-CIDP and typical CIDP constitute a spectrum.",
+      "resultados_clave": [
+        "The CMAPerb/CMAPaxilla in MMN was significantly higher than in motor CIDP (median nerve, 0.82 ± 0.28 for MMN and 0.60 ± 0.37 for motor CIDP, P = 0.017).",
+        "In patients with MMN and typical CIDP, the percentage enlargement in the brachial plexus (MMN 45.7%, typical CIDP 78%) was similar to that in the arm (MMN 42.9%, typical CIDP 76.8%) and forearm (MMN 42.9%, typical CIDP 79.4%).",
+        "However, in patients with motor CIDP, the percentage enlargement in the brachial plexus (74.1%) was more pronounced than in the arm (65.5%) and forearm (58.6%)."
+      ]
+    },
+    {
+      "id": "PMID:35332927",
+      "titulo": "[Prognostic and monitoring biomarkers in chronic inflammatory demyelinating polyneuropathy].",
+      "abstract": "Introduction: Chronic inflammatory demyelinating polyneuropathy (CIDP) is a clinical entity with significant phenotypic variability both in its onset and in its course. Therefore, it is important to have objective biomarkers with which to monitor its evolution. In this review we present clinical, neurophysiological, neuroimaging, blood and cerebrospinal fluid (CSF) biomarkers for the monitoring and prognosis of CIDP. Development: Different clinical tools have been developed and validated to monitor CIDP by assessing strength and disability. However, the best parameter for monitoring gait remains to be determined. Monitoring by neurophysiological examination is also widespread and the amplitude of the compound muscle action potential is the most commonly used. More recently, the Motor Unit Number Index sum score has been developed, which is an accurate and reproducible technique. The role of nerve ultrasonography is under development and a correlation between clinical evolution and ultrasound findings has been described. Multiple biomarkers have been described in blood and CSF, including antinodal/paranodal antibodies, neurofilament light chain, serum immunoglobulin G levels and CSF sphingomyelin levels. Genetic variants and cytokines associated with prognosis and response to treatment have also been described. Conclusions: One of the most important challenges in the management of CIDP is the monitoring of clinical changes after treatment initiation. The combination of biomarkers that allow an accurate understanding of the disease is crucial for the optimal management of CIDP.",
+      "pmid": "35332927",
+      "pmcid": "PMC11502160",
+      "doi": "10.33588/rn.7407.2021495",
+      "revista": "Rev Neurol",
+      "anio": 2022,
+      "volumen": "74",
+      "numero": "7",
+      "paginas": "232-241",
+      "autores": [
+        "Llauradó A",
+        "Sánchez-Tejerina D",
+        "Vidal-Taboada JM",
+        "Salvado M",
+        "Sotoca J",
+        "Juntas-Morales R"
+      ],
+      "tipos": [
+        "Journal Article",
+        "Review"
+      ],
+      "idioma": "spa",
+      "secciones": [
+        {
+          "label": "Introduction",
+          "texto": "Chronic inflammatory demyelinating polyneuropathy (CIDP) is a clinical entity with significant phenotypic variability both in its onset and in its course. Therefore, it is important to have objective biomarkers with which to monitor its evolution. In this review we present clinical, neurophysiological, neuroimaging, blood and cerebrospinal fluid (CSF) biomarkers for the monitoring and prognosis of CIDP."
+        },
+        {
+          "label": "Development",
+          "texto": "Different clinical tools have been developed and validated to monitor CIDP by assessing strength and disability. However, the best parameter for monitoring gait remains to be determined. Monitoring by neurophysiological examination is also widespread and the amplitude of the compound muscle action potential is the most commonly used. More recently, the Motor Unit Number Index sum score has been developed, which is an accurate and reproducible technique. The role of nerve ultrasonography is under development and a correlation between clinical evolution and ultrasound findings has been described. Multiple biomarkers have been described in blood and CSF, including antinodal/paranodal antibodies, neurofilament light chain, serum immunoglobulin G levels and CSF sphingomyelin levels. Genetic variants and cytokines associated with prognosis and response to treatment have also been described."
+        },
+        {
+          "label": "Conclusions",
+          "texto": "One of the most important challenges in the management of CIDP is the monitoring of clinical changes after treatment initiation. The combination of biomarkers that allow an accurate understanding of the disease is crucial for the optimal management of CIDP."
+        }
+      ],
+      "fuentes": [
+        "pubmed"
+      ],
+      "texto_completo_libre": true,
+      "preprint": false,
+      "retractada": false,
+      "diseno": "revisión narrativa",
+      "nivel": 0.45,
+      "relevancia": 0.8251,
+      "puntaje": 0.7213,
+      "n_muestra": null,
+      "n_estudios": null,
+      "estimadores": false,
+      "conclusion": "One of the most important challenges in the management of CIDP is the monitoring of clinical changes after treatment initiation. The combination of biomarkers that allow an accurate understanding of the disease is crucial for the optimal management of CIDP.",
+      "resultados_clave": []
+    },
+    {
+      "id": "PMID:40452261",
+      "titulo": "Role of Imaging in Chronic Inflammatory Demyelinating Polyneuropathy: A Systematic Review.",
+      "abstract": "Introduction: Chronic Inflammatory Demyelinating Polyneuropathy (CIDP) is a treatable immune-mediated neuropathy with a relapsing-remitting course and symmetrical proximal and distal weakness. Diagnosis relies on nerve conduction studies (NCS) to detect demyelination but can be difficult in atypical cases. In such instances, nerve ultrasound (US) and MRI of the brachial and lumbosacral plexuses help improve diagnostic accuracy and guide treatment. This review examines the role of imaging in CIDP, focusing on its contribution to diagnosis, prognosis, and follow-up. Methods: A total of 183 articles were identified in the PubMed database using the search terms: \"CIDP AND imaging,\" \"CIDP AND ULTRASOUND,\" and \"CIDP AND MRI.\" Based on predefined inclusion criteria, 106 articles were selected for review (63 related to US and 43 to MRI). From each included study, data were extracted on the study population, imaging protocols used, outcome measures applied, and main findings relevant to the review's aim. Results: The most used ultrasound and MRI protocols, along with their associated outcome measures, are discussed. Furthermore, the roles of each imaging modality in diagnosis, prognosis, and follow-up are analysed. Conclusion: Although NCS remain the primary instrumental test for the diagnosis of CIDP, US and MRI can be valuable adjuncts in cases with diagnostic uncertainty. Additionally, these imaging modalities may be more useful than NCS in prognostic evaluation, helping in predict treatment response and monitoring subclinical disease activity.",
+      "pmid": "40452261",
+      "pmcid": "PMC12127570",
+      "doi": "10.1111/ene.70226",
+      "revista": "Eur J Neurol",
+      "anio": 2025,
+      "volumen": "32",
+      "numero": "6",
+      "paginas": "e70226",
+      "autores": [
+        "Tozza S",
+        "Cassano E",
+        "Erra C",
+        "Muto M",
+        "Habetswallner F",
+        "Manganelli F"
+      ],
+      "tipos": [
+        "Journal Article",
+        "Systematic Review"
+      ],
+      "idioma": "eng",
+      "secciones": [
+        {
+          "label": "Introduction",
+          "texto": "Chronic Inflammatory Demyelinating Polyneuropathy (CIDP) is a treatable immune-mediated neuropathy with a relapsing-remitting course and symmetrical proximal and distal weakness. Diagnosis relies on nerve conduction studies (NCS) to detect demyelination but can be difficult in atypical cases. In such instances, nerve ultrasound (US) and MRI of the brachial and lumbosacral plexuses help improve diagnostic accuracy and guide treatment. This review examines the role of imaging in CIDP, focusing on its contribution to diagnosis, prognosis, and follow-up."
+        },
+        {
+          "label": "Methods",
+          "texto": "A total of 183 articles were identified in the PubMed database using the search terms: \"CIDP AND imaging,\" \"CIDP AND ULTRASOUND,\" and \"CIDP AND MRI.\" Based on predefined inclusion criteria, 106 articles were selected for review (63 related to US and 43 to MRI). From each included study, data were extracted on the study population, imaging protocols used, outcome measures applied, and main findings relevant to the review's aim."
+        },
+        {
+          "label": "Results",
+          "texto": "The most used ultrasound and MRI protocols, along with their associated outcome measures, are discussed. Furthermore, the roles of each imaging modality in diagnosis, prognosis, and follow-up are analysed."
+        },
+        {
+          "label": "Conclusion",
+          "texto": "Although NCS remain the primary instrumental test for the diagnosis of CIDP, US and MRI can be valuable adjuncts in cases with diagnostic uncertainty. Additionally, these imaging modalities may be more useful than NCS in prognostic evaluation, helping in predict treatment response and monitoring subclinical disease activity."
+        }
+      ],
+      "fuentes": [
+        "pubmed"
+      ],
+      "texto_completo_libre": true,
+      "preprint": false,
+      "retractada": false,
+      "diseno": "revisión sistemática/metaanálisis",
+      "nivel": 0.9,
+      "relevancia": 0.5864,
+      "puntaje": 0.7012,
+      "n_muestra": null,
+      "n_estudios": 183,
+      "estimadores": true,
+      "conclusion": "Although NCS remain the primary instrumental test for the diagnosis of CIDP, US and MRI can be valuable adjuncts in cases with diagnostic uncertainty. Additionally, these imaging modalities may be more useful than NCS in prognostic evaluation, helping in predict treatment response and monitoring subclinical disease activity.",
+      "resultados_clave": []
+    },
+    {
+      "id": "PMID:41145127",
+      "titulo": "Nerve Ultrasound in Pediatric Polyneuropathies: A Systematic Review.",
+      "abstract": "The diagnosis of peripheral polyneuropathy in children and the differential diagnosis among its various forms often present a challenge, also because electrodiagnostic studies can be painful and sometimes yield inconclusive results. This systematic review examines the role of nerve ultrasound (n-US) in the diagnosis and follow-up of pediatric polyneuropathies. We searched PubMed and Embase from 1975 to April 1, 2025. Included studies assessed patients aged ≤ 18 years with clinically and neurophysiologically confirmed polyneuropathy, providing pediatric-specific qualitative or quantitative n-US findings. Eighteen studies met the inclusion criteria. Six focused on acquired inflammatory polyneuropathies (three on Guillain-Barré Syndrome [GBS], three on Chronic Inflammatory Demyelinating Polyneuropathy [CIDP]), eight on Charcot-Marie-Tooth disease (CMT), two on lysosomal storage disorders, one on Autosomal Recessive Spastic Ataxia of Charlevoix-Saguenay (ARSACS), and one on mixed etiologies. Most (n = 7) were case reports. Cross-sectional area and nerve enlargement (NE) distribution were the main parameters evaluated. Marked, diffuse NE was found in demyelinating CMT and lysosomal disorders; CIDP showed diffuse and multifocal NE; GBS presented mild and proximal NE. No NE was reported in axonal CMT or ARSACS. Few studies assessed echogenicity or fascicular structure; none evaluated vascularization. n-US shows promise in differentiating demyelinating conditions such as CMT, CIDP, GBS, and certain metabolic syndromes in children. However, further age-matched control studies are needed, given that nerve growth and myelination peak between 15 and 17 years. Future research should explore n-US as an early diagnostic, screening, and follow-up tool.",
+      "pmid": "41145127",
+      "pmcid": "",
+      "doi": "10.1055/a-2731-5029",
+      "revista": "Neuropediatrics",
+      "anio": 2026,
+      "volumen": "57",
+      "numero": "2",
+      "paginas": "81-89",
+      "autores": [
+        "Maccora S",
+        "Stefano VD",
+        "Brighina F",
+        "Sacconi S",
+        "Puma A"
+      ],
+      "tipos": [
+        "Journal Article",
+        "Systematic Review"
+      ],
+      "idioma": "eng",
+      "secciones": [
+        {
+          "label": "",
+          "texto": "The diagnosis of peripheral polyneuropathy in children and the differential diagnosis among its various forms often present a challenge, also because electrodiagnostic studies can be painful and sometimes yield inconclusive results. This systematic review examines the role of nerve ultrasound (n-US) in the diagnosis and follow-up of pediatric polyneuropathies. We searched PubMed and Embase from 1975 to April 1, 2025. Included studies assessed patients aged ≤ 18 years with clinically and neurophysiologically confirmed polyneuropathy, providing pediatric-specific qualitative or quantitative n-US findings. Eighteen studies met the inclusion criteria. Six focused on acquired inflammatory polyneuropathies (three on Guillain-Barré Syndrome [GBS], three on Chronic Inflammatory Demyelinating Polyneuropathy [CIDP]), eight on Charcot-Marie-Tooth disease (CMT), two on lysosomal storage disorders, one on Autosomal Recessive Spastic Ataxia of Charlevoix-Saguenay (ARSACS), and one on mixed etiologies. Most (n = 7) were case reports. Cross-sectional area and nerve enlargement (NE) distribution were the main parameters evaluated. Marked, diffuse NE was found in demyelinating CMT and lysosomal disorders; CIDP showed diffuse and multifocal NE; GBS presented mild and proximal NE. No NE was reported in axonal CMT or ARSACS. Few studies assessed echogenicity or fascicular structure; none evaluated vascularization. n-US shows promise in differentiating demyelinating conditions such as CMT, CIDP, GBS, and certain metabolic syndromes in children. However, further age-matched control studies are needed, given that nerve growth and myelination peak between 15 and 17 years. Future research should explore n-US as an early diagnostic, screening, and follow-up tool."
+        }
+      ],
+      "fuentes": [
+        "pubmed"
+      ],
+      "texto_completo_libre": false,
+      "preprint": false,
+      "retractada": false,
+      "diseno": "revisión sistemática/metaanálisis",
+      "nivel": 0.9,
+      "relevancia": 0.5746,
+      "puntaje": 0.6935,
+      "n_muestra": 7,
+      "n_estudios": null,
+      "estimadores": true,
+      "conclusion": "However, further age-matched control studies are needed, given that nerve growth and myelination peak between 15 and 17 years. Future research should explore n-US as an early diagnostic, screening, and follow-up tool.",
+      "resultados_clave": [
+        "Included studies assessed patients aged ≤ 18 years with clinically and neurophysiologically confirmed polyneuropathy, providing pediatric-specific qualitative or quantitative n-US findings.",
+        "However, further age-matched control studies are needed, given that nerve growth and myelination peak between 15 and 17 years.",
+        "We searched PubMed and Embase from 1975 to April 1, 2025."
+      ]
+    },
+    {
+      "id": "PMID:35153986",
+      "titulo": "Nerve Ultrasound Distinguishes Non-Inflammatory Axonal Polyneuropathy From Inflammatory Polyneuropathy With Secondary Axonal Damage.",
+      "abstract": "Introduction: Chronic inflammatory demyelinating polyneuropathy (CIDP) may have a similar clinical and electrophysiological presentation to non-inflammatory axonal polyneuropathies (NIAPs) when secondary axonal damage occurs. We aimed to investigate if nerve ultrasound can help to differentiate CIDP with additional secondary axonal damage from NIAP. Methods: In a retrospective analysis, the cross-sectional area (CSA) of the peripheral nerves measured by ultrasound at six suitable nerve sites was compared in 95 patients with CIDP and 82 patients with NIAP. We developed the adjusted Bochum ultrasound score (aBUS) ranging from 0 to 6 resulting from the number of sites with enlarged CSA (median, ulnar, radial, and sural nerve). Results: The mean CSA of patients with CIDP was enlarged at all six nerve sites compared with the mean CSA of patients with NIAP. A total of 21 patients with CIDP did not meet 2010 electrophysiological diagnostic criteria (European Academy of Neurology/Peripheral Nerve Society Guideline, EFNS/PNS criteria) for CIDP at examination timepoint but only in further follow-up, while 25 patients with NIAP fulfilled electrophysiological EFNS/PNS criteria for CIDP as \"possible\" or \"probable\" CIDP. To increase diagnostic power, we included aBUS measured by ultrasound in patients classified as \"possible\" or \"probable\" resulting in an improved specificity of 94% and a sensitivity of 59%, compared to a specificity of the EFNS/PNS criteria alone of 60% and sensitivity of 78%. Conclusion: Using nerve ultrasound and the aBUS as a complementary method to distinguish CIDP from NIAP in case of secondary axonal damage can facilitate the diagnosis of CIDP.",
+      "pmid": "35153986",
+      "pmcid": "PMC8831897",
+      "doi": "10.3389/fneur.2021.809359",
+      "revista": "Front Neurol",
+      "anio": 2021,
+      "volumen": "12",
+      "numero": "",
+      "paginas": "809359",
+      "autores": [
+        "Brünger J",
+        "Motte J",
+        "Grüter T",
+        "Mork H",
+        "Bulut Y",
+        "Carolus A",
+        "Athanasopoulos D",
+        "Yoon MS",
+        "Gold R",
+        "Pitarokoili K",
+        "Fisse AL"
+      ],
+      "tipos": [
+        "Journal Article"
+      ],
+      "idioma": "eng",
+      "secciones": [
+        {
+          "label": "Introduction",
+          "texto": "Chronic inflammatory demyelinating polyneuropathy (CIDP) may have a similar clinical and electrophysiological presentation to non-inflammatory axonal polyneuropathies (NIAPs) when secondary axonal damage occurs. We aimed to investigate if nerve ultrasound can help to differentiate CIDP with additional secondary axonal damage from NIAP."
+        },
+        {
+          "label": "Methods",
+          "texto": "In a retrospective analysis, the cross-sectional area (CSA) of the peripheral nerves measured by ultrasound at six suitable nerve sites was compared in 95 patients with CIDP and 82 patients with NIAP. We developed the adjusted Bochum ultrasound score (aBUS) ranging from 0 to 6 resulting from the number of sites with enlarged CSA (median, ulnar, radial, and sural nerve)."
+        },
+        {
+          "label": "Results",
+          "texto": "The mean CSA of patients with CIDP was enlarged at all six nerve sites compared with the mean CSA of patients with NIAP. A total of 21 patients with CIDP did not meet 2010 electrophysiological diagnostic criteria (European Academy of Neurology/Peripheral Nerve Society Guideline, EFNS/PNS criteria) for CIDP at examination timepoint but only in further follow-up, while 25 patients with NIAP fulfilled electrophysiological EFNS/PNS criteria for CIDP as \"possible\" or \"probable\" CIDP. To increase diagnostic power, we included aBUS measured by ultrasound in patients classified as \"possible\" or \"probable\" resulting in an improved specificity of 94% and a sensitivity of 59%, compared to a specificity of the EFNS/PNS criteria alone of 60% and sensitivity of 78%."
+        },
+        {
+          "label": "Conclusion",
+          "texto": "Using nerve ultrasound and the aBUS as a complementary method to distinguish CIDP from NIAP in case of secondary axonal damage can facilitate the diagnosis of CIDP."
+        }
+      ],
+      "fuentes": [
+        "pubmed"
+      ],
+      "texto_completo_libre": true,
+      "preprint": false,
+      "retractada": false,
+      "diseno": "estudio original",
+      "nivel": 0.45,
+      "relevancia": 0.6732,
+      "puntaje": 0.6226,
+      "n_muestra": 95,
+      "n_estudios": null,
+      "estimadores": true,
+      "conclusion": "Using nerve ultrasound and the aBUS as a complementary method to distinguish CIDP from NIAP in case of secondary axonal damage can facilitate the diagnosis of CIDP.",
+      "resultados_clave": [
+        "A total of 21 patients with CIDP did not meet 2010 electrophysiological diagnostic criteria (European Academy of Neurology/Peripheral Nerve Society Guideline, EFNS/PNS criteria) for CIDP at examination timepoint but only in further follow-up, while 25 patients with NIAP fulfilled electrophysiological EFNS/PNS criteria for CIDP as \"possible\" or…",
+        "To increase diagnostic power, we included aBUS measured by ultrasound in patients classified as \"possible\" or \"probable\" resulting in an improved specificity of 94% and a sensitivity of 59%, compared to a specificity of the EFNS/PNS criteria alone of 60% and sensitivity of 78%."
+      ]
+    },
+    {
+      "id": "PMID:37143208",
+      "titulo": "Focused Neuromuscular Ultrasound Approach for the Diagnosis of Chronic Inflammatory Demyelinating Polyneuropathy.",
+      "abstract": "Purpose: Previous ultrasonographic studies of individuals with chronic inflammatory demyelinating polyneuropathy (CIDP) have shown nerve enlargement at several sites. This prospective study compares only the bilateral median and ulnar nerves of individuals with CIDP with reference values to determine the clinical usefulness of this focused approach as a diagnostic tool. Methods: The cross-sectional area, echogenicity, and vascularity of the bilateral median and ulnar nerves of 25 subjects with CIDP were measured using ultrasound. Nineteen had typical CIDP based on the European Federation of Neurological Societies and the Peripheral Nerve Society guidelines, whereas six had atypical CIDP and were diagnosed based on clinical impression. Results: Focal nerve enlargement was found in at least one segment in all subjects. Subjects with typical CIDP had larger cross-sectional areas compared with subjects with atypical CIDP. Conclusion: A focused ultrasound study, involving only the median and ulnar nerves, is sensitive for the detection of nerve enlargement in CIDP. Measuring the cross-sectional area of the median and ulnar nerves is clinically feasible and may help establish the diagnosis of CIDP.",
+      "pmid": "37143208",
+      "pmcid": "",
+      "doi": "10.1097/WNP.0000000000000905",
+      "revista": "J Clin Neurophysiol",
+      "anio": 2023,
+      "volumen": "40",
+      "numero": "4",
+      "paginas": "378-381",
+      "autores": [
+        "Yun CJ",
+        "Crump N",
+        "Puckett M",
+        "Cartwright MS"
+      ],
+      "tipos": [
+        "Journal Article"
+      ],
+      "idioma": "eng",
+      "secciones": [
+        {
+          "label": "Purpose",
+          "texto": "Previous ultrasonographic studies of individuals with chronic inflammatory demyelinating polyneuropathy (CIDP) have shown nerve enlargement at several sites. This prospective study compares only the bilateral median and ulnar nerves of individuals with CIDP with reference values to determine the clinical usefulness of this focused approach as a diagnostic tool."
+        },
+        {
+          "label": "Methods",
+          "texto": "The cross-sectional area, echogenicity, and vascularity of the bilateral median and ulnar nerves of 25 subjects with CIDP were measured using ultrasound. Nineteen had typical CIDP based on the European Federation of Neurological Societies and the Peripheral Nerve Society guidelines, whereas six had atypical CIDP and were diagnosed based on clinical impression."
+        },
+        {
+          "label": "Results",
+          "texto": "Focal nerve enlargement was found in at least one segment in all subjects. Subjects with typical CIDP had larger cross-sectional areas compared with subjects with atypical CIDP."
+        },
+        {
+          "label": "Conclusion",
+          "texto": "A focused ultrasound study, involving only the median and ulnar nerves, is sensitive for the detection of nerve enlargement in CIDP. Measuring the cross-sectional area of the median and ulnar nerves is clinically feasible and may help establish the diagnosis of CIDP."
+        }
+      ],
+      "fuentes": [
+        "pubmed"
+      ],
+      "texto_completo_libre": false,
+      "preprint": false,
+      "retractada": false,
+      "diseno": "estudio original",
+      "nivel": 0.45,
+      "relevancia": 0.6701,
+      "puntaje": 0.6206,
+      "n_muestra": 25,
+      "n_estudios": null,
+      "estimadores": false,
+      "conclusion": "A focused ultrasound study, involving only the median and ulnar nerves, is sensitive for the detection of nerve enlargement in CIDP. Measuring the cross-sectional area of the median and ulnar nerves is clinically feasible and may help establish the diagnosis of CIDP.",
+      "resultados_clave": []
+    },
+    {
+      "id": "PMID:36182621",
+      "titulo": "French recommendations for the management of adult & pediatric chronic inflammatory demyelinating polyradiculoneuropathy (CIDP).",
+      "abstract": "Chronic inflammatory demyelinating polyradiculoneuropathy (CIDP) is a rare autoimmune disorder of the peripheral nervous system, primarily affecting the myelin sheath. The pathophysiology of CIDP is complex, involving both humoral and cellular immunity. The diagnosis of CIDP should be suspected in patients with symmetrical proximal and distal motor weakness and distal sensory symptoms of progressive onset, associated with decreased/abolished tendon reflexes. Treatments include intraveinous immunoglobulins, steroids and plasma exchange, with usually an induction phase followed by a maintenance therapy with progressive weaning. Treatment should be rapidly initiated to prevent axonal degeneration, which may compromise recovery. CIDP outcome is variable, ranging from mild distal paresthesiae to complete loss of ambulation. There have been several breakthroughs in the diagnosis and management of CIDP the past ten years, e.g. discovery of antibodies against the node of Ranvier, contribution of nerve ultrasound and magnetic resonance imaging to diagnosis, and demonstration of subcutaneous immunoglobulins efficiency. This led us to elaborate French recommendations for the management of adult & pediatric CIDP patients. These recommendations include diagnosis assessment, treatment, and follow-up.",
+      "pmid": "36182621",
+      "pmcid": "",
+      "doi": "10.1016/j.neurol.2022.06.004",
+      "revista": "Rev Neurol (Paris)",
+      "anio": 2022,
+      "volumen": "178",
+      "numero": "9",
+      "paginas": "953-968",
+      "autores": [
+        "Fargeot G",
+        "Gitiaux C",
+        "Magy L",
+        "Pereon Y",
+        "Delmont E",
+        "Viala K",
+        "Echaniz-Laguna A"
+      ],
+      "tipos": [
+        "Practice Guideline",
+        "Journal Article"
+      ],
+      "idioma": "eng",
+      "secciones": [
+        {
+          "label": "",
+          "texto": "Chronic inflammatory demyelinating polyradiculoneuropathy (CIDP) is a rare autoimmune disorder of the peripheral nervous system, primarily affecting the myelin sheath. The pathophysiology of CIDP is complex, involving both humoral and cellular immunity. The diagnosis of CIDP should be suspected in patients with symmetrical proximal and distal motor weakness and distal sensory symptoms of progressive onset, associated with decreased/abolished tendon reflexes. Treatments include intraveinous immunoglobulins, steroids and plasma exchange, with usually an induction phase followed by a maintenance therapy with progressive weaning. Treatment should be rapidly initiated to prevent axonal degeneration, which may compromise recovery. CIDP outcome is variable, ranging from mild distal paresthesiae to complete loss of ambulation. There have been several breakthroughs in the diagnosis and management of CIDP the past ten years, e.g. discovery of antibodies against the node of Ranvier, contribution of nerve ultrasound and magnetic resonance imaging to diagnosis, and demonstration of subcutaneous immunoglobulins efficiency. This led us to elaborate French recommendations for the management of adult & pediatric CIDP patients. These recommendations include diagnosis assessment, treatment, and follow-up."
+        }
+      ],
+      "fuentes": [
+        "pubmed"
+      ],
+      "texto_completo_libre": false,
+      "preprint": false,
+      "retractada": false,
+      "diseno": "guía/consenso",
+      "nivel": 1.0,
+      "relevancia": 0.4064,
+      "puntaje": 0.6142,
+      "n_muestra": null,
+      "n_estudios": null,
+      "estimadores": false,
+      "conclusion": "This led us to elaborate French recommendations for the management of adult & pediatric CIDP patients. These recommendations include diagnosis assessment, treatment, and follow-up.",
+      "resultados_clave": []
+    },
+    {
+      "id": "PMID:42377577",
+      "titulo": "Charcot-Marie-Tooth type 4 C misdiagnosed as CIDP: electrodiagnostic pitfalls and genetic confirmation.",
+      "abstract": "Background and objective: Charcot-Marie-Tooth disease type 4 C (CMT4C) is a hereditary neuropathy caused by recessive mutations in the SH3TC2 gene. Due to overlapping symptoms with acquired conditions like chronic inflammatory demyelinating polyneuropathy (CIDP), misdiagnosis is common. This study examines the clinical and electrophysiological profiles of five patients initially misdiagnosed with CIDP but later confirmed to have CMT4C. Methods: Data were collected on demographics, clinical features, nerve conduction studies, and ultrasonographic findings. Patients underwent genetic testing to identify pathogenic SH3TC2 variants. Results: All patients exhibited early-onset symptoms, including progressive muscle weakness, pes cavus, and spinal deformities; some had a positive family history of neuropathy, while others appeared to be sporadic cases. Nerve conduction studies revealed diminished motor and sensory amplitudes and conduction velocities, with conduction block or temporal dispersion, subsequently reappraised as temporal dispersion-related pseudo-block in the tibial nerves. Genetic testing confirmed SH3TC2 mutations in all cases. Nerve ultrasonography showed an increase in cross-sectional area (CSA), indicating nerve hypertrophy, a characteristic observed in both Charcot-Marie-Tooth disease (CMT) and Chronic Inflammatory Demyelinating Polyneuropathy (CIDP). Conclusion: Accurate distinction between CMT4C and CIDP is critical to avoid ineffective treatments. Genetic testing should be considered in refractory or atypical cases of presumed immune-mediated neuropathy. This study highlights that the initial misdiagnosis was driven by electrodiagnostic findings rather than the clinical picture, and identifies specific clues (early onset, parental consanguinity, scoliosis, and poor response to immunotherapy) that should prompt clinicians to pursue genetic testing before attributing NCS findings to an acquired inflammatory process.",
+      "pmid": "42377577",
+      "pmcid": "",
+      "doi": "10.1007/s10048-026-00917-z",
+      "revista": "Neurogenetics",
+      "anio": 2026,
+      "volumen": "27",
+      "numero": "1",
+      "paginas": "48",
+      "autores": [
+        "Okhovat AA",
+        "Shahriyari H",
+        "Ghasemi A",
+        "Dirandeh E",
+        "Karimi N",
+        "Ziaadini B",
+        "Panahi A",
+        "Kahrizi K",
+        "Najmabadi H",
+        "Nafissi S",
+        "Fatehi F"
+      ],
+      "tipos": [
+        "Journal Article"
+      ],
+      "idioma": "eng",
+      "secciones": [
+        {
+          "label": "Background and objective",
+          "texto": "Charcot-Marie-Tooth disease type 4 C (CMT4C) is a hereditary neuropathy caused by recessive mutations in the SH3TC2 gene. Due to overlapping symptoms with acquired conditions like chronic inflammatory demyelinating polyneuropathy (CIDP), misdiagnosis is common. This study examines the clinical and electrophysiological profiles of five patients initially misdiagnosed with CIDP but later confirmed to have CMT4C."
+        },
+        {
+          "label": "Methods",
+          "texto": "Data were collected on demographics, clinical features, nerve conduction studies, and ultrasonographic findings. Patients underwent genetic testing to identify pathogenic SH3TC2 variants."
+        },
+        {
+          "label": "Results",
+          "texto": "All patients exhibited early-onset symptoms, including progressive muscle weakness, pes cavus, and spinal deformities; some had a positive family history of neuropathy, while others appeared to be sporadic cases. Nerve conduction studies revealed diminished motor and sensory amplitudes and conduction velocities, with conduction block or temporal dispersion, subsequently reappraised as temporal dispersion-related pseudo-block in the tibial nerves. Genetic testing confirmed SH3TC2 mutations in all cases. Nerve ultrasonography showed an increase in cross-sectional area (CSA), indicating nerve hypertrophy, a characteristic observed in both Charcot-Marie-Tooth disease (CMT) and Chronic Inflammatory Demyelinating Polyneuropathy (CIDP)."
+        },
+        {
+          "label": "Conclusion",
+          "texto": "Accurate distinction between CMT4C and CIDP is critical to avoid ineffective treatments. Genetic testing should be considered in refractory or atypical cases of presumed immune-mediated neuropathy. This study highlights that the initial misdiagnosis was driven by electrodiagnostic findings rather than the clinical picture, and identifies specific clues (early onset, parental consanguinity, scoliosis, and poor response to immunotherapy) that should prompt clinicians to pursue genetic testing before attributing NCS findings to an acquired inflammatory process."
+        }
+      ],
+      "fuentes": [
+        "europepmc"
+      ],
+      "texto_completo_libre": false,
+      "preprint": false,
+      "retractada": false,
+      "diseno": "estudio original",
+      "nivel": 0.45,
+      "relevancia": 0.6244,
+      "puntaje": 0.5909,
+      "n_muestra": null,
+      "n_estudios": null,
+      "estimadores": true,
+      "conclusion": "Accurate distinction between CMT4C and CIDP is critical to avoid ineffective treatments. Genetic testing should be considered in refractory or atypical cases of presumed immune-mediated neuropathy. This study highlights that the initial misdiagnosis was driven by electrodiagnostic findings rather than the clinical picture, and identifies specific clues (early onset, parental consanguinity, scoliosis, and poor response to immunotherapy) that should prompt clinicians to pursue genetic testing…",
+      "resultados_clave": [
+        "Genetic testing confirmed SH3TC2 mutations in all cases."
+      ]
+    },
+    {
+      "id": "PMID:39681614",
+      "titulo": "Nerve ultrasound helps to distinguish CIDP patients with diabetes from patients with diabetic polyneuropathy.",
+      "abstract": "Diabetic polyneuropathy (DPN) shares overlapping clinical and electrodiagnostic features with chronic inflammatory demyelinating polyneuropathy (CIDP), which complicates the differential diagnosis of CIDP in diabetic patients. 32 patients with diabetes mellitus and CIDP, 68 patients with CIDP without diabetes, 83 patients with DPN, and 28 diabetic patients without polyneuropathy were examined using clinical scores (Overall Neuropathy Limitation Scale (ONLS), Neuropathy Symptom Score, Neuropathy Deficit Score), nerve conduction studies, and nerve ultrasound (Ultrasound Pattern Sum Score (UPSS)). The ONLS was significantly higher in the CIDP patients with diabetes than in DPN (median [interquartile range]: 4.0 [3.0] vs. 0 [1.0], p < 0.001) as well as the UPSS (4.0 [6.0] vs. 0 [2.9], p < 0.001). Multiple binary logistic regression revealed UPSS and ONLS as statistically significant predictors to differentiate between CIDP with diabetes and DPN. Receiver operating characteristic curve analysis showed the ONLS with an area under the curve (AUC) of 0.918 (95% CI: 0.868-0.0.967, p < 0.001). The UPSS total score had an AUC of 0.826 (95% CI: 0.743-0.909, p < 0.001). An UPSS ≥ 2.5 had a sensitivity of 77.4% and a specificity of 68.7% to detect CIDP. An ONLS ≥ 1.5 had a sensitivity of 87.1% and a specificity of 81.9% to detect CIDP. ROC curve analysis of a composite score of ONLS and UPSS revealed an AUC of 0.959 (95% CI: 0.928-0.991, p < 0.001). CIDP is an important differential diagnosis in people with diabetes mellitus. This study reports that the UPSS is well suited to differentiate between DPN and CIDP.",
+      "pmid": "39681614",
+      "pmcid": "PMC11649805",
+      "doi": "10.1038/s41598-024-82235-8",
+      "revista": "Sci Rep",
+      "anio": 2024,
+      "volumen": "14",
+      "numero": "1",
+      "paginas": "30504",
+      "autores": [
+        "Heiling B",
+        "Kneer K",
+        "He W",
+        "Lehmann T",
+        "Müller N",
+        "Kloos C",
+        "Grimm A",
+        "Axer H"
+      ],
+      "tipos": [
+        "Journal Article"
+      ],
+      "idioma": "eng",
+      "secciones": [
+        {
+          "label": "",
+          "texto": "Diabetic polyneuropathy (DPN) shares overlapping clinical and electrodiagnostic features with chronic inflammatory demyelinating polyneuropathy (CIDP), which complicates the differential diagnosis of CIDP in diabetic patients. 32 patients with diabetes mellitus and CIDP, 68 patients with CIDP without diabetes, 83 patients with DPN, and 28 diabetic patients without polyneuropathy were examined using clinical scores (Overall Neuropathy Limitation Scale (ONLS), Neuropathy Symptom Score, Neuropathy Deficit Score), nerve conduction studies, and nerve ultrasound (Ultrasound Pattern Sum Score (UPSS)). The ONLS was significantly higher in the CIDP patients with diabetes than in DPN (median [interquartile range]: 4.0 [3.0] vs. 0 [1.0], p < 0.001) as well as the UPSS (4.0 [6.0] vs. 0 [2.9], p < 0.001). Multiple binary logistic regression revealed UPSS and ONLS as statistically significant predictors to differentiate between CIDP with diabetes and DPN. Receiver operating characteristic curve analysis showed the ONLS with an area under the curve (AUC) of 0.918 (95% CI: 0.868-0.0.967, p < 0.001). The UPSS total score had an AUC of 0.826 (95% CI: 0.743-0.909, p < 0.001). An UPSS ≥ 2.5 had a sensitivity of 77.4% and a specificity of 68.7% to detect CIDP. An ONLS ≥ 1.5 had a sensitivity of 87.1% and a specificity of 81.9% to detect CIDP. ROC curve analysis of a composite score of ONLS and UPSS revealed an AUC of 0.959 (95% CI: 0.928-0.991, p < 0.001). CIDP is an important differential diagnosis in people with diabetes mellitus. This study reports that the UPSS is well suited to differentiate between DPN and CIDP."
+        }
+      ],
+      "fuentes": [
+        "pubmed"
+      ],
+      "texto_completo_libre": true,
+      "preprint": false,
+      "retractada": false,
+      "diseno": "estudio original",
+      "nivel": 0.45,
+      "relevancia": 0.6179,
+      "puntaje": 0.5866,
+      "n_muestra": 83,
+      "n_estudios": null,
+      "estimadores": true,
+      "conclusion": "CIDP is an important differential diagnosis in people with diabetes mellitus. This study reports that the UPSS is well suited to differentiate between DPN and CIDP.",
+      "resultados_clave": [
+        "32 patients with diabetes mellitus and CIDP, 68 patients with CIDP without diabetes, 83 patients with DPN, and 28 diabetic patients without polyneuropathy were examined using clinical scores (Overall Neuropathy Limitation Scale (ONLS), Neuropathy Symptom Score, Neuropathy Deficit Score), nerve conduction studies, and nerve ultrasound (Ultrasound…",
+        "The ONLS was significantly higher in the CIDP patients with diabetes than in DPN (median [interquartile range]: 4.0 [3.0] vs. 0 [1.0], p < 0.001) as well as the UPSS (4.0 [6.0] vs. 0 [2.9], p < 0.001).",
+        "An UPSS ≥ 2.5 had a sensitivity of 77.4% and a specificity of 68.7% to detect CIDP."
+      ]
+    }
+  ]
+}
