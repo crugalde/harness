@@ -43,7 +43,7 @@ def test_protected_sections():
 
 def test_skills_discovery():
     idx = L.load_skills()
-    for name in ["pubmed_search", "build_docx", "build_pptx"]:
+    for name in ["pubmed_search", "pubmed_qa", "build_docx", "build_pptx"]:
         assert name in idx
 
 

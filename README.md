@@ -19,7 +19,7 @@ tools/read_emg.py             # de-identificación de estudios EMG (med)
 tools/decompose.py            # pipeline HD-sEMG (signals)
 tools/ha_setup.py             # wizard de conexión/diagnóstico de Home Assistant (home)
 tools/schedule_distill.py     # disparador periódico del autoaprendizaje (cron)
-skills/<nombre>/SKILL.md+tool.py   # pubmed_search · build_docx · build_pptx · home_assistant
+skills/<nombre>/SKILL.md+tool.py   # pubmed_qa · pubmed_search · build_docx · build_pptx · home_assistant
 evals/run_evals.py            # red de seguridad offline (routing, guardas, secciones protegidas)
 tests/test_harness.py         # pytest del núcleo
 shared/                       # rules/, notebooklm/, learning/, traces/, templates/
@@ -60,6 +60,22 @@ python tools/compose.py --spec spec.json --out deck.pptx --demo   # sin API (mar
 
 # Disparador periódico del autoaprendizaje (genera propuestas para todos los agentes)
 python tools/schedule_distill.py
+```
+
+## Preguntas científicas con evidencia (skill `pubmed_qa`)
+
+Responde una pregunta científica con una síntesis analizada y citada desde abstracts libres de
+PubMed y Europe PMC, y verifica que no haya citas ni cifras inventadas. Detalle en
+`skills/pubmed_qa/SKILL.md`; ejemplos verificados en `projects/2026-11-09_pubmed_qa/`.
+
+```bash
+# 1) paquete de evidencia (query en inglés)
+python3 skills/pubmed_qa/scripts/pubmed_qa.py buscar "¿pregunta?" --query "english query" --out DIR
+# 2) el agente redacta DIR/respuesta.md con skills/pubmed_qa/references/formato_respuesta.md
+# 3) verificación anti-alucinación + referencias Vancouver -> DIR/respuesta_final.md
+python3 skills/pubmed_qa/scripts/pubmed_qa.py verificar --dir DIR
+# todo en uno con la API de Anthropic
+python3 skills/pubmed_qa/scripts/pubmed_qa.py buscar "¿pregunta?" --llm --out DIR
 ```
 
 ## Home Assistant (subagente `home`)

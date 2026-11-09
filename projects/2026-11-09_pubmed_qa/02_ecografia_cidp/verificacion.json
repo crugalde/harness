@@ -1,0 +1,23 @@
+{
+  "ok": true,
+  "citas_validas": [
+    "PMID:31959710",
+    "PMID:40452261",
+    "PMID:36182621",
+    "PMID:35153986",
+    "PMID:39681614",
+    "PMID:42377577",
+    "PMID:41145127",
+    "PMID:37143208",
+    "PMID:40485489",
+    "PMID:35332927"
+  ],
+  "citas_fuera_del_paquete": [],
+  "dois_desconocidos": [],
+  "cobertura": 1.0,
+  "oraciones_sin_cita": [],
+  "cifras_sin_respaldo": [],
+  "secciones_faltantes": [],
+  "fuentes_no_usadas": [],
+  "avisos": []
+}
