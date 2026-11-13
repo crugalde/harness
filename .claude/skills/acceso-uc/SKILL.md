@@ -14,7 +14,7 @@ institucionales, así que el orquestador pide confirmación explícita por cada 
 - `UC_USER` y `UC_PASSWORD` en `~/.config/harness/.env` (o la ruta en `HARNESS_ENV_FILE`).
 
 Si faltan las credenciales, **nunca** las pidas por chat. Entrega al usuario estos comandos
-para que las guarde localmente (fuera de iCloud):
+para que las guarde localmente (fuera de carpetas sincronizadas):
 
 ```bash
 ENV_FILE="${HARNESS_ENV_FILE:-$HOME/.config/harness/.env}"

@@ -1,6 +1,6 @@
 """_comun.py — Utilidades compartidas por los scripts del orquestador científico.
 
-- Carga del .env local (fuera del repo y de iCloud): ~/.config/harness/.env, o la ruta en
+- Carga del .env local (fuera del repo y de carpetas sincronizadas como OneDrive o iCloud): ~/.config/harness/.env, o la ruta en
   HARNESS_ENV_FILE. Las variables ya exportadas en el shell tienen prioridad.
 - GET HTTP con reintentos y backoff (solo biblioteca estándar).
 - Normalización de DOI/títulos y formato de citas Vancouver.

@@ -66,10 +66,15 @@ O en lenguaje natural: el orquestador enruta solo y declara a qué agente delega
 
 ## Uso en Hermes (local)
 
-Ver [`hermes/README.md`](hermes/README.md). En resumen:
+Corre en el PC con NVIDIA (16 GB VRAM + 64 GB RAM), no en el Mac. Ver
+[`hermes/README.md`](hermes/README.md). En resumen:
 
 ```bash
-python3 scripts/instalar_hermes.py --modelo gemma4-64k --instalar-plugin
+python3 scripts/diagnostico_pc.py
+```
+
+```bash
+python3 scripts/instalar_hermes.py --modelo Qwen3.6-35B-A3B-UD-Q4_K_M --instalar-plugin
 ```
 
 ```bash
@@ -88,6 +93,9 @@ orquestador chat
 | Verificar | `python3 scripts/verificar.py workspace/resumenes_papers/x.md` |
 | Exportar | `python3 scripts/exportar.py x.md --pdf x.pdf --esquemas esquemas/` |
 | Proxy UC | `python3 scripts/fetch_uc_paper.py 10.1056/NEJMoa1800410 workspace/papers_locales/x.pdf` |
+| Diagnóstico del PC | `python3 scripts/diagnostico_pc.py --out memory/diagnostico_pc.md` |
+
+En Windows nativo, usa `python` en lugar de `python3`.
 
 Google Scholar no se consulta: no tiene API oficial. OpenAlex y Semantic Scholar son los
 sustitutos abiertos.

@@ -18,6 +18,12 @@
 |---|---|---|---|
 | _(vacío)_ | | | |
 
+## Equipos
+
+- **Hermes Agent (local):** PC de escritorio con NVIDIA de 16 GB de VRAM y 64 GB de RAM. No
+  corre en el Mac. Modelo recomendado: Qwen3.6 35B-A3B (MoE) del runtime local de Hermes, uno
+  solo para todos los perfiles. Detalle real del equipo: `scripts/diagnostico_pc.py`.
+
 ## Rutas frecuentes
 
 - PDFs locales: `workspace/papers_locales/`

@@ -119,6 +119,7 @@ Scripts en Python 3.10+, ejecutables desde la raíz del repo. Todos aceptan `--h
 | `scripts/verificar.py` | Control de calidad de resumen / análisis / respuesta | `python3 scripts/verificar.py archivo.md` |
 | `scripts/exportar.py` | `.md` → PDF/HTML; esquemas Mermaid → SVG | `python3 scripts/exportar.py x.md --pdf x.pdf --esquemas dir/` |
 | `scripts/fetch_uc_paper.py` | PDF tras paywall vía proxy UC (Gate de acción) | ver `.claude/skills/acceso-uc/` |
+| `scripts/diagnostico_pc.py` | Hardware del PC (GPU/VRAM, RAM, CUDA) y modelo local recomendado | `python3 scripts/diagnostico_pc.py` |
 | `scripts/instalar_hermes.py` | Genera e instala los perfiles de Hermes | `python3 scripts/instalar_hermes.py --modelo <modelo>` |
 
 Google Scholar no se consulta: no tiene API oficial. OpenAlex y Semantic Scholar cubren buena
@@ -131,6 +132,8 @@ parte de su índice; decláralo si el usuario pide Scholar explícitamente.
 - **Hermes Agent:** un perfil por agente más `orquestador`, generados desde `.claude/agents/`
   por `scripts/instalar_hermes.py`. El orquestador delega con `delegate_task` sobre
   `profile_routes` (plugin `advanced-delegation`). Requiere modelos con ≥64K de contexto.
+  Corre en el PC con NVIDIA 16 GB + 64 GB RAM (no en el Mac): un solo modelo local para todos
+  los perfiles y como máximo 2 subagentes en paralelo. Ver `hermes/README.md`.
 
 ## 9. Desarrollo
 

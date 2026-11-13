@@ -7,19 +7,24 @@ perfil `orquestador`, que delega en los otros 4 vía `delegation.backend: profil
 (plugin oficial `advanced-delegation`, requiere Hermes >= 0.22.5).
 
 Todos los perfiles:
-  - usan el modelo local indicado (endpoint OpenAI-compatible, p. ej. Ollama);
+  - usan el mismo modelo local: el runtime llama.cpp que gestiona Hermes (`llamacpp`, por
+    defecto) o un endpoint OpenAI-compatible propio como Ollama (`custom` + --base-url);
   - no tienen proveedor de respaldo en la nube (fallback_providers: []);
   - piden aprobación antes de escribir en su memoria (memory.write_approval: true);
   - arrancan en la raíz del repo (terminal.cwd), así cargan AGENTS.md como contexto;
   - leen las skills de .claude/skills (skills.external_dirs).
+El orquestador limita los subagentes simultáneos (--max-hijos, default 2): con una sola GPU
+todos comparten el mismo servidor y cada uno reserva su propio contexto de 64K.
 
-Uso:
+Uso (PC con NVIDIA 16 GB + 64 GB RAM; ver scripts/diagnostico_pc.py):
+    # 0) Descargar el modelo: hermes model -> Local models -> Qwen3.6 35B-A3B
     # 1) Solo generar y revisar (no toca Hermes):
-    python3 scripts/instalar_hermes.py --modelo gemma4-64k --solo-generar
+    python3 scripts/instalar_hermes.py --modelo Qwen3.6-35B-A3B-UD-Q4_K_M --solo-generar
     # 2) Generar e instalar los 5 perfiles + el plugin de delegación:
-    python3 scripts/instalar_hermes.py --modelo gemma4-64k --instalar-plugin
-    # Modelo distinto para el orquestador (recomendado: el más capaz que quepa):
-    python3 scripts/instalar_hermes.py --modelo qwen3-8b-64k --modelo-orquestador gemma4-64k
+    python3 scripts/instalar_hermes.py --modelo Qwen3.6-35B-A3B-UD-Q4_K_M --instalar-plugin
+    # Con Ollama en vez del runtime de Hermes:
+    python3 scripts/instalar_hermes.py --proveedor custom --modelo qwen36-64k \\
+        --base-url http://localhost:11434/v1
 
 El modelo debe tener >= 64K de contexto (Hermes lo exige al arrancar). Ver hermes/README.md.
 """
@@ -42,6 +47,7 @@ AGENTES_DIR = RAIZ / ".claude" / "agents"
 SKILLS_DIR = RAIZ / ".claude" / "skills"
 HERMES_MIN = ">=0.22.5"
 ORQUESTADOR = "orquestador"
+PROVEEDORES = ("llamacpp", "custom")
 
 
 @dataclass
@@ -91,13 +97,32 @@ def primera_frase(texto: str, largo: int = 220) -> str:
     return frase[: largo - 1].rsplit(" ", 1)[0].rstrip(" ,;:-") + "…"
 
 
-def config_yaml(modelo: str, base_url: str, rutas: list[Perfil] | None = None) -> str:
+def config_yaml(
+    modelo: str,
+    base_url: str,
+    rutas: list[Perfil] | None = None,
+    *,
+    proveedor: str = "custom",
+    max_hijos: int = 2,
+) -> str:
+    if proveedor == "llamacpp":
+        bloque_modelo = [
+            "model:",
+            "  provider: llamacpp           # runtime llama.cpp gestionado por Hermes",
+            f"  default: {_q(modelo)}",
+            "local_runtime:",
+            "  enabled: true                # arranca el servidor local; si ya corre, lo reutiliza",
+        ]
+    else:
+        bloque_modelo = [
+            "model:",
+            "  provider: custom",
+            f"  base_url: {_q(base_url)}",
+            f"  default: {_q(modelo)}",
+        ]
     lineas = [
         "# Generado por scripts/instalar_hermes.py — no editar a mano; regenerar.",
-        "model:",
-        "  provider: custom",
-        f"  base_url: {_q(base_url)}",
-        f"  default: {_q(modelo)}",
+        *bloque_modelo,
         "fallback_providers: []          # local estricto: nada cae a la nube si el modelo falla",
         "memory:",
         "  write_approval: true          # el agente no aprende sin tu visto bueno",
@@ -112,6 +137,7 @@ def config_yaml(modelo: str, base_url: str, rutas: list[Perfil] | None = None) -
         lineas += [
             "delegation:",
             "  backend: profile_routes      # requiere el plugin advanced-delegation",
+            f"  max_concurrent_children: {max_hijos}   # una GPU: pocos subagentes a la vez",
             "  backends:",
             "    profile_routes:",
             "      profiles:",
@@ -148,7 +174,19 @@ def version_repo() -> str:
     return m.group(1) if m else "0.0.0"
 
 
-def generar(salida: Path, modelo: str, modelo_orq: str, base_url: str) -> list[Perfil]:
+def generar(
+    salida: Path,
+    modelo: str,
+    modelo_orq: str,
+    base_url: str,
+    *,
+    proveedor: str = "custom",
+    max_hijos: int = 2,
+) -> list[Perfil]:
+    if proveedor not in PROVEEDORES:
+        raise ValueError(f"Proveedor no soportado: {proveedor} (opciones: {PROVEEDORES})")
+    if max_hijos < 1:
+        raise ValueError("--max-hijos debe ser >= 1")
     agentes = [leer_agente(r) for r in sorted(AGENTES_DIR.glob("*.md"))]
     if not agentes:
         raise ValueError(f"No hay agentes en {AGENTES_DIR}")
@@ -160,7 +198,8 @@ def generar(salida: Path, modelo: str, modelo_orq: str, base_url: str) -> list[P
         d = salida / perfil.nombre
         d.mkdir(parents=True)
         (d / "SOUL.md").write_text(perfil.soul, encoding="utf-8")
-        (d / "config.yaml").write_text(config_yaml(mod, base_url, rutas), encoding="utf-8")
+        texto = config_yaml(mod, base_url, rutas, proveedor=proveedor, max_hijos=max_hijos)
+        (d / "config.yaml").write_text(texto, encoding="utf-8")
         (d / "distribution.yaml").write_text(distribution_yaml(perfil, version), encoding="utf-8")
     return [orq] + agentes
 
@@ -191,12 +230,27 @@ def instalar(salida: Path, perfiles: list[Perfil], plugin: bool) -> bool:
 
 def main(argv: list[str] | None = None) -> int:
     ap = argparse.ArgumentParser(description="Genera e instala los perfiles de Hermes.")
-    ap.add_argument("--modelo", required=True, help="Modelo local de los 4 agentes (>=64K ctx)")
-    ap.add_argument("--modelo-orquestador", help="Modelo del orquestador (default: --modelo)")
+    ap.add_argument("--modelo", required=True, help="Modelo local de los 5 perfiles (>=64K ctx)")
+    ap.add_argument(
+        "--modelo-orquestador",
+        help="Modelo solo para el orquestador (default: --modelo). Con una GPU, evítalo",
+    )
+    ap.add_argument(
+        "--proveedor",
+        choices=PROVEEDORES,
+        default="llamacpp",
+        help="llamacpp = runtime local de Hermes (default); custom = Ollama u otro endpoint",
+    )
     ap.add_argument(
         "--base-url",
         default="http://localhost:11434/v1",
-        help="Endpoint OpenAI-compatible (default: Ollama local)",
+        help="Endpoint OpenAI-compatible si --proveedor custom (default: Ollama local)",
+    )
+    ap.add_argument(
+        "--max-hijos",
+        type=int,
+        default=2,
+        help="Subagentes simultáneos del orquestador (default 2; GPU única)",
     )
     ap.add_argument(
         "--salida",
@@ -212,9 +266,22 @@ def main(argv: list[str] | None = None) -> int:
     args = ap.parse_args(argv)
 
     salida = Path(args.salida).expanduser().resolve()
+    modelo_orq = args.modelo_orquestador or args.modelo
+    if modelo_orq != args.modelo:
+        log.warning(
+            "Dos modelos distintos (%s / %s): en una sola GPU no caben a la vez y el servidor "
+            "los alternará en cada delegación. Usa uno solo salvo que tengas VRAM para ambos.",
+            modelo_orq,
+            args.modelo,
+        )
     try:
         perfiles = generar(
-            salida, args.modelo, args.modelo_orquestador or args.modelo, args.base_url
+            salida,
+            args.modelo,
+            modelo_orq,
+            args.base_url,
+            proveedor=args.proveedor,
+            max_hijos=args.max_hijos,
         )
     except (ValueError, OSError) as exc:
         log.error("%s", exc)

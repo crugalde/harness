@@ -144,3 +144,33 @@ def test_primera_frase_no_corta_palabras():
     assert ih.primera_frase("Corta. Larga") == "Corta."
     largo = ih.primera_frase("palabra " * 60, largo=50)
     assert largo.endswith("palabra…") and len(largo) <= 50
+
+
+def test_instalar_hermes_llamacpp_y_max_hijos(tmp_path):
+    ih.generar(
+        tmp_path,
+        "Qwen3.6-35B-A3B-UD-Q4_K_M",
+        "Qwen3.6-35B-A3B-UD-Q4_K_M",
+        "",
+        proveedor="llamacpp",
+        max_hijos=3,
+    )
+    orq = yaml.safe_load((tmp_path / "orquestador" / "config.yaml").read_text(encoding="utf-8"))
+    assert orq["model"] == {"provider": "llamacpp", "default": "Qwen3.6-35B-A3B-UD-Q4_K_M"}
+    assert orq["local_runtime"]["enabled"] is True
+    assert orq["delegation"]["max_concurrent_children"] == 3
+    hoja = yaml.safe_load((tmp_path / "resumidor" / "config.yaml").read_text(encoding="utf-8"))
+    assert hoja["model"]["provider"] == "llamacpp" and "base_url" not in hoja["model"]
+
+
+def test_instalar_hermes_rechaza_opciones_invalidas(tmp_path):
+    with pytest.raises(ValueError, match="Proveedor"):
+        ih.generar(tmp_path, "m", "m", "", proveedor="openai")
+    with pytest.raises(ValueError, match="max-hijos"):
+        ih.generar(tmp_path, "m", "m", "", max_hijos=0)
+    assert (
+        ih.main(
+            ["--modelo", "m", "--salida", str(tmp_path / "x"), "--solo-generar", "--max-hijos", "0"]
+        )
+        == 1
+    )
