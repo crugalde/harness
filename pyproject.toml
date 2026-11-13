@@ -1,0 +1,22 @@
+[project]
+name = "orquestador-cientifico"
+version = "2.0.0"
+description = "Orquestador científico con 4 agentes (búsqueda, consulta, resumen e integración de evidencia) para Claude Code y Hermes Agent"
+requires-python = ">=3.10"
+
+[tool.black]
+line-length = 100
+target-version = ["py310"]
+
+[tool.ruff]
+line-length = 100
+target-version = "py310"
+
+[tool.ruff.lint]
+select = ["E", "F", "W", "I", "B", "UP"]
+ignore = ["E501"]  # black gobierna el largo; las cadenas largas en español no se parten
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+pythonpath = ["scripts"]
+addopts = "-q"
