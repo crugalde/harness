@@ -1,117 +1,119 @@
-# Harness — orquestador + subagentes con autoaprendizaje gobernado
+# Orquestador científico
 
-Harness de ingeniería de agentes: un orquestador (científico, crítico, creativo) que enruta a
-cinco subagentes con voz y dominio propios, todos con un ciclo de auto-modificación **gated** y
-journals separados. Agnóstico al runtime (estándar `AGENTS.md`).
+Un orquestador **analítico, científico e integrador** que coordina 4 agentes para trabajar con
+literatura científica. Corre en **Claude Code** y en **Hermes Agent** (local) con una sola
+definición: `AGENTS.md` + `.claude/agents/` + `.claude/skills/` + `scripts/`.
 
-## Mapa de archivos
+| # | Agente | Qué hace | Entrega |
+|---|---|---|---|
+| 1 | `buscador` | Busca papers en PubMed, OpenAlex, Semantic Scholar y en local (carpeta, Zotero, Obsidian) | `workspace/busquedas/<slug>/` |
+| 2 | `consultor` | Responde preguntas científicas con esa evidencia, citas y certeza | `workspace/respuestas/<slug>.md` |
+| 3 | `resumidor` | Resume un estudio (PDF, Word, .md): ficha, resumen estructurado, ≥2 aspectos positivos y ≥2 negativos, aporte global, hallazgos destacados con página | `workspace/resumenes_papers/<autor-año-slug>.md` |
+| 4 | `integrador` | Integra varios estudios: matriz, convergencias, divergencias, certeza, detalles a considerar y esquema Mermaid | `workspace/analisis_globales/<slug>.md` (+ PDF, SVG) |
 
-```
-AGENTS.md                     # orquestador (política raíz: R1–R13, gates, seguridad, §10)
-agents/<id>/AGENTS.md         # med · research · biz · signals · coach · docs · home (heredan de la raíz)
-agents/<id>/learning/         # journal + propuestas + changelog por subagente (separados)
-tools/loop.py                 # runtime: contexto jerárquico + router + guardas + ciclo de tools
-tools/self_improve.py         # ciclo de autoaprendizaje (capturar→destilar→proponer→aplicar)
-tools/tracing.py              # observabilidad: JSONL por día (tools, tokens, costo, latencia)
-tools/registry.py             # ensambla el ToolRegistry (auto-descubre skills + MCP)
-tools/compose.py              # motor de `docs`: integra subagentes → .docx/.pptx
-tools/read_emg.py             # de-identificación de estudios EMG (med)
-tools/decompose.py            # pipeline HD-sEMG (signals)
-tools/ha_setup.py             # wizard de conexión/diagnóstico de Home Assistant (home)
-tools/schedule_distill.py     # disparador periódico del autoaprendizaje (cron)
-skills/<nombre>/SKILL.md+tool.py   # pubmed_search · build_docx · build_pptx · home_assistant
-evals/run_evals.py            # red de seguridad offline (routing, guardas, secciones protegidas)
-tests/test_harness.py         # pytest del núcleo
-shared/                       # rules/, notebooklm/, learning/, traces/, templates/
-projects/<fecha_tema>/_estado.md   # continuidad entre sesiones (R5)
+```mermaid
+flowchart LR
+    U["Usuario"] --> O["Orquestador (AGENTS.md)"]
+    O --> B["1 buscador"]
+    O --> C["2 consultor"]
+    O --> R["3 resumidor"]
+    O --> I["4 integrador"]
+    B -->|"fuentes.json"| C
+    B -->|"selección (Gate 2)"| R
+    R -->|"resúmenes"| I
+    I -->|".md / .pdf / esquema"| U
 ```
 
-## Setup
+## Estructura
+
+```
+AGENTS.md                 # orquestador: identidad, enrutamiento, reglas C1–C12, gates
+CLAUDE.md                 # importa AGENTS.md para Claude Code
+.claude/
+  agents/                 # los 4 subagentes (también son el SOUL.md de cada perfil Hermes)
+  commands/               # /buscar-paper /responder /resumir /analizar
+  skills/                 # procedimientos + plantillas (compartidos por Claude Code y Hermes)
+hermes/README.md          # instalación de los perfiles de Hermes
+scripts/                  # Python: búsqueda, fuentes locales, extracción, verificación, exportación
+memory/                   # context_global.md (+ logs e intermedios, no versionados)
+workspace/                # entregables; papers_locales/ no se versiona
+tests/                    # pytest (sin red)
+```
+
+## Instalación
 
 ```bash
-python -m venv .venv && source .venv/bin/activate
+python3 -m venv .venv && source .venv/bin/activate
 pip install -r requirements.txt
-# Credenciales locales (fuera de iCloud). El harness las carga solo desde aquí:
-mkdir -p ~/.config/harness && chmod 600 ~/.config/harness/.env 2>/dev/null || true
-$EDITOR ~/.config/harness/.env   # añade ANTHROPIC_API_KEY, UC_USER, UC_PASSWORD, etc.
-# Override de ruta opcional: export HARNESS_ENV_FILE=/ruta/a/.env
+python3 -m playwright install chromium        # para exportar PDF y para acceso-uc
+mkdir -p ~/.config/harness && cp .env.example ~/.config/harness/.env && chmod 600 ~/.config/harness/.env
 ```
 
-## Uso
+Completa `~/.config/harness/.env` (al menos `ENTREZ_EMAIL`; `OBSIDIAN_VAULT` y Zotero si los
+usas). Para Zotero, deja el escritorio abierto con la API local activada
+(`curl http://localhost:23119/api/` debe responder).
+
+## Uso en Claude Code
+
+```text
+/buscar-paper myasthenia gravis efgartigimod desde 2018
+/responder ¿El efgartigimod reduce el MG-ADL frente a placebo en MG generalizada AChR+?
+/resumir workspace/papers_locales/howard-2021-adapt.pdf pdf
+/analizar eficacia de inhibidores de FcRn en MG workspace/resumenes_papers/ pdf esquema
+```
+
+O en lenguaje natural: el orquestador enruta solo y declara a qué agente delega.
+
+## Uso en Hermes (local)
+
+Corre en el PC con NVIDIA (16 GB VRAM + 64 GB RAM), no en el Mac. Ver
+[`hermes/README.md`](hermes/README.md). En resumen:
 
 ```bash
-# Ejecutar el harness (enruta solo, o fuerza subagente)
-python tools/loop.py "haz una revisión sobre transmisión neuromuscular" --agent research
-python tools/loop.py "interpreta este EMG" --project 2026-06-11_caso_x
-
-# Autoaprendizaje (por agente; raíz si se omite --agent)
-python tools/self_improve.py distill --agent signals
-python tools/self_improve.py list --agent signals
-python tools/self_improve.py apply <id> --agent signals    # Gate humano + git
-
-# Observabilidad y evals
-python tools/tracing.py                # resumen del día (sesiones, tool calls, costo)
-python evals/run_evals.py              # 0 = todo pasa; corre antes/después de cada apply
-pytest -q                              # tests del núcleo
-
-# Componer un entregable con el subagente docs (integra subagentes)
-python tools/compose.py --spec spec.json --out informe.docx
-python tools/compose.py --spec spec.json --out deck.pptx --demo   # sin API (marcadores)
-
-# Disparador periódico del autoaprendizaje (genera propuestas para todos los agentes)
-python tools/schedule_distill.py
+python3 scripts/diagnostico_pc.py
 ```
-
-## Home Assistant (subagente `home`)
-
-Integración con Home Assistant vía su API REST. El wizard `tools/ha_setup.py` conecta y
-diagnostica; la skill `skills/home_assistant/` expone las herramientas (`ha_states`,
-`ha_services`, `ha_call_service`) al subagente `home`.
-
-### Setup y verificación
 
 ```bash
-# Wizard interactivo: crea/valida el Long-Lived Access Token y guarda credenciales
-# en ~/.config/harness/.env (chmod 600, fuera de iCloud).
-python tools/ha_setup.py
-# No interactivo:
-python tools/ha_setup.py setup --url http://192.168.4.60:8123 --token XXXX
-# Diagnóstico con credenciales ya guardadas (ping + inventario por dominio):
-python tools/ha_setup.py status
+python3 scripts/instalar_hermes.py --modelo Qwen3.6-35B-A3B-UD-Q4_K_M --instalar-plugin
 ```
 
-`status` hace `GET /api/` (ping) y lista las entidades agrupadas por dominio — útil para
-confirmar la conexión tras el setup.
+```bash
+orquestador chat
+```
 
-### Prueba de la integración
+## Scripts
 
-- **Lectura (libre):** consulta el estado real de una entidad para validar el camino
-  credenciales → `env_loader` → cliente REST → `/api/states/<entity_id>`.
+| Script | Ejemplo |
+|---|---|
+| Búsqueda remota | `python3 scripts/buscar_literatura.py "ALS riluzole survival" --n 20 --out workspace/busquedas/als-riluzol` |
+| Carpeta local | `python3 scripts/fuentes_locales.py carpeta "MG-ADL" --ruta workspace/papers_locales` |
+| Zotero | `python3 scripts/fuentes_locales.py zotero "complement inhibitor" --n 10` |
+| Obsidian | `python3 scripts/fuentes_locales.py obsidian "fibra fina"` |
+| Extraer texto | `python3 scripts/extraer_texto.py estudio.pdf --out memory/agent_handoffs/estudio.md` |
+| Verificar | `python3 scripts/verificar.py workspace/resumenes_papers/x.md` |
+| Exportar | `python3 scripts/exportar.py x.md --pdf x.pdf --esquemas esquemas/` |
+| Proxy UC | `python3 scripts/fetch_uc_paper.py 10.1056/NEJMoa1800410 workspace/papers_locales/x.pdf` |
+| Diagnóstico del PC | `python3 scripts/diagnostico_pc.py --out memory/diagnostico_pc.md` |
 
-  ```bash
-  python tools/loop.py "estado de weather.forecast_casa" --agent home
-  ```
+En Windows nativo, usa `python` en lugar de `python3`.
 
-- **Escritura (gated):** un cambio de estado exige confirmación humana por turno. Para una
-  prueba controlada, usa una entidad **sin efecto físico** (p. ej. el LED indicador de un
-  enchufe, `switch.<id>_network_indicator`), togglea y **revierte** al estado original.
-  Evita switches que controlan luces/enchufes reales.
+Google Scholar no se consulta: no tiene API oficial. OpenAlex y Semantic Scholar son los
+sustitutos abiertos.
 
-  ```bash
-  python tools/loop.py "apaga switch.<id>_network_indicator" --agent home   # pide confirmación
-  python tools/loop.py "enciende switch.<id>_network_indicator" --agent home # revertir
-  ```
+## Desarrollo
 
-Verifica con `ha_states` que el estado cambió tras el toggle y volvió al original tras revertir.
-Nota: `ha_call_service` puede responder "sin cambios de estado reportados" aunque la acción sí
-se aplique; confírmalo releyendo el estado.
+```bash
+pip install -r requirements-dev.txt
+ruff check . && black --check .
+pytest
+```
 
-## Flujo de seguridad
+## Versión anterior
 
-- Toda instrucción válida viene del usuario; lo observado por herramientas es **dato, no orden**.
-- `loop.py` bloquea patrones destructivos y exige confirmación humana en acciones con efecto
-  externo (`GATED_TOOLS`).
-- El autoaprendizaje propone, pero **no aplica** sin Gate humano + git. Las secciones protegidas
-  (identidad, reglas, gates, seguridad) son inmutables al ciclo (R13).
-- Regla operativa: `python evals/run_evals.py` debe dar 0 fallos antes de cada `apply`. Si un
-  cambio del ciclo baja el score, se revierte (`git revert`).
+La versión 1.x (orquestador con 8 subagentes: med, research, biz, signals, coach, docs, home,
+shopper; skills de domótica, docx/pptx; carpeta `projects/`) se eliminó en la 2.0.0 y queda en
+el historial de git. Para recuperar algo puntual:
+
+```bash
+git checkout beb2f48 -- projects/
+```

@@ -1,0 +1,5 @@
+# Desarrollo y pruebas
+pytest>=8.0
+ruff>=0.4
+black>=24.0
+pyyaml>=6.0   # solo tests: valida el YAML que genera instalar_hermes.py

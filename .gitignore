@@ -1,4 +1,4 @@
-# Secrets / local env (kept outside the repo, e.g. ~/.config/harness/.env)
+# Secretos / entorno local (las claves viven en ~/.config/harness/.env)
 .env
 .env.*
 !.env.example
@@ -7,9 +7,26 @@
 .venv/
 __pycache__/
 *.pyc
+.pytest_cache/
+.ruff_cache/
 
-# macOS
+# Generados
+build/
+
+# Ajustes personales de Claude Code
+.claude/settings.local.json
+
+# Workspace: PDFs con copyright y cachés no se versionan
+workspace/papers_locales/*
+!workspace/papers_locales/.gitkeep
+workspace/.cache/
+
+# Memoria de sesión e intermedios entre agentes
+memory/session_logs/*
+!memory/session_logs/.gitkeep
+memory/agent_handoffs/*
+!memory/agent_handoffs/.gitkeep
+
+# macOS / Office
 .DS_Store
-
-# Office temp/lock files
 ~$*
