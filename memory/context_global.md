@@ -20,9 +20,13 @@
 
 ## Equipos
 
-- **Hermes Agent (local):** PC de escritorio con NVIDIA de 16 GB de VRAM y 64 GB de RAM. No
-  corre en el Mac. Modelo recomendado: Qwen3.6 35B-A3B (MoE) del runtime local de Hermes, uno
-  solo para todos los perfiles. Detalle real del equipo: `scripts/diagnostico_pc.py`.
+- **Hermes Agent (local):** PC de escritorio, no el Mac. Diagnóstico del 2026-11-14:
+  Windows 11 nativo (sin WSL), AMD Ryzen 7 9850X3D (8 núcleos/16 hilos), 64 GB de RAM,
+  NVIDIA GeForce RTX 5070 Ti de 16 GB (driver 610.88), 708 GB libres. Repo en
+  `C:\Users\Usuario\code\harness`. En ese PC se usa `python`, no `python3`.
+- Modelo: Qwen3.6 35B-A3B (MoE) del runtime local de Hermes, uno solo para todos los
+  perfiles; ~23 tok/s estimados desbordando a RAM. Hermes estaba en v0.21.0: requiere
+  `hermes update` a ≥ 0.22.5 antes de instalar los perfiles.
 
 ## Rutas frecuentes
 

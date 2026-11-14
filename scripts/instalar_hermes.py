@@ -46,6 +46,7 @@ from _comun import RAIZ, log  # noqa: E402
 AGENTES_DIR = RAIZ / ".claude" / "agents"
 SKILLS_DIR = RAIZ / ".claude" / "skills"
 HERMES_MIN = ">=0.22.5"
+HERMES_MIN_TUPLA = (0, 22, 5)  # advanced-delegation: en <0.22.0 se instala pero no hace nada
 ORQUESTADOR = "orquestador"
 PROVEEDORES = ("llamacpp", "custom")
 
@@ -212,9 +213,37 @@ def _ejecutar(cmd: list[str]) -> bool:
     return r.returncode == 0
 
 
+def version_hermes() -> tuple[int, int, int] | None:
+    """Versión instalada de Hermes, o None si no se puede leer."""
+    try:
+        r = subprocess.run(
+            ["hermes", "--version"],
+            capture_output=True,
+            text=True,
+            encoding="utf-8",
+            errors="replace",
+            timeout=60,
+            check=False,
+        )
+    except (OSError, subprocess.TimeoutExpired):
+        return None
+    m = re.search(r"v?(\d+)\.(\d+)\.(\d+)", r.stdout)
+    return (int(m.group(1)), int(m.group(2)), int(m.group(3))) if m else None
+
+
 def instalar(salida: Path, perfiles: list[Perfil], plugin: bool) -> bool:
     if not shutil.which("hermes"):
         log.error("No encuentro 'hermes' en el PATH. Instálalo primero (ver hermes/README.md).")
+        return False
+    version = version_hermes()
+    if version is None:
+        log.warning("No pude leer la versión de Hermes; se necesita >= 0.22.5.")
+    elif version < HERMES_MIN_TUPLA:
+        log.error(
+            "Hermes v%s es anterior a 0.22.5: la delegación del orquestador (plugin "
+            "advanced-delegation) no funcionaría. Ejecuta `hermes update` y reintenta.",
+            ".".join(map(str, version)),
+        )
         return False
     ok = True
     for p in perfiles:

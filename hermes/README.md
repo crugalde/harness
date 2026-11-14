@@ -33,7 +33,9 @@ de memoria. **Un solo modelo para los 5 perfiles:** en 16 GB no caben dos a la v
 
 ## 3. Requisitos
 
-1. **Hermes Agent ≥ 0.22.5** (lo exige el plugin `advanced-delegation`): `hermes --version`.
+1. **Hermes Agent ≥ 0.22.5** (lo exige el plugin `advanced-delegation`; en versiones
+   anteriores a 0.22.0 se instala pero no hace nada). Comprueba con `hermes --version` y
+   actualiza con `hermes update`. `instalar_hermes.py` se niega a instalar con una versión menor.
 2. **Driver NVIDIA** reciente. En Linux, el runtime local de Hermes pide un driver con CUDA 13.
 3. **WSL2:** por defecto ve solo una fracción de la RAM. Para desbordar el modelo a RAM, en
    `%UserProfile%\.wslconfig` pon `[wsl2]` y `memory=56GB`, luego `wsl --shutdown`.
@@ -48,7 +50,8 @@ Descarga el modelo con el runtime de Hermes (instala llama.cpp con CUDA y ajusta
 hermes model
 ```
 
-Elige *Local models* → **Qwen3.6 35B-A3B**. Luego genera y revisa los perfiles:
+Elige *Local models* → **Qwen3.6 35B-A3B**. Luego genera y revisa los perfiles (en Windows,
+`python` en vez de `python3`):
 
 ```bash
 python3 scripts/instalar_hermes.py --modelo Qwen3.6-35B-A3B-UD-Q4_K_M --solo-generar

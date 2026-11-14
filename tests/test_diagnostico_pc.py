@@ -74,3 +74,39 @@ def test_main_json_en_este_equipo(capsys):
     datos = json.loads(capsys.readouterr().out)
     assert {"hardware", "modelos", "recomendado", "avisos"} <= set(datos)
     assert datos["hardware"]["ram_gb"] > 0
+
+
+CABECERA_SMI = """+-----------------------------------------------------------------------------------------+
+| NVIDIA-SMI 610.88                 Driver Version: 610.88         CUDA Version: 13.4     |
+╞═════════════════════════════════════════════════════════════════════════════════════════╡"""
+SMI_Q = "Driver Version                            : 610.88\nCUDA Version                              : 13.4\n"
+
+
+def test_parse_cuda_cabecera_y_q():
+    assert dp.parse_cuda(CABECERA_SMI) == "13.4"
+    assert dp.parse_cuda(SMI_Q) == "13.4"
+    assert dp.parse_cuda("sin datos") == ""
+
+
+def test_cmd_decodifica_utf8_sin_romperse():
+    import sys
+
+    salida = dp._cmd(
+        [sys.executable, "-c", "import sys; sys.stdout.buffer.write('a · ═ b'.encode())"]
+    )
+    assert salida == "a · ═ b"
+
+
+def test_hermes_antiguo_avisa_actualizar():
+    hw = _hw(16.0, 64.0)
+    hw.software["hermes"] = "Hermes Agent v0.21.0 (2026.8.31) · upstream ad4fa2f4"
+    _, _, avisos = dp.recomendar(hw)
+    assert any("v0.21.0" in a and "hermes update" in a for a in avisos)
+    hw.software["hermes"] = "Hermes Agent v0.22.5"
+    assert dp.recomendar(hw)[2] == []
+
+
+def test_windows_recomienda_python_y_no_python3():
+    hw = _hw(16.0, 64.0, sistema="Windows", detalle_sistema="Windows 11 (AMD64)")
+    texto = dp.informe_md(hw, *dp.recomendar(hw))
+    assert "\npython scripts/instalar_hermes.py" in texto and "python3 scripts" not in texto

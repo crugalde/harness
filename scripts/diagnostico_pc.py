@@ -37,6 +37,7 @@ OVERHEAD_GB = 1.5  # buffers de cómputo + CUDA; margen conservador
 FRACCION_RAM_UTIL = 0.75  # deja RAM para el sistema y el navegador
 BW_GPU, BW_RAM = 1000.0, 80.0  # GB/s, constantes de Hermes (catalog.py)
 UMBRAL_AGRADABLE, UMBRAL_USABLE = 20.0, 6.0  # tok/s, umbrales de Hermes
+HERMES_MIN = (0, 22, 5)  # el plugin advanced-delegation lo exige (catálogo de plugins de Hermes)
 
 # Catálogo local de Hermes (hermes_cli/local_runtime/catalog.json, commit 491f984, nov-2026).
 # Excluye entradas con recommend: false. kv = capas de atención completa × bytes/token/capa.
@@ -115,10 +116,32 @@ class Hardware:
 def _cmd(args: list[str], timeout: int = 15) -> str | None:
     """stdout de un comando, o None si no existe, falla o se cuelga."""
     try:
-        r = subprocess.run(args, capture_output=True, text=True, timeout=timeout, check=False)
+        # UTF-8 tolerante: en Windows el default (cp1252) corrompe o rompe la salida de
+        # herramientas que escriben UTF-8 (hermes, nvidia-smi con caracteres de caja).
+        r = subprocess.run(
+            args,
+            capture_output=True,
+            text=True,
+            encoding="utf-8",
+            errors="replace",
+            timeout=timeout,
+            check=False,
+        )
     except (FileNotFoundError, subprocess.TimeoutExpired, OSError):
         return None
     return r.stdout.strip() if r.returncode == 0 else None
+
+
+def parse_cuda(texto: str) -> str:
+    """Versión CUDA del driver: 'CUDA Version: 13.4' (cabecera) o 'CUDA Version  : 13.4' (-q)."""
+    m = re.search(r"CUDA\s+Version\s*:\s*([\d.]+)", texto, re.I)
+    return m.group(1) if m else ""
+
+
+def parse_version(texto: str) -> tuple[int, int, int] | None:
+    """(0, 21, 0) desde 'Hermes Agent v0.21.0 (2026.8.31) ...'."""
+    m = re.search(r"v?(\d+)\.(\d+)\.(\d+)", texto)
+    return (int(m.group(1)), int(m.group(2)), int(m.group(3))) if m else None
 
 
 def _es_wsl() -> bool:
@@ -200,9 +223,8 @@ def leer_gpus() -> tuple[list[GPU], str]:
             "--format=csv,noheader,nounits",
         ]
     )
-    cabecera = _cmd([ejecutable]) or ""
-    m = re.search(r"CUDA Version:\s*([\d.]+)", cabecera)
-    return parse_nvidia_smi(csv or ""), (m.group(1) if m else "")
+    cuda = parse_cuda(_cmd([ejecutable]) or "") or parse_cuda(_cmd([ejecutable, "-q"]) or "")
+    return parse_nvidia_smi(csv or ""), cuda
 
 
 def leer_software() -> dict[str, str]:
@@ -293,8 +315,15 @@ def recomendar(hw: Hardware) -> tuple[list[dict], dict | None, list[str]]:
             f"Disco libre {hw.disco_libre_gb} GB: el modelo pesa {elegido['gb']} GB; deja al "
             "menos 10 GB extra."
         )
-    if hw.software.get("hermes") == "no instalado":
+    version_hermes = hw.software.get("hermes", "no instalado")
+    if version_hermes == "no instalado":
         avisos.append("Hermes no está instalado (o no está en el PATH).")
+    elif (v := parse_version(version_hermes)) and v < HERMES_MIN:
+        avisos.append(
+            f"Hermes v{'.'.join(map(str, v))} es anterior a 0.22.5: el plugin "
+            "advanced-delegation (delegación del orquestador en los 4 perfiles) se instala pero "
+            "no hace nada. Actualiza con `hermes update` antes de instalar los perfiles."
+        )
     return evaluados, elegido, avisos
 
 
@@ -329,6 +358,7 @@ def informe_md(hw: Hardware, evaluados: list[dict], elegido: dict | None, avisos
             f"{'sí' if e['residente'] else 'no'} | {e['tok_s']} | {e['veredicto']} |"
         )
     lineas += ["", "## Recomendación", ""]
+    py = "python" if hw.sistema == "Windows" else "python3"
     if elegido:
         lineas += [
             f"**{elegido['nombre']}** — {elegido['veredicto']}, ~{elegido['tok_s']} tok/s "
@@ -339,7 +369,7 @@ def informe_md(hw: Hardware, evaluados: list[dict], elegido: dict | None, avisos
             "2. Genera e instala los perfiles con ese mismo modelo para todos:",
             "",
             "```bash",
-            f"python3 scripts/instalar_hermes.py --proveedor llamacpp --modelo {elegido['gguf']} "
+            f"{py} scripts/instalar_hermes.py --proveedor llamacpp --modelo {elegido['gguf']} "
             "--max-hijos 2 --instalar-plugin",
             "```",
         ]

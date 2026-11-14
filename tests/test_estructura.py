@@ -174,3 +174,16 @@ def test_instalar_hermes_rechaza_opciones_invalidas(tmp_path):
         )
         == 1
     )
+
+
+def test_instalar_se_detiene_con_hermes_antiguo(tmp_path, monkeypatch):
+    llamadas = []
+    monkeypatch.setattr(ih.shutil, "which", lambda _: "/usr/bin/hermes")
+    monkeypatch.setattr(ih, "version_hermes", lambda: (0, 21, 0))
+    monkeypatch.setattr(ih, "_ejecutar", lambda cmd: llamadas.append(cmd) or True)
+    perfiles = ih.generar(tmp_path, "m", "m", "")
+    assert ih.instalar(tmp_path, perfiles, plugin=True) is False
+    assert llamadas == []  # no instaló nada
+    monkeypatch.setattr(ih, "version_hermes", lambda: (0, 23, 1))
+    assert ih.instalar(tmp_path, perfiles, plugin=True) is True
+    assert len(llamadas) == len(perfiles) + 1  # 5 perfiles + plugin
